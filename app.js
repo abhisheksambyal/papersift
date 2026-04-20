@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Layout transitions ────────────────────────────────────────────────────
   const transitionToResults = () => {
-    headerSection.classList.replace('min-h-[70vh]', 'min-h-[10vh]');
+    headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
     headerSection.classList.add('pb-4', 'pt-2');
-    logoTitle.style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
+    logoTitle.style.fontSize = 'clamp(1rem, 4vw, 1.8rem)';
     subtitle.classList.add('hidden');
     examplePills.classList.add('hidden');
     setTimeout(() => {
@@ -154,21 +154,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const card = Object.assign(document.createElement('a'), {
         href, target: '_blank', rel: 'noopener noreferrer',
-        className: 'group block py-2.5 px-1 hover:bg-black/[0.03] transition-colors border-b border-ink/5 last:border-0',
+        className: 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] active:bg-black/[0.05] transition-colors border-b border-ink/5 last:border-0 touch-manipulation',
       });
 
       card.innerHTML = `
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex-grow overflow-hidden">
-            <div class="flex items-baseline gap-3">
-              <h3 class="font-masthead font-bold text-base leading-tight group-hover:text-ink/80 transition-colors truncate capitalize">${title}</h3>
-              <div class="font-serif text-[0.6rem] text-ink/40 uppercase tracking-widest font-bold whitespace-nowrap">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-grow min-w-0">
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <h3 class="font-masthead font-bold leading-snug group-hover:text-ink/80 transition-colors capitalize"
+                  style="font-size: clamp(0.8rem, 2.5vw, 1rem);">${title}</h3>
+              <div class="hidden sm:inline font-serif text-[0.6rem] text-ink/40 uppercase tracking-widest font-bold whitespace-nowrap">
                 ${paper.venue} '${paper.year.slice(-2)}
               </div>
             </div>
-            <div class="font-serif text-[0.7rem] text-ink/40 italic truncate mt-0.5">${paper.authors || 'Unknown Authors'}</div>
+            <div class="font-serif text-ink/40 italic mt-0.5 leading-relaxed"
+                 style="font-size: clamp(0.6rem, 1.8vw, 0.7rem);">${paper.authors || 'Unknown Authors'}</div>
           </div>
-          <span class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity font-serif text-[0.6rem] font-bold uppercase tracking-[0.2em] text-ink/60">&rarr;</span>
+          <span class="flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity font-serif text-[0.6rem] font-bold uppercase tracking-[0.2em] text-ink/60">&rarr;</span>
         </div>`;
 
       resultsList.appendChild(card);
