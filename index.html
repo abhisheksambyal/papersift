@@ -20,7 +20,6 @@
           colors: {
             paper: '#f4f1ea',
             ink: '#1c1c1c',
-            'ink-light': '#3b3b3b'
           },
           fontFamily: {
             serif: ['Merriweather', 'serif'],
@@ -35,26 +34,15 @@
 <body class="bg-paper text-ink font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper">
   <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col min-h-screen" id="app-container">
 
-    <!-- Masthead Header -->
     <header id="header-section"
-      class="flex flex-col items-center justify-center min-h-[70vh] transition-all duration-700 ease-in-out border-b-0 border-ink">
-
-      <!-- Date & Edition Line -->
-      <div id="edition-line"
-        class="hidden w-full flex justify-between uppercase tracking-widest text-[0.65rem] font-bold border-t border-b border-ink py-1 mb-6">
-        <span>The Global Medical Archive</span>
-        <span id="current-date">Vol. CXIV ... No. 1</span>
-        <span>Late City Edition</span>
-      </div>
+      class="flex flex-col items-center justify-center min-h-[70vh] transition-all duration-700 ease-in-out">
 
       <div class="text-center w-full transition-all duration-700" id="logo-container">
         <h1 class="font-masthead font-black tracking-tight text-ink transition-all duration-700"
           style="font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.1;">
           LiteratureSearch
         </h1>
-        <div id="subtitle-wrapper" class="overflow-hidden max-h-20 transition-all duration-700 opacity-100">
-          <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif" id="subtitle">"Find Literature You Need"</p>
-        </div>
+        <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif" id="subtitle">"Find Literature You Need"</p>
       </div>
 
       <div class="w-full max-w-xl transition-all duration-500 ease-in-out" id="search-container">
@@ -74,6 +62,11 @@
             </button>
           </div>
         </form>
+        <div id="example-pills" class="flex flex-wrap gap-2 mt-4 text-[0.65rem] uppercase tracking-widest">
+          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-1 rounded-full cursor-pointer hover:bg-ink hover:text-paper transition-all">"mri"</span>
+          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-1 rounded-full cursor-pointer hover:bg-ink hover:text-paper transition-all">"classification"</span>
+          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-1 rounded-full cursor-pointer hover:bg-ink hover:text-paper transition-all">"calibration"</span>
+        </div>
       </div>
     </header>
 
@@ -82,10 +75,7 @@
       <div class="py-2 mb-4">
         <h2 id="results-count" class="font-masthead italic text-lg font-bold text-center opacity-60"></h2>
       </div>
-
-      <div id="results-list" class="flex flex-col gap-1">
-        <!-- Results -->
-      </div>
+      <div id="results-list" class="flex flex-col gap-1"></div>
     </main>
 
   </div>

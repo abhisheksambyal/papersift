@@ -1,22 +1,57 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('search-form');
-  const input = document.getElementById('search-input');
+  const form          = document.getElementById('search-form');
+  const input         = document.getElementById('search-input');
   const headerSection = document.getElementById('header-section');
   const logoContainer = document.getElementById('logo-container');
-  const editionLine = document.getElementById('edition-line');
-  const subtitle = document.getElementById('subtitle');
   const resultsSection = document.getElementById('results-section');
-  const resultsList = document.getElementById('results-list');
-  const resultsCount = document.getElementById('results-count');
+  const resultsList   = document.getElementById('results-list');
+  const resultsCount  = document.getElementById('results-count');
+  const subtitle      = document.getElementById('subtitle');
+  const examplePills  = document.getElementById('example-pills');
 
-  // Set the current date for the edition line
-  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', dateOptions);
+  const STORAGE_KEY   = 'medsearch_recent';
+  const MAX_RECENT    = 4;
+  const DEFAULTS      = ['mri', 'classification', 'calibration'];
+
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveRecent(query) {
+    const recent = [query, ...getRecent().filter(q => q !== query)].slice(0, MAX_RECENT);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+  }
+
+  function renderPills() {
+    const recent = getRecent();
+    const terms  = recent.length ? recent : DEFAULTS;
+    examplePills.innerHTML = terms.map(term =>
+      `<span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-1 rounded-full cursor-pointer hover:bg-ink hover:text-paper transition-all">${term}</span>`
+    ).join('');
+  }
+
+  renderPills();
 
   let hasSearched = false;
-
   let debounceTimer;
-  
+
+  const transitionToResults = () => {
+    headerSection.classList.replace('min-h-[70vh]', 'min-h-[10vh]');
+    headerSection.classList.add('pb-4', 'pt-2');
+
+    subtitle.classList.add('hidden');
+
+    logoContainer.querySelector('h1').style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
+
+    examplePills.classList.add('hidden');
+
+    setTimeout(() => {
+      resultsSection.classList.remove('opacity-0', 'translate-y-8', 'invisible');
+      resultsSection.classList.add('opacity-100', 'translate-y-0', 'visible');
+    }, 300);
+  };
+
   const initiateSearch = () => {
     const query = input.value.trim();
     if (!query) {
@@ -28,27 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!hasSearched) {
-      // Trigger smooth compact layout transition
-      headerSection.classList.replace('min-h-[70vh]', 'min-h-[10vh]');
-      headerSection.classList.add('pb-4', 'pt-2');
-      
-      const subtitleWrapper = document.getElementById('subtitle-wrapper');
-      subtitleWrapper.classList.replace('max-h-20', 'max-h-0');
-      subtitleWrapper.classList.replace('opacity-100', 'opacity-0');
-      
-      logoContainer.querySelector('h1').style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
-      logoContainer.classList.remove('mb-8');
-      logoContainer.classList.add('mb-2');
-      
-      // Delay results fade-in slightly for a phased feel
-      setTimeout(() => {
-        resultsSection.classList.remove('opacity-0', 'translate-y-8', 'invisible');
-        resultsSection.classList.add('opacity-100', 'translate-y-0', 'visible');
-      }, 300);
-      
+      transitionToResults();
       hasSearched = true;
     }
 
+    saveRecent(query);
     performSearch(query);
   };
 
@@ -63,68 +82,74 @@ document.addEventListener('DOMContentLoaded', () => {
     initiateSearch();
   });
 
+  examplePills.addEventListener('click', (e) => {
+    if (e.target.classList.contains('pill-example')) {
+      input.value = e.target.textContent.replace(/"/g, '');
+      initiateSearch();
+    }
+  });
+
   async function performSearch(query) {
     resultsList.innerHTML = '';
     resultsCount.innerHTML = `<span class="italic opacity-60">Scanning the archives...</span>`;
-    
+
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error("Telegraph communication failed");
-      
+      if (!response.ok) throw new Error('Server error: ' + response.status);
+
       const results = await response.json();
-      renderResults(results, query.toLowerCase().split(' ').filter(t => t.length > 2));
+      const terms = query.toLowerCase().split(' ').filter(t => t.length > 2);
+      renderResults(results, terms);
     } catch (err) {
-      resultsCount.innerHTML = `Error dispatching queries: ${err.message}`;
+      console.error('Search failed:', err);
+      resultsCount.innerHTML = `Search error: ${err.message}`;
     }
   }
 
   function renderResults(results, searchTerms) {
     if (results.length === 0) {
-      resultsCount.textContent = "No chronicles found matching your inquiry.";
+      resultsCount.textContent = 'No papers found matching your query.';
       return;
     }
 
-    resultsCount.innerHTML = `<span class="opacity-70">Discovered</span> <span class="font-bold">${results.length}</span> <span class="opacity-70">pertinent chronicles</span>`;
+    resultsCount.innerHTML = `
+      <span class="opacity-70">Discovered</span>
+      <span class="font-bold">${results.length}</span>
+      <span class="opacity-70">pertinent papers</span>`;
 
-    results.forEach((paper, index) => {
-      // Highlight logic for titles only
-      let hiTitle = paper.title;
-      
+    results.forEach(paper => {
+      let hiTitle = paper.title || 'Untitled';
+
       searchTerms.forEach(term => {
         const regex = new RegExp(`(${term})`, 'gi');
-        const highlightSpan = '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>';
-        hiTitle = hiTitle.replace(regex, highlightSpan);
+        hiTitle = hiTitle.replace(regex, '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>');
       });
 
       const card = document.createElement('a');
-      card.href = paper.url.startsWith('http') ? paper.url : `https://papers.miccai.org${paper.url}`;
+      card.href   = paper.url?.startsWith('http') ? paper.url : `https://papers.miccai.org${paper.url}`;
       card.target = '_blank';
-      card.rel = 'noopener noreferrer';
-      
-      // Compact list design (py-2.5) with authors
-      card.className = "group block py-2.5 px-1 hover:bg-black/[0.03] transition-colors cursor-pointer border-b border-ink/5 last:border-0";
-      
+      card.rel    = 'noopener noreferrer';
+      card.className = 'group block py-2.5 px-1 hover:bg-black/[0.03] transition-colors border-b border-ink/5 last:border-0';
+
       card.innerHTML = `
         <div class="flex items-center justify-between gap-4">
           <div class="flex-grow overflow-hidden">
             <div class="flex items-baseline gap-3">
-              <h3 class="font-masthead font-bold text-base leading-tight group-hover:text-ink/80 transition-colors whitespace-nowrap overflow-hidden text-overflow-ellipsis capitalize">${hiTitle.toLowerCase()}</h3>
+              <h3 class="font-masthead font-bold text-base leading-tight group-hover:text-ink/80 transition-colors truncate capitalize">
+                ${hiTitle.toLowerCase()}
+              </h3>
               <div class="font-serif text-[0.6rem] text-ink/40 uppercase tracking-widest font-bold whitespace-nowrap">
-                <span class="mr-1">${paper.venue}</span>
-                <span>'${paper.year.slice(-2)}</span> 
+                ${paper.venue} '${paper.year.slice(-2)}
               </div>
             </div>
-            <div class="font-serif text-[0.7rem] text-ink/40 italic font-medium truncate mt-0.5">
-              ${paper.authors}
+            <div class="font-serif text-[0.7rem] text-ink/40 italic truncate mt-0.5">
+              ${paper.authors || 'Unknown Authors'}
             </div>
           </div>
-          <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-             <span class="font-serif text-[0.6rem] font-bold uppercase tracking-[0.2em] text-ink/60">
-                &rarr;
-             </span>
-          </div>
-        </div>
-      `;
+          <span class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity font-serif text-[0.6rem] font-bold uppercase tracking-[0.2em] text-ink/60">
+            &rarr;
+          </span>
+        </div>`;
 
       resultsList.appendChild(card);
     });

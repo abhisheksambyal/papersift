@@ -11,61 +11,58 @@ def fetch_miccai_json(year):
     try:
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req) as response:
-            data = response.read().decode('utf-8')
-            return json.loads(data)
+            return json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        print(f"Failed fetching {year} JSON: {e}")
+        print(f"Failed fetching {year} data: {e}")
         return []
+
+def build_paper(paper, year):
+    return {
+        "title":   paper.get("title"),
+        "authors": paper.get("authors", paper.get("tags", "Unknown Authors")),
+        "url":     paper.get("pdflink", paper.get("url")),
+        "venue":   f"MICCAI {year}",
+        "year":    year,
+    }
+
+def score_paper(paper, query_terms):
+    score = 0
+    title   = paper.get('title', '').lower()
+    authors = paper.get('authors', '').lower()
+    tags    = paper.get('tags', '').lower()
+    category = paper.get('category', '').lower()
+
+    for term in query_terms:
+        if term in title:    score += 5
+        if term in authors:  score += 2
+        if term in tags:     score += 1
+        if term in category: score += 1
+    return score
 
 class APIHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        parsed_path = urllib.parse.urlparse(self.path)
-        
-        if parsed_path.path == '/api/search':
-            query = urllib.parse.parse_qs(parsed_path.query).get('q', [''])[0].lower()
+        parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path == '/api/search':
+            query = urllib.parse.parse_qs(parsed.query).get('q', [''])[0].lower()
             query_terms = [t for t in query.split() if len(t) > 2]
-            
-            # Fetch ON THE FLY when the endpoint is hit!
-            data_2024 = fetch_miccai_json(2024)
-            data_2025 = fetch_miccai_json(2025)
-            
-            all_data = []
-            for item in data_2024:
-                item['year'] = '2024'
-                all_data.append(item)
-            for item in data_2025:
-                item['year'] = '2025'
-                all_data.append(item)
-            
+
+            all_papers = []
+            for year in (2024, 2025):
+                for item in fetch_miccai_json(year):
+                    all_papers.append((item, str(year)))
+
             results = []
-            for paper in all_data:
-                score = 0
-                title_lower = paper.get('title', '').lower()
-                authors_lower = paper.get('authors', '').lower()
-                tags_lower = paper.get('tags', '').lower()
-                category_lower = paper.get('category', '').lower()
-                
-                for term in query_terms:
-                    if term in title_lower: score += 5
-                    if term in authors_lower: score += 2
-                    if term in tags_lower: score += 1
-                    if term in category_lower: score += 1
-                    if term == paper.get('year'): score += 3
-                
-                if not query_terms or score > 0:
-                    results.append({
-                        "title": paper.get("title"),
-                        "authors": paper.get("authors", paper.get("tags", "Unknown Authors")),
-                        "url": paper.get("pdflink", paper.get("url")),
-                        "venue": f"MICCAI {paper.get('year')}",
-                        "year": paper.get("year"),
-                        "score": score
-                    })
-            
+            for paper, year in all_papers:
+                s = score_paper(paper, query_terms)
+                if not query_terms or s > 0:
+                    entry = build_paper(paper, year)
+                    entry['score'] = s
+                    results.append(entry)
+
             if query_terms:
                 results.sort(key=lambda x: x['score'], reverse=True)
-            
-            # Send response back containing maximum 100 matching items to frontend
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -74,6 +71,7 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
 if __name__ == '__main__':
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), APIHandler) as httpd:
-        print(f"Serving on port {PORT}. Hitting search will trigger realtime fetch.")
+        print(f"Serving on http://localhost:{PORT}")
         httpd.serve_forever()
