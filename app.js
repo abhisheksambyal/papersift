@@ -18,7 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     catch { return []; }
   }
 
+  function isValidQuery(query) {
+    // Only save if every word is purely alphabetic and at least 3 chars long
+    return query.trim().split(/\s+/).every(w => /^[a-zA-Z]{3,}$/.test(w));
+  }
+
   function saveRecent(query) {
+    if (!isValidQuery(query)) return;
     const recent = [query, ...getRecent().filter(q => q !== query)].slice(0, MAX_RECENT);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
   }
@@ -39,18 +45,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const transitionToResults = () => {
     headerSection.classList.replace('min-h-[70vh]', 'min-h-[10vh]');
     headerSection.classList.add('pb-4', 'pt-2');
-
     subtitle.classList.add('hidden');
-
     logoContainer.querySelector('h1').style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
-
     examplePills.classList.add('hidden');
-
     setTimeout(() => {
       resultsSection.classList.remove('opacity-0', 'translate-y-8', 'invisible');
       resultsSection.classList.add('opacity-100', 'translate-y-0', 'visible');
     }, 300);
   };
+
+  const resetToHome = () => {
+    // Restore header
+    headerSection.classList.replace('min-h-[10vh]', 'min-h-[70vh]');
+    headerSection.classList.remove('pb-4', 'pt-2');
+    // Restore logo size
+    logoContainer.querySelector('h1').style.fontSize = '';
+    // Show subtitle and pills
+    subtitle.classList.remove('hidden');
+    examplePills.classList.remove('hidden');
+    renderPills();
+    // Hide results
+    resultsSection.classList.add('opacity-0', 'translate-y-8', 'invisible');
+    resultsSection.classList.remove('opacity-100', 'translate-y-0', 'visible');
+    // Clear state
+    input.value = '';
+    resultsList.innerHTML = '';
+    resultsCount.innerHTML = '';
+    hasSearched = false;
+  };
+
+  logoContainer.querySelector('h1').style.cursor = 'pointer';
+  logoContainer.querySelector('h1').addEventListener('click', () => {
+    if (hasSearched) resetToHome();
+  });
 
   const initiateSearch = () => {
     const query = input.value.trim();
@@ -67,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
       hasSearched = true;
     }
 
-    saveRecent(query);
     performSearch(query);
   };
 
@@ -79,12 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     clearTimeout(debounceTimer);
+    const query = input.value.trim();
+    if (query) saveRecent(query);
     initiateSearch();
   });
 
   examplePills.addEventListener('click', (e) => {
     if (e.target.classList.contains('pill-example')) {
-      input.value = e.target.textContent.replace(/"/g, '');
+      const term = e.target.textContent.trim();
+      input.value = term;
+      saveRecent(term);
       initiateSearch();
     }
   });

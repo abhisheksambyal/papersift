@@ -21,7 +21,7 @@ def build_paper(paper, year):
         "title":   paper.get("title"),
         "authors": paper.get("authors", paper.get("tags", "Unknown Authors")),
         "url":     paper.get("pdflink", paper.get("url")),
-        "venue":   f"MICCAI {year}",
+        "venue":   f"MICCAI",
         "year":    year,
     }
 
@@ -40,6 +40,11 @@ def score_paper(paper, query_terms):
     return score
 
 class APIHandler(http.server.SimpleHTTPRequestHandler):
+    def handle_error(self, request, client_address):
+        pass  # Suppress noisy BrokenPipeError from debounced browser requests
+
+    def log_message(self, format, *args):
+        pass  # Suppress per-request access logs (errors still print to stderr)
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
 
