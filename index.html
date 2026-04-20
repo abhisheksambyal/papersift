@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedSearch | Find Literature You Need</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#f4f1ea',
+            ink: '#1c1c1c',
+            'ink-light': '#3b3b3b'
+          },
+          fontFamily: {
+            serif: ['Merriweather', 'serif'],
+            masthead: ['"Playfair Display"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-paper text-ink font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper">
+  <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col min-h-screen" id="app-container">
+
+    <!-- Masthead Header -->
+    <header id="header-section"
+      class="flex flex-col items-center justify-center min-h-[70vh] transition-all duration-700 ease-in-out border-b-0 border-ink">
+
+      <!-- Date & Edition Line -->
+      <div id="edition-line"
+        class="hidden w-full flex justify-between uppercase tracking-widest text-[0.65rem] font-bold border-t border-b border-ink py-1 mb-6">
+        <span>The Global Medical Archive</span>
+        <span id="current-date">Vol. CXIV ... No. 1</span>
+        <span>Late City Edition</span>
+      </div>
+
+      <div class="text-center w-full transition-all duration-700" id="logo-container">
+        <h1 class="font-masthead font-black tracking-tight text-ink transition-all duration-700"
+          style="font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.1;">
+          LiteratureSearch
+        </h1>
+        <div id="subtitle-wrapper" class="overflow-hidden max-h-20 transition-all duration-700 opacity-100">
+          <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif" id="subtitle">"Find Literature You Need"</p>
+        </div>
+      </div>
+
+      <div class="w-full max-w-xl transition-all duration-500 ease-in-out" id="search-container">
+        <form id="search-form" class="w-full">
+          <div class="flex items-center border-b-2 border-ink/30 focus-within:border-ink transition-colors pb-1">
+            <svg class="w-5 h-5 mr-3 text-ink/50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="search-input"
+              class="w-full bg-transparent border-none outline-none text-ink font-serif text-lg py-2 placeholder-ink/30"
+              placeholder="Search the archives..." autocomplete="off">
+            <button type="submit"
+              class="text-ink uppercase tracking-widest text-xs font-bold py-2 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none transition-all">
+              Search
+            </button>
+          </div>
+        </form>
+      </div>
+    </header>
+
+    <main id="results-section"
+      class="opacity-0 translate-y-8 invisible transition-all duration-700 delay-300 pt-8 flex-1">
+      <div class="py-2 mb-4">
+        <h2 id="results-count" class="font-masthead italic text-lg font-bold text-center opacity-60"></h2>
+      </div>
+
+      <div id="results-list" class="flex flex-col gap-1">
+        <!-- Results -->
+      </div>
+    </main>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+
+</html>
