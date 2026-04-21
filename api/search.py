@@ -11,15 +11,36 @@ _SCORE_FIELDS = [
     ("category", 1),
 ]
 
+# ── Pre-computed search index ────────────────────────────────────────────────
+# Built once on first search (after data is fetched/cached).
+# Each entry: (pre-lowered field dict, year, raw record)
+_index = None
 
-def _score(raw, terms):
-    """Return a relevance score for a paper given the query terms."""
-    return sum(
-        weight
-        for field, weight in _SCORE_FIELDS
-        for term in terms
-        if term in raw.get(field, "").lower()
-    )
+
+def _build_index():
+    """Build a flat list of (lowered_fields, year_str, raw) for fast scoring."""
+    global _index
+    entries = []
+    for year in YEARS:
+        year_str = str(year)
+        for raw in fetch_miccai_json(year):
+            lowered = {
+                field: raw.get(field, "").lower()
+                for field, _ in _SCORE_FIELDS
+            }
+            entries.append((lowered, year_str, raw))
+    _index = entries
+
+
+def _score(lowered, terms):
+    """Return a relevance score using pre-lowered fields."""
+    score = 0
+    for field, weight in _SCORE_FIELDS:
+        text = lowered[field]
+        for term in terms:
+            if term in text:
+                score += weight
+    return score
 
 
 def _build(raw, year):
@@ -35,18 +56,22 @@ def _build(raw, year):
 
 def run_search(query):
     """Return up to MAX_RESULTS papers ranked by relevance to *query*."""
+    global _index
+    if _index is None:
+        _build_index()
+
     terms = [t for t in query.split() if len(t) > 2]
 
-    results = []
-    for year in YEARS:
-        for raw in fetch_miccai_json(year):
-            s = _score(raw, terms)
-            if not terms or s > 0:
-                entry = _build(raw, str(year))
-                entry["score"] = s
-                results.append(entry)
+    if not terms:
+        return [_build(raw, year) for _, year, raw in _index[:MAX_RESULTS]]
 
-    if terms:
-        results.sort(key=lambda x: x["score"], reverse=True)
+    scored = []
+    for lowered, year, raw in _index:
+        s = _score(lowered, terms)
+        if s > 0:
+            entry = _build(raw, year)
+            entry["score"] = s
+            scored.append(entry)
 
-    return results[:MAX_RESULTS]
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    return scored[:MAX_RESULTS]

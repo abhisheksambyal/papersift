@@ -18,3 +18,11 @@ def fetch_miccai_json(year):
     except Exception as e:
         print(f"Failed fetching {year} data: {e}")
         return []
+
+
+def preload(years):
+    """Pre-fetch and cache paper data for the given years at startup."""
+    for year in years:
+        if year not in _cache:
+            fetch_miccai_json(year)
+            print(f"  Loaded {year}: {len(_cache.get(year, []))} papers")
