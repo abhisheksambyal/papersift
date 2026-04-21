@@ -118,6 +118,50 @@ def fetch_midl_json(year):
     return processed
 
 
+def fetch_isbi_json(year):
+    """Fetch ISBI papers from DBLP API."""
+    if year in _fetcher._cache.get('isbi', {}):
+        return _fetcher._cache['isbi'][year]
+
+    if 'isbi' not in _fetcher._cache: _fetcher._cache['isbi'] = {}
+
+    # DBLP query for ISBI conference by year
+    # h=1000 to get a large chunk of papers (ISBI usually has ~700-900)
+    url = f"https://dblp.org/search/publ/api?q=venue:ISBI:year:{year}:&format=json&h=1000"
+    
+    response = _fetcher.fetch(url)
+    if not isinstance(response, dict): response = {}
+    
+    hits = response.get('result', {}).get('hits', {}).get('hit', [])
+    if not isinstance(hits, list): hits = [hits] if hits else []
+    
+    processed = []
+    for h in hits:
+        info = h.get('info', {})
+        
+        # Skip if not a paper (e.g., Editorship/Proceedings entry)
+        if info.get('type') != 'Conference and Workshop Papers':
+            continue
+            
+        title = info.get('title', '').rstrip('.')
+        
+        # Handle authors structure in DBLP
+        authors_data = info.get('authors', {}).get('author', [])
+        if isinstance(authors_data, dict): authors_data = [authors_data]
+        authors_list = [a.get('text', 'Unknown') for a in authors_data]
+        
+        processed.append({
+            "title": title,
+            "authors": ", ".join(authors_list),
+            "url": info.get('ee') or info.get('url') or "#",
+            "venue": f"ISBI {year}",
+            "year": str(year)
+        })
+
+    _fetcher._cache['isbi'][year] = processed
+    return processed
+
+
 def preload(config):
     """Pre-fetch and cache paper data based on conference config."""
     for conf, data in config.items():

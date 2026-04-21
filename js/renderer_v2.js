@@ -74,6 +74,10 @@ function createCard(paper, highlightRegex) {
     ? paper.url
     : `https://papers.miccai.org${paper.url}`;
 
+  const venueParts = (paper.venue || '').split(' ');
+  const venueName  = venueParts[0] || 'PAPER';
+  const shortYear  = (String(paper.year || '')).slice(-2);
+
   const card = document.createElement('a');
   card.href = href;
   card.target = '_blank';
@@ -84,10 +88,10 @@ function createCard(paper, highlightRegex) {
     <div class="flex items-start gap-4 sm:gap-8 py-1">
       <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
         <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 uppercase tracking-widest font-black leading-none">
-          ${paper.venue.includes('MICCAI') ? 'MICCAI' : 'MIDL'}
+          ${venueName}
         </div>
         <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 -mt-1 tabular-nums tracking-tighter">
-          '${(String(paper.year || '')).slice(-2)}
+          '${shortYear}
         </div>
       </div>
       <div class="flex-grow min-w-0 border-l border-ink/10 pl-4 sm:pl-8">

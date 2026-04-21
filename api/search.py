@@ -1,4 +1,4 @@
-from api.fetcher import fetch_miccai_json, fetch_midl_json
+from api.fetcher import fetch_miccai_json, fetch_midl_json, fetch_isbi_json
 from functools import lru_cache
 
 # Conference configuration
@@ -10,6 +10,10 @@ CONFERENCES = {
     "midl": {
         "years": (2020, 2021, 2022, 2023, 2024, 2025, 2026),
         "fetcher": fetch_midl_json,
+    },
+    "isbi": {
+        "years": (2021, 2022, 2023, 2024),
+        "fetcher": fetch_isbi_json,
     }
 }
 
