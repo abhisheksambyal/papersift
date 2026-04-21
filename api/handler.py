@@ -4,7 +4,7 @@ import json
 import io
 import gzip
 
-from api.search import run_search
+from api.search import run_search, get_search_config
 
 # Pre-computed headers for common responses
 _JSON_HEADERS = [
@@ -41,9 +41,11 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
         """Handle GET requests with efficient routing."""
         parsed = urllib.parse.urlparse(self.path)
 
-        # Fast path for API search endpoint
+        # Fast path for API endpoints
         if parsed.path == "/api/search":
             self._handle_search(parsed.query)
+        elif parsed.path == "/api/config":
+            self._handle_config()
         else:
             # Static files with caching headers
             self._handle_static(parsed.path)
@@ -108,6 +110,21 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(payload)
             except BrokenPipeError:
                 pass  # Client disconnected
+
+    def _handle_config(self):
+        """Serve conference and year metadata."""
+        config = get_search_config()
+        payload = self._encode_json(config)
+
+        self.send_response(200)
+        for header, value in _JSON_HEADERS:
+            self.send_header(header, value)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        try:
+            self.wfile.write(payload)
+        except BrokenPipeError:
+            pass
 
     @staticmethod
     def _encode_json(data):

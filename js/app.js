@@ -32,6 +32,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Init ──────────────────────────────────────────────────────────────────
   renderPills(examplePills);
+  initializeFilters();
+
+  async function initializeFilters() {
+    try {
+      const res = await fetch('/api/config');
+      const config = await res.json();
+      
+      // Populate Conferences
+      const confHtml = '<option value="">All Archives</option>' + 
+        config.conferences.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      conferenceFilter.innerHTML = confHtml;
+      
+      // Populate Years
+      const yearHtml = '<option value="">All Time</option>' + 
+        config.years.map(y => `<option value="${y}">${y}</option>`).join('');
+      yearFilter.innerHTML = yearHtml;
+    } catch (err) {
+      console.error('Failed to load filter config:', err);
+    }
+  }
 
 
   logoTitle.addEventListener('click', () => {

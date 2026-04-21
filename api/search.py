@@ -1,18 +1,21 @@
 from api.fetcher import fetch_miccai_json, fetch_midl_json, fetch_isbi_json
 from functools import lru_cache
+from datetime import date
 
 # Conference configuration
+CURRENT_YEAR = date.today().year
+
 CONFERENCES = {
     "miccai": {
-        "years": tuple(range(2018, 2026)),
+        "years": tuple(range(2018, CURRENT_YEAR + 1)),
         "fetcher": fetch_miccai_json,
     },
     "midl": {
-        "years": (2020, 2021, 2022, 2023, 2024, 2025, 2026),
+        "years": tuple(range(2018, CURRENT_YEAR + 2)), # Some MIDL years are ahead
         "fetcher": fetch_midl_json,
     },
     "isbi": {
-        "years": tuple(range(2004, 2027)),
+        "years": tuple(range(2004, CURRENT_YEAR + 1)),
         "fetcher": fetch_isbi_json,
     }
 }
@@ -105,4 +108,19 @@ def get_stats():
     return {
         "total_papers": len(_index),
         "conferences": list(CONFERENCES.keys())
+    }
+
+def get_search_config():
+    """Return conference and year metadata for the UI."""
+    years = set()
+    for conf in CONFERENCES.values():
+        years.update(conf["years"])
+    
+    return {
+        "conferences": [
+            {"id": "miccai", "name": "MICCAI"},
+            {"id": "midl", "name": "MIDL"},
+            {"id": "isbi", "name": "ISBI"}
+        ],
+        "years": sorted(list(years), reverse=True)
     }
