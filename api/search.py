@@ -26,6 +26,7 @@ MAX_RESULTS = 100
 _SCORE_FIELDS = [
     ("title",    10), # Boost title matches as requested
     ("authors",  2),
+    ("abstract", 5), # Include abstract in search relevance
     ("venue",    1),
 ]
 
@@ -47,12 +48,14 @@ def _build_index():
                     "authors": raw.get("authors") or raw.get("tags") or "Unknown Authors",
                     "url": raw.get("url") or raw.get("pdflink") or "#",
                     "venue": raw.get("venue") or f"{conf_id.upper()} {year}",
-                    "year": raw.get("year") or year_str
+                    "year": raw.get("year") or year_str,
+                    "abstract": raw.get("abstract") or ""
                 }
                 
                 lowered = {
                     "title": normalized["title"].lower(),
                     "authors": normalized["authors"].lower(),
+                    "abstract": normalized["abstract"].lower(),
                     "venue": normalized["venue"].lower(),
                 }
                 entries.append((lowered, normalized))

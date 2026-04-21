@@ -20,7 +20,7 @@ def _get_ssl_context():
 
 
 class Fetcher:
-    """Handles HTTP fetching with connection pooling and caching."""
+    """Handles HTTP fetching with connection pooling, caching, and retries."""
     __slots__ = ['_cache', '_opener']
 
     def __init__(self):
@@ -28,13 +28,15 @@ class Fetcher:
         # Create opener with connection pooling via HTTP handler
         https_handler = urllib.request.HTTPSHandler(
             context=_get_ssl_context(),
-            # Enable connection reuse
             check_hostname=True
         )
         self._opener = urllib.request.build_opener(https_handler)
 
-    def fetch(self, url, timeout=30):
-        """Fetch URL with proper timeouts and connection reuse."""
+    def fetch(self, url, timeout=30, max_retries=3):
+        """Fetch URL with proper timeouts, connection reuse, and retries for 429s."""
+        import time
+        import random
+
         req = urllib.request.Request(
             url,
             headers={
@@ -45,18 +47,32 @@ class Fetcher:
             }
         )
 
-        try:
-            with self._opener.open(req, timeout=timeout) as response:
-                # Check if response is gzip encoded
-                if response.headers.get('Content-Encoding') == 'gzip':
-                    import gzip
-                    data = gzip.decompress(response.read())
-                else:
-                    data = response.read()
-                return json.loads(data.decode('utf-8'))
-        except Exception as e:
-            print(f"Error fetching {url}: {e}")
-            return {} # Return empty dict to prevent attribute errors
+        for attempt in range(max_retries):
+            try:
+                with self._opener.open(req, timeout=timeout) as response:
+                    if response.headers.get('Content-Encoding') == 'gzip':
+                        import gzip
+                        data = gzip.decompress(response.read())
+                    else:
+                        data = response.read()
+                    return json.loads(data.decode('utf-8'))
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt < max_retries - 1:
+                    wait = (2 ** attempt) + random.random()
+                    print(f"  Rate limited (429) on {url}. Retrying in {wait:.1f}s...")
+                    time.sleep(wait)
+                    continue
+                if e.code == 404:
+                    return {} # Return empty for 404
+                print(f"HTTP Error {e.code} fetching {url}: {e}")
+                return {}
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                    continue
+                print(f"Error fetching {url}: {e}")
+                return {}
+        return {}
 
 
 # Global fetcher instance for connection reuse
@@ -83,10 +99,19 @@ def fetch_miccai_json(year):
     data = _fetcher.fetch(url)
     
     if isinstance(data, list) and len(data) > 0:
-        papers = data
+        papers = []
+        for p in data:
+            papers.append({
+                "title": p.get("title") or "Untitled",
+                "authors": p.get("authors") or p.get("tags") or "Unknown",
+                "url": p.get("pdflink") or p.get("url") or "#",
+                "venue": f"MICCAI {year}",
+                "year": str(year),
+                "abstract": p.get("description") or p.get("discription") or p.get("abstract") or ""
+            })
+        print(f"  Loaded official MICCAI {year} data with abstracts.")
     else:
         # 2. Fallback to DBLP for older years
-        print(f"  Official MICCAI {year} not found, falling back to DBLP...")
         url = f"https://dblp.org/search/publ/api?q=venue:MICCAI:year:{year}:&format=json&h=1000"
         response = _fetcher.fetch(url)
         if not isinstance(response, dict): response = {}
@@ -108,7 +133,8 @@ def fetch_miccai_json(year):
                 "authors": ", ".join(authors_list),
                 "url": info.get('ee') or info.get('url') or "#",
                 "venue": f"MICCAI {year}",
-                "year": str(year)
+                "year": str(year),
+                "abstract": ""
             })
 
     # Save to disk
@@ -127,7 +153,6 @@ def fetch_midl_json(year):
 
     if 'midl' not in _fetcher._cache: _fetcher._cache['midl'] = {}
 
-    # Try disk cache first
     cache_path = os.path.join(CACHE_DIR, f"midl_{year}.json")
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
@@ -135,7 +160,6 @@ def fetch_midl_json(year):
             _fetcher._cache['midl'][year] = processed
             return processed
 
-    # 2020-2023 use API v1, 2024+ use API v2
     base_api = "api2" if year >= 2024 else "api"
     url = f"https://{base_api}.openreview.net/notes?content.venueid=MIDL.io/{year}/Conference"
     
@@ -146,7 +170,6 @@ def fetch_midl_json(year):
     processed = []
     for n in notes:
         content = n.get('content', {})
-        # Normalize v1 vs v2
         title = content.get('title')
         if isinstance(title, dict): title = title.get('value')
         authors = content.get('authors')
@@ -157,15 +180,18 @@ def fetch_midl_json(year):
         if not title or any(x in venue.lower() for x in ["submitted", "review", "reject"]):
             continue
 
+        abstract = content.get('abstract')
+        if isinstance(abstract, dict): abstract = abstract.get('value')
+
         processed.append({
             "title": title,
             "authors": ", ".join(authors) if isinstance(authors, list) else authors,
             "url": f"https://openreview.net/forum?id={n['id']}",
             "venue": f"MIDL {year}",
-            "year": str(year)
+            "year": str(year),
+            "abstract": abstract or ""
         })
 
-    # Save to disk
     if processed:
         with open(cache_path, 'w') as f:
             json.dump(processed, f)
@@ -181,7 +207,6 @@ def fetch_isbi_json(year):
 
     if 'isbi' not in _fetcher._cache: _fetcher._cache['isbi'] = {}
 
-    # Try disk cache first
     cache_path = os.path.join(CACHE_DIR, f"isbi_{year}.json")
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
@@ -189,7 +214,6 @@ def fetch_isbi_json(year):
             _fetcher._cache['isbi'][year] = processed
             return processed
 
-    # DBLP query for ISBI conference by year
     url = f"https://dblp.org/search/publ/api?q=venue:ISBI:year:{year}:&format=json&h=1000"
     
     response = _fetcher.fetch(url)
@@ -212,10 +236,10 @@ def fetch_isbi_json(year):
             "authors": ", ".join(authors_list),
             "url": info.get('ee') or info.get('url') or "#",
             "venue": f"ISBI {year}",
-            "year": str(year)
+            "year": str(year),
+            "abstract": ""
         })
 
-    # Save to disk
     if processed:
         with open(cache_path, 'w') as f:
             json.dump(processed, f)
@@ -225,9 +249,31 @@ def fetch_isbi_json(year):
 
 
 def preload(config):
-    """Pre-fetch and cache paper data in parallel."""
-    from concurrent.futures import ThreadPoolExecutor
+    """Pre-fetch and cache paper data with a 24-hour global cache."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import time
+
+    global_cache_path = os.path.join(CACHE_DIR, "full_index.json")
     
+    # 1. Try to load from global cache if it exists and is fresh (< 24h)
+    if os.path.exists(global_cache_path):
+        file_age = time.time() - os.path.getmtime(global_cache_path)
+        if file_age < 86400: # 24 hours
+            print("Loading paper index from global cache (up to date)...")
+            try:
+                with open(global_cache_path, 'r') as f:
+                    full_data = json.load(f)
+                    for conf, years in full_data.items():
+                        _fetcher._cache[conf] = {int(y): papers for y, papers in years.items()}
+                    
+                    total = sum(len(y) for c in _fetcher._cache.values() for y in c.values())
+                    print(f"  Instant load: {total} papers from global cache.")
+                    return
+            except Exception as e:
+                print(f"  Global cache corrupted: {e}. Re-indexing...")
+        else:
+            print("Global cache is older than 24 hours. Refreshing from sources...")
+
     tasks = []
     for conf, data in config.items():
         years = data.get('years', [])
@@ -238,15 +284,29 @@ def preload(config):
     print(f"Pre-loading {len(tasks)} conference years...")
     
     def _run_task(task):
+        import random
         conf, y, fetcher_fn = task
-        data = fetcher_fn(y)
-        return conf, y, len(data)
+        time.sleep(random.random() * 0.5)
+        try:
+            data = fetcher_fn(y)
+            return conf, y, len(data)
+        except Exception:
+            return conf, y, 0
 
     with ThreadPoolExecutor(max_workers=4) as executor:
-        results = list(executor.map(_run_task, tasks))
-    
-    for conf, y, count in results:
-        print(f"  Loaded {conf.upper()} {y}: {count} papers")
+        future_to_task = {executor.submit(_run_task, task): task for task in tasks}
+        for future in as_completed(future_to_task):
+            conf, y, count = future.result()
+            if count > 0:
+                print(f"  Loaded {conf.upper()} {y}: {count} papers")
+
+    # 2. Save the full index to a global cache file for next time
+    print("Saving global paper index...")
+    try:
+        with open(global_cache_path, 'w') as f:
+            json.dump(_fetcher._cache, f)
+    except Exception as e:
+        print(f"  Failed to save global cache: {e}")
 
 
 @lru_cache(maxsize=1)
@@ -261,6 +321,3 @@ def get_cache_info():
         'cached_conferences': years_map,
         'total_cached': total
     }
-
-
-

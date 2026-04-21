@@ -5,6 +5,7 @@
  * @property {string} [url]
  * @property {string} [venue]
  * @property {string} year
+ * @property {string} [abstract]
  * @property {number} [score]
  */
 
@@ -26,7 +27,6 @@ function escapeRegex(str) {
   if (escaped === undefined) {
     escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     escapeCache.set(str, escaped);
-    // Limit cache size to prevent unbounded growth
     if (escapeCache.size > 100) {
       const firstKey = escapeCache.keys().next().value;
       escapeCache.delete(firstKey);
@@ -58,7 +58,7 @@ function getHighlightRegex(terms) {
  * @returns {string}
  */
 function highlight(text, regex) {
-  if (!regex) return text;
+  if (!regex || !text) return text;
   return text.replace(regex, '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>');
 }
 
@@ -66,10 +66,12 @@ function highlight(text, regex) {
  * Create a result card element.
  * @param {Paper} paper
  * @param {RegExp | null} highlightRegex
- * @returns {HTMLAnchorElement}
+ * @returns {HTMLElement}
  */
 function createCard(paper, highlightRegex) {
   const title = highlight((paper.title || 'Untitled').toLowerCase(), highlightRegex);
+  const abstract = paper.abstract ? highlight(paper.abstract, highlightRegex) : '';
+  
   const href = paper.url?.startsWith('http')
     ? paper.url
     : `https://papers.miccai.org${paper.url}`;
@@ -78,11 +80,8 @@ function createCard(paper, highlightRegex) {
   const venueName  = venueParts[0] || 'PAPER';
   const shortYear  = (String(paper.year || '')).slice(-2);
 
-  const card = document.createElement('a');
-  card.href = href;
-  card.target = '_blank';
-  card.rel = 'noopener noreferrer';
-  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] active:bg-black/[0.05] transition-colors border-b border-ink/5 last:border-0 touch-manipulation no-tap';
+  const card = document.createElement('div');
+  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] transition-colors border-b border-ink/5 last:border-0';
 
   card.innerHTML = `
     <div class="flex items-start gap-4 sm:gap-8 py-1">
@@ -95,22 +94,54 @@ function createCard(paper, highlightRegex) {
         </div>
       </div>
       <div class="flex-grow min-w-0 border-l border-ink/10 pl-4 sm:pl-8">
-        <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
-        <div class="font-serif text-ink/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)] truncate">
+        <div class="flex items-start justify-between gap-4">
+          <a href="${href}" target="_blank" rel="noopener noreferrer" class="hover:underline underline-offset-4 decoration-1">
+            <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
+          </a>
+          <div class="flex-shrink-0 flex items-center gap-3">
+             ${paper.abstract ? `
+              <button class="abstract-toggle text-[0.6rem] uppercase tracking-widest font-black text-ink/30 hover:text-ink transition-colors flex items-center gap-1">
+                <span>Abstract</span>
+                <svg class="w-2.5 h-2.5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+              </button>` : ''}
+            <a href="${href}" target="_blank" class="text-ink/30 hover:text-ink transition-colors font-serif text-[0.8rem] font-bold">&rarr;</a>
+          </div>
+        </div>
+        <div class="font-serif text-ink/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
           ${paper.authors || 'Unknown Authors'}
         </div>
+        
+        ${paper.abstract ? `
+          <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 font-serif border-t border-ink/5 pt-4 abstract-expansion">
+            ${abstract}
+          </div>
+        ` : ''}
       </div>
-      <div class="flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-0 -translate-x-2 font-serif text-[0.8rem] font-bold text-ink/30">&rarr;</div>
     </div>`;
+
+  // Add toggle functionality
+  const toggleBtn = card.querySelector('.abstract-toggle');
+  const abstractDiv = card.querySelector('.abstract-content');
+  const arrow = toggleBtn?.querySelector('svg');
+
+  if (toggleBtn && abstractDiv) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isHidden = abstractDiv.classList.contains('hidden');
+      abstractDiv.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
+      toggleBtn.classList.toggle('text-ink', isHidden);
+      toggleBtn.classList.toggle('text-ink/30', !isHidden);
+    });
+  }
 
   return card;
 }
 
 /**
- * Render a list of results into the DOM using DocumentFragment for batch insertion.
- *
+ * Render a list of results into the DOM.
  * @param {Paper[]} results
- * @param {string[]} terms - highlighted query terms
+ * @param {string[]} terms
  * @param {HTMLElement} resultsList
  * @param {HTMLElement} resultsCount
  */
