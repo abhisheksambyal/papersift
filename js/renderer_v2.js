@@ -81,17 +81,22 @@ function createCard(paper, highlightRegex) {
   card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] active:bg-black/[0.05] transition-colors border-b border-ink/5 last:border-0 touch-manipulation no-tap';
 
   card.innerHTML = `
-    <div class="flex items-start justify-between gap-3">
-      <div class="flex-grow min-w-0">
-        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <h3 class="font-masthead font-bold leading-snug group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.8rem,2.5vw,1rem)]">${title}</h3>
-          <div class="hidden sm:inline font-serif text-[0.6rem] text-ink/40 uppercase tracking-widest font-bold whitespace-nowrap">
-            ${paper.venue} '${(String(paper.year || '')).slice(-2)}
-          </div>
+    <div class="flex items-start gap-4 sm:gap-8 py-1">
+      <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
+        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 uppercase tracking-widest font-black leading-none">
+          ${paper.venue.includes('MICCAI') ? 'MICCAI' : 'MIDL'}
         </div>
-        <div class="font-serif text-ink/40 italic mt-0.5 leading-relaxed text-[clamp(0.6rem,1.8vw,0.7rem)]">${paper.authors || 'Unknown Authors'}</div>
+        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 -mt-1 tabular-nums tracking-tighter">
+          '${(String(paper.year || '')).slice(-2)}
+        </div>
       </div>
-      <span class="flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity font-serif text-[0.6rem] font-bold uppercase tracking-[0.2em] text-ink/60">&rarr;</span>
+      <div class="flex-grow min-w-0 border-l border-ink/10 pl-4 sm:pl-8">
+        <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
+        <div class="font-serif text-ink/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)] truncate">
+          ${paper.authors || 'Unknown Authors'}
+        </div>
+      </div>
+      <div class="flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-0 -translate-x-2 font-serif text-[0.8rem] font-bold text-ink/30">&rarr;</div>
     </div>`;
 
   return card;

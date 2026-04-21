@@ -1,6 +1,6 @@
 import { saveRecent }                           from './history.js';
 import { fetchResults }                          from './search.js';
-import { renderResults }                         from './renderer.js';
+import { renderResults }                         from './renderer_v2.js';
 import { renderPills, transitionToResults, resetToHome } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {

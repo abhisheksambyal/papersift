@@ -50,14 +50,14 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
 
     def _handle_static(self, path):
         """Serve static files with optimized caching headers."""
-        # Set cache headers based on file type
-        if path.endswith(('.js', '.css', '.woff2', '.woff', '.ttf')):
+        if path.endswith(('.woff2', '.woff', '.ttf')):
             self._cache_headers = ("Cache-Control", "public, max-age=3600, immutable")
+        elif path.endswith(('.js', '.css')):
+            self._cache_headers = ("Cache-Control", "no-cache, no-store, must-revalidate")
         elif path.endswith('.html') or path == '/':
             self._cache_headers = ("Cache-Control", "public, max-age=300")
         else:
             self._cache_headers = None
-
         super().do_GET()
 
     def end_headers(self):
