@@ -31,42 +31,41 @@
     }
   </script>
 
-  <style>
-    /* Respect iPhone notch / home-bar safe areas */
-    #app-container {
-      padding-left: max(1rem, env(safe-area-inset-left));
-      padding-right: max(1rem, env(safe-area-inset-right));
-      padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  <style type="text/tailwindcss">
+    @layer base {
+      body {
+        @apply bg-paper text-ink font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper;
+        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
+        background-size: 16px 16px;
+        background-attachment: fixed;
+      }
     }
 
-    /* Prevent tap highlight on interactive elements */
-    .pill-example,
-    button,
-    a {
-      -webkit-tap-highlight-color: transparent;
-    }
+    @layer components {
+      .app-container-safe {
+        @apply max-w-5xl mx-auto py-6 sm:py-8 flex flex-col min-h-screen;
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
+      }
 
-    /* Sophisticated dense dot grid background */
-    body {
-      background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
-      background-size: 16px 16px;
-      background-attachment: fixed;
-    }
+      .no-tap {
+        -webkit-tap-highlight-color: transparent;
+      }
 
-    /* Title sizes */
-    .title-landing {
-      font-size: clamp(1.6rem, 8vw, 3.5rem);
-      line-height: 1.1;
-    }
-    .title-compact {
-      font-size: clamp(1rem, 4vw, 1.8rem) !important;
-      line-height: 1.2 !important;
+      .title-landing {
+        @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
+      }
+
+      .title-compact {
+        @apply !text-[clamp(1rem,4vw,1.8rem)] !leading-[1.2];
+      }
     }
   </style>
 </head>
 
-<body class="bg-paper text-ink font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper">
-  <div class="max-w-5xl mx-auto py-6 sm:py-8 flex flex-col min-h-screen" id="app-container">
+<body class="no-tap">
+  <div class="app-container-safe" id="app-container">
 
     <header id="header-section"
       class="flex flex-col items-center justify-center min-h-[70vh] transition-all duration-700 ease-in-out">
@@ -88,11 +87,11 @@
             </svg>
             <!-- font-size:16px prevents iOS auto-zoom on focus -->
             <input type="text" id="search-input"
-              class="w-full bg-transparent border-none outline-none text-ink font-serif py-3 placeholder-ink/30"
-              style="font-size: 16px;" placeholder="Search the archives…" autocomplete="off" autocorrect="off"
+              class="w-full bg-transparent border-none outline-none text-ink font-serif py-3 placeholder-ink/30 text-base"
+              placeholder="Search the archives…" autocomplete="off" autocorrect="off"
               autocapitalize="none" spellcheck="false">
             <button type="submit"
-              class="flex-shrink-0 text-ink uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation">
+              class="flex-shrink-0 text-ink uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation no-tap">
               Search
             </button>
           </div>
