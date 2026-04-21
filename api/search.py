@@ -1,3 +1,4 @@
+from functools import lru_cache
 from api.fetcher import fetch_miccai_json
 
 YEARS = (2024, 2025)
@@ -33,7 +34,7 @@ def _build_index():
 
 
 def _score(lowered, terms):
-    """Return a relevance score using pre-lowered fields."""
+    """Return a relevance score using substring matching for partial word search."""
     score = 0
     for field, weight in _SCORE_FIELDS:
         text = lowered[field]
@@ -54,16 +55,27 @@ def _build(raw, year):
     }
 
 
+# Cache for repeated queries
+_query_cache = {}
+_MAX_CACHE_SIZE = 50
+
+
 def run_search(query):
     """Return up to MAX_RESULTS papers ranked by relevance to *query*."""
-    global _index
+    global _index, _query_cache
+
     if _index is None:
         _build_index()
 
-    terms = [t for t in query.split() if len(t) > 2]
+    terms = [t.lower() for t in query.split() if len(t) > 2]
 
     if not terms:
         return [_build(raw, year) for _, year, raw in _index[:MAX_RESULTS]]
+
+    # Check cache for exact query
+    cache_key = query.lower()
+    if cache_key in _query_cache:
+        return _query_cache[cache_key]
 
     scored = []
     for lowered, year, raw in _index:
@@ -74,4 +86,22 @@ def run_search(query):
             scored.append(entry)
 
     scored.sort(key=lambda x: x["score"], reverse=True)
-    return scored[:MAX_RESULTS]
+    results = scored[:MAX_RESULTS]
+
+    # Cache results (simple LRU eviction)
+    if len(_query_cache) >= _MAX_CACHE_SIZE:
+        _query_cache.clear()
+    _query_cache[cache_key] = results
+
+    return results
+
+
+@lru_cache(maxsize=1)
+def get_stats():
+    """Get search index statistics."""
+    if _index is None:
+        _build_index()
+    return {
+        "total_papers": len(_index),
+        "years": list(YEARS)
+    }

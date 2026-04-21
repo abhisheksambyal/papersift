@@ -1,46 +1,129 @@
 import http.server
 import urllib.parse
 import json
+import io
+import gzip
 
 from api.search import run_search
 
+# Pre-computed headers for common responses
+_JSON_HEADERS = [
+    ("Content-Type", "application/json; charset=utf-8"),
+    ("Cache-Control", "no-store"),
+    ("X-Content-Type-Options", "nosniff"),
+]
+
+_CORS_HEADERS = [
+    ("Access-Control-Allow-Origin", "*"),
+    ("Access-Control-Allow-Methods", "GET, OPTIONS"),
+    ("Access-Control-Allow-Headers", "Content-Type"),
+]
+
 
 class APIHandler(http.server.SimpleHTTPRequestHandler):
+    """Optimized HTTP request handler with gzip support and efficient JSON encoding."""
+
+    # Protocol version for connection reuse
+    protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt, *args):
-        pass  # suppress per-request access logs
+        """Suppress per-request access logs in production."""
+        pass
+
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests."""
+        self.send_response(200)
+        for header, value in _CORS_HEADERS:
+            self.send_header(header, value)
+        self.end_headers()
 
     def do_GET(self):
+        """Handle GET requests with efficient routing."""
         parsed = urllib.parse.urlparse(self.path)
 
+        # Fast path for API search endpoint
         if parsed.path == "/api/search":
             self._handle_search(parsed.query)
         else:
-            super().do_GET()
+            # Static files with caching headers
+            self._handle_static(parsed.path)
+
+    def _handle_static(self, path):
+        """Serve static files with optimized caching headers."""
+        # Set cache headers based on file type
+        if path.endswith(('.js', '.css', '.woff2', '.woff', '.ttf')):
+            self._cache_headers = ("Cache-Control", "public, max-age=3600, immutable")
+        elif path.endswith('.html') or path == '/':
+            self._cache_headers = ("Cache-Control", "public, max-age=300")
+        else:
+            self._cache_headers = None
+
+        super().do_GET()
 
     def end_headers(self):
-        # Cache static assets (JS/CSS/fonts) for 1 hour; HTML for 5 min
-        if not hasattr(self, '_skip_cache'):
-            path = self.path.split('?')[0]
-            if path.endswith(('.js', '.css', '.woff2', '.woff', '.ttf')):
-                self.send_header("Cache-Control", "public, max-age=3600")
-            elif path.endswith('.html') or path == '/':
-                self.send_header("Cache-Control", "public, max-age=300")
+        """Add cache and security headers."""
+        if hasattr(self, '_cache_headers') and self._cache_headers:
+            self.send_header(*self._cache_headers)
+            delattr(self, '_cache_headers')
         super().end_headers()
 
     def _handle_search(self, query_string):
+        """Handle search requests with optimized JSON encoding and optional gzip."""
+        # Parse query efficiently
         query = urllib.parse.parse_qs(query_string).get("q", [""])[0].lower()
+
+        # Get search results
         results = run_search(query)
 
-        payload = json.dumps(results, separators=(',', ':')).encode("utf-8")
-        self._skip_cache = True
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(payload)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        del self._skip_cache
+        # Encode JSON efficiently
+        payload = self._encode_json(results)
+
+        # Check if client accepts gzip
+        accepts_gzip = 'gzip' in self.headers.get('Accept-Encoding', '')
+
+        if accepts_gzip and len(payload) > 1024:
+            # Compress for larger payloads
+            compressed = gzip.compress(payload, compresslevel=6)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(compressed)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            try:
+                self.wfile.write(compressed)
+            except BrokenPipeError:
+                pass  # Client disconnected
+        else:
+            self.send_response(200)
+            for header, value in _JSON_HEADERS:
+                self.send_header(header, value)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            try:
+                self.wfile.write(payload)
+            except BrokenPipeError:
+                pass  # Client disconnected
+
+    @staticmethod
+    def _encode_json(data):
+        """Encode JSON with minimal separators for compact output."""
+        # Use orjson if available (much faster), fallback to standard json
         try:
-            self.wfile.write(payload)
-        except BrokenPipeError:
-            pass  # browser cancelled the in-flight request
+            import orjson
+            return orjson.dumps(data)
+        except ImportError:
+            return json.dumps(data, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+
+
+def create_server(port=8000, bind=''):
+    """Create and configure the HTTP server."""
+    server = http.server.ThreadingHTTPServer(
+        (bind, port),
+        APIHandler,
+        bind_and_activate=False  # We'll bind manually for better control
+    )
+    server.allow_reuse_address = True
+    server.allow_reuse_port = True
+    return server
