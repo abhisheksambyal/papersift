@@ -78,10 +78,39 @@ def fetch_miccai_json(year):
             _fetcher._cache['miccai'][year] = papers
             return papers
 
+    # 1. Try official papers.miccai.org (usually 2024+)
     url = f"https://papers.miccai.org/miccai-{year}/js/search.json"
     data = _fetcher.fetch(url)
-    papers = data if isinstance(data, list) else []
     
+    if isinstance(data, list) and len(data) > 0:
+        papers = data
+    else:
+        # 2. Fallback to DBLP for older years
+        print(f"  Official MICCAI {year} not found, falling back to DBLP...")
+        url = f"https://dblp.org/search/publ/api?q=venue:MICCAI:year:{year}:&format=json&h=1000"
+        response = _fetcher.fetch(url)
+        if not isinstance(response, dict): response = {}
+        hits = response.get('result', {}).get('hits', {}).get('hit', [])
+        if not isinstance(hits, list): hits = [hits] if hits else []
+        
+        papers = []
+        for h in hits:
+            info = h.get('info', {})
+            if info.get('type') != 'Conference and Workshop Papers':
+                continue
+            
+            authors_data = info.get('authors', {}).get('author', [])
+            if isinstance(authors_data, dict): authors_data = [authors_data]
+            authors_list = [a.get('text', 'Unknown') for a in authors_data]
+            
+            papers.append({
+                "title": info.get('title', '').rstrip('.'),
+                "authors": ", ".join(authors_list),
+                "url": info.get('ee') or info.get('url') or "#",
+                "venue": f"MICCAI {year}",
+                "year": str(year)
+            })
+
     # Save to disk
     if papers:
         with open(cache_path, 'w') as f:

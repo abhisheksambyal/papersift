@@ -4,7 +4,7 @@ from functools import lru_cache
 # Conference configuration
 CONFERENCES = {
     "miccai": {
-        "years": (2024, 2025),
+        "years": tuple(range(2018, 2026)),
         "fetcher": fetch_miccai_json,
     },
     "midl": {
