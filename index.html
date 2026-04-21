@@ -34,12 +34,24 @@
   <style>
     /* Respect iPhone notch / home-bar safe areas */
     #app-container {
-      padding-left:  max(1rem, env(safe-area-inset-left));
+      padding-left: max(1rem, env(safe-area-inset-left));
       padding-right: max(1rem, env(safe-area-inset-right));
       padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
+
     /* Prevent tap highlight on interactive elements */
-    .pill-example, button, a { -webkit-tap-highlight-color: transparent; }
+    .pill-example,
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Sophisticated dot grid background */
+    body {
+      background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1.5px, transparent 1.5px);
+      background-size: 32px 32px;
+      background-attachment: fixed;
+    }
   </style>
 </head>
 
@@ -68,12 +80,8 @@
             <!-- font-size:16px prevents iOS auto-zoom on focus -->
             <input type="text" id="search-input"
               class="w-full bg-transparent border-none outline-none text-ink font-serif py-3 placeholder-ink/30"
-              style="font-size: 16px;"
-              placeholder="Search the archives…"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="none"
-              spellcheck="false">
+              style="font-size: 16px;" placeholder="Search the archives…" autocomplete="off" autocorrect="off"
+              autocapitalize="none" spellcheck="false">
             <button type="submit"
               class="flex-shrink-0 text-ink uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation">
               Search
@@ -83,9 +91,12 @@
 
         <!-- Example / recent-search pills -->
         <div id="example-pills" class="flex flex-wrap gap-2 mt-4 text-[0.65rem] uppercase tracking-widest">
-          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">mri</span>
-          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">classification</span>
-          <span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">calibration</span>
+          <span
+            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">mri</span>
+          <span
+            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">classification</span>
+          <span
+            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">calibration</span>
         </div>
       </div>
     </header>
