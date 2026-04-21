@@ -15,7 +15,9 @@ export function renderPills(examplePills) {
 export function transitionToResults({ headerSection, logoTitle, subtitle, examplePills, resultsSection }) {
   headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
   headerSection.classList.add('pb-4', 'pt-2');
-  logoTitle.style.fontSize = 'clamp(1rem, 4vw, 1.8rem)';
+  // Toggle title size classes
+  logoTitle.classList.remove('title-landing');
+  logoTitle.classList.add('title-compact');
   subtitle.classList.add('hidden');
   examplePills.classList.add('hidden');
 
@@ -33,18 +35,26 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
 export function resetToHome(refs, onReset) {
   const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount } = refs;
 
-  headerSection.classList.replace('min-h-0', 'min-h-[70vh]');
-  headerSection.classList.remove('pb-4', 'pt-2');
-  logoTitle.style.fontSize = '';
-  subtitle.classList.remove('hidden');
-  examplePills.classList.remove('hidden');
-  renderPills(examplePills);
-
+  // Hide results first
   resultsSection.classList.add('opacity-0', 'translate-y-8', 'invisible');
   resultsSection.classList.remove('opacity-100', 'translate-y-0', 'visible');
 
-  input.value        = '';
-  resultsList.innerHTML  = '';
+  // Reset header layout after a brief delay to allow results to fade out
+  setTimeout(() => {
+    headerSection.classList.replace('min-h-0', 'min-h-[70vh]');
+    headerSection.classList.remove('pb-4', 'pt-2');
+
+    // Toggle back to landing title size
+    logoTitle.classList.remove('title-compact');
+    logoTitle.classList.add('title-landing');
+
+    subtitle.classList.remove('hidden');
+    examplePills.classList.remove('hidden');
+    renderPills(examplePills);
+  }, 300);
+
+  input.value = '';
+  resultsList.innerHTML = '';
   resultsCount.innerHTML = '';
 
   onReset();

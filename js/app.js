@@ -29,7 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   logoTitle.style.cursor = 'pointer';
   logoTitle.addEventListener('click', () => {
-    if (hasSearched) resetToHome(domRefs, () => { hasSearched = false; });
+    if (hasSearched) {
+      // Clear any pending search timer
+      clearTimeout(debounceTimer);
+      resetToHome(domRefs, () => { hasSearched = false; });
+    }
   });
 
   // ── Search orchestration ──────────────────────────────────────────────────
