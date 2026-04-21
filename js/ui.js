@@ -13,18 +13,31 @@ export function renderPills(examplePills) {
  * @param {{ headerSection, logoTitle, subtitle, examplePills, resultsSection }} refs
  */
 export function transitionToResults({ headerSection, logoTitle, subtitle, examplePills, resultsSection }) {
-  headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
-  headerSection.classList.add('pb-4', 'pt-2');
-  // Toggle title size classes
-  logoTitle.classList.remove('title-landing');
-  logoTitle.classList.add('title-compact');
-  subtitle.classList.add('hidden');
-  examplePills.classList.add('hidden');
+  // Use requestAnimationFrame to ensure the transition starts smoothly
+  requestAnimationFrame(() => {
+    headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
+    headerSection.classList.add('pb-4', 'pt-2');
+    
+    // Toggle title size classes
+    logoTitle.classList.remove('title-landing');
+    logoTitle.classList.add('title-compact');
+    
+    // Instead of hiding immediately, fade out if needed (subtitle already has transition)
+    subtitle.classList.add('opacity-0', 'pointer-events-none');
+    examplePills.classList.add('opacity-0', 'pointer-events-none');
+    
+    // Hide them from layout after fade
+    setTimeout(() => {
+      subtitle.classList.add('hidden');
+      examplePills.classList.add('hidden');
+    }, 500);
 
-  setTimeout(() => {
-    resultsSection.classList.remove('opacity-0', 'translate-y-8', 'invisible');
-    resultsSection.classList.add('opacity-100', 'translate-y-0', 'visible');
-  }, 300);
+    setTimeout(() => {
+      resultsSection.classList.remove('invisible');
+      resultsSection.classList.add('opacity-100', 'translate-y-0');
+      resultsSection.classList.remove('opacity-0', 'translate-y-4');
+    }, 200);
+  });
 }
 
 /**
@@ -35,27 +48,30 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
 export function resetToHome(refs, onReset) {
   const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount } = refs;
 
-  // Hide results first
-  resultsSection.classList.add('opacity-0', 'translate-y-8', 'invisible');
-  resultsSection.classList.remove('opacity-100', 'translate-y-0', 'visible');
+  requestAnimationFrame(() => {
+    // Hide results first
+    resultsSection.classList.add('opacity-0', 'translate-y-4');
+    resultsSection.classList.remove('opacity-100', 'translate-y-0');
 
-  // Reset header layout after a brief delay to allow results to fade out
-  setTimeout(() => {
-    headerSection.classList.replace('min-h-0', 'min-h-[70vh]');
-    headerSection.classList.remove('pb-4', 'pt-2');
+    setTimeout(() => {
+      resultsSection.classList.add('invisible');
+      
+      headerSection.classList.replace('min-h-0', 'min-h-[70vh]');
+      headerSection.classList.remove('pb-4', 'pt-2');
 
-    // Toggle back to landing title size
-    logoTitle.classList.remove('title-compact');
-    logoTitle.classList.add('title-landing');
+      logoTitle.classList.remove('title-compact');
+      logoTitle.classList.add('title-landing');
 
-    subtitle.classList.remove('hidden');
-    examplePills.classList.remove('hidden');
-    renderPills(examplePills);
-  }, 300);
+      subtitle.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      examplePills.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      
+      renderPills(examplePills);
+    }, 400);
 
-  input.value = '';
-  resultsList.innerHTML = '';
-  resultsCount.innerHTML = '';
+    input.value = '';
+    resultsList.innerHTML = '';
+    resultsCount.innerHTML = '';
 
-  onReset();
+    onReset();
+  });
 }

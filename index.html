@@ -38,6 +38,8 @@
         background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
         background-size: 16px 16px;
         background-attachment: fixed;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
     }
 
@@ -47,6 +49,7 @@
         padding-left: max(1rem, env(safe-area-inset-left));
         padding-right: max(1rem, env(safe-area-inset-right));
         padding-bottom: max(2rem, env(safe-area-inset-bottom));
+        transform: translateZ(0);
       }
 
       .no-tap {
@@ -55,10 +58,12 @@
 
       .title-landing {
         @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
+        transform: translateZ(0);
       }
 
       .title-compact {
         @apply !text-[clamp(1rem,4vw,1.8rem)] !leading-[1.2];
+        transform: translateZ(0);
       }
     }
   </style>
@@ -68,16 +73,16 @@
   <div class="app-container-safe" id="app-container">
 
     <header id="header-section"
-      class="flex flex-col items-center justify-center min-h-[70vh] transition-all duration-700 ease-in-out">
+      class="flex flex-col items-center justify-center min-h-[70vh] transition-[min-height,padding] duration-700 ease-in-out will-change-[min-height]">
 
-      <div class="text-center w-full transition-all duration-700" id="logo-container">
-        <h1 id="logo-title" class="font-masthead font-black tracking-tight text-ink transition-all duration-700 title-landing">
+      <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform" id="logo-container">
+        <h1 id="logo-title" class="font-masthead font-black tracking-tight text-ink transition-[font-size,transform] duration-700 ease-in-out title-landing will-change-[font-size]">
           LiteratureSearch
         </h1>
-        <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif" id="subtitle">"Find Literature You Need"</p>
+        <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif opacity-100 transition-opacity duration-500 ease-in-out" id="subtitle">"Find Literature You Need"</p>
       </div>
 
-      <div class="w-full max-w-xl transition-all duration-500 ease-in-out" id="search-container">
+      <div class="w-full max-w-xl transition-transform duration-500 ease-in-out will-change-transform" id="search-container">
         <form id="search-form" class="w-full">
           <div class="flex items-center border-b-2 border-ink/30 focus-within:border-ink transition-colors pb-1">
             <svg class="w-5 h-5 mr-3 flex-shrink-0 text-ink/50" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -110,7 +115,7 @@
     </header>
 
     <main id="results-section"
-      class="opacity-0 translate-y-8 invisible transition-all duration-700 delay-300 pt-6 sm:pt-8 flex-1">
+      class="opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
       <div class="py-2 mb-4">
         <h2 id="results-count" class="font-masthead italic text-base sm:text-lg font-bold text-center opacity-60"></h2>
       </div>
