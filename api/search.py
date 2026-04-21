@@ -12,7 +12,7 @@ CONFERENCES = {
         "fetcher": fetch_midl_json,
     },
     "isbi": {
-        "years": (2021, 2022, 2023, 2024),
+        "years": tuple(range(2004, 2027)),
         "fetcher": fetch_isbi_json,
     }
 }

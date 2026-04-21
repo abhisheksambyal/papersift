@@ -1,6 +1,11 @@
+
 import urllib.request
 import json
+import os
 from functools import lru_cache
+
+CACHE_DIR = "data_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 # Shared SSL context for connection reuse
 _ssl_context = None
@@ -59,16 +64,29 @@ _fetcher = Fetcher()
 
 
 def fetch_miccai_json(year):
-    """Fetch (and in-memory cache) the MICCAI paper list for a given year."""
+    """Fetch (and cache) the MICCAI paper list for a given year."""
     if year in _fetcher._cache.get('miccai', {}):
         return _fetcher._cache['miccai'][year]
 
     if 'miccai' not in _fetcher._cache: _fetcher._cache['miccai'] = {}
     
+    # Try disk cache first
+    cache_path = os.path.join(CACHE_DIR, f"miccai_{year}.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['miccai'][year] = papers
+            return papers
+
     url = f"https://papers.miccai.org/miccai-{year}/js/search.json"
     data = _fetcher.fetch(url)
-    # MICCAI returns a list
     papers = data if isinstance(data, list) else []
+    
+    # Save to disk
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
     _fetcher._cache['miccai'][year] = papers
     return papers
 
@@ -79,6 +97,14 @@ def fetch_midl_json(year):
         return _fetcher._cache['midl'][year]
 
     if 'midl' not in _fetcher._cache: _fetcher._cache['midl'] = {}
+
+    # Try disk cache first
+    cache_path = os.path.join(CACHE_DIR, f"midl_{year}.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            processed = json.load(f)
+            _fetcher._cache['midl'][year] = processed
+            return processed
 
     # 2020-2023 use API v1, 2024+ use API v2
     base_api = "api2" if year >= 2024 else "api"
@@ -91,18 +117,14 @@ def fetch_midl_json(year):
     processed = []
     for n in notes:
         content = n.get('content', {})
-        
         # Normalize v1 vs v2
         title = content.get('title')
         if isinstance(title, dict): title = title.get('value')
-        
         authors = content.get('authors')
         if isinstance(authors, dict): authors = authors.get('value')
-        
         venue = content.get('venue', {})
         if isinstance(venue, dict): venue = venue.get('value', '')
         
-        # Filter accepted papers (avoid "Submitted", "under review", "Rejected")
         if not title or any(x in venue.lower() for x in ["submitted", "review", "reject"]):
             continue
 
@@ -113,6 +135,11 @@ def fetch_midl_json(year):
             "venue": f"MIDL {year}",
             "year": str(year)
         })
+
+    # Save to disk
+    if processed:
+        with open(cache_path, 'w') as f:
+            json.dump(processed, f)
 
     _fetcher._cache['midl'][year] = processed
     return processed
@@ -125,27 +152,28 @@ def fetch_isbi_json(year):
 
     if 'isbi' not in _fetcher._cache: _fetcher._cache['isbi'] = {}
 
+    # Try disk cache first
+    cache_path = os.path.join(CACHE_DIR, f"isbi_{year}.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            processed = json.load(f)
+            _fetcher._cache['isbi'][year] = processed
+            return processed
+
     # DBLP query for ISBI conference by year
-    # h=1000 to get a large chunk of papers (ISBI usually has ~700-900)
     url = f"https://dblp.org/search/publ/api?q=venue:ISBI:year:{year}:&format=json&h=1000"
     
     response = _fetcher.fetch(url)
     if not isinstance(response, dict): response = {}
-    
     hits = response.get('result', {}).get('hits', {}).get('hit', [])
     if not isinstance(hits, list): hits = [hits] if hits else []
     
     processed = []
     for h in hits:
         info = h.get('info', {})
-        
-        # Skip if not a paper (e.g., Editorship/Proceedings entry)
         if info.get('type') != 'Conference and Workshop Papers':
             continue
-            
         title = info.get('title', '').rstrip('.')
-        
-        # Handle authors structure in DBLP
         authors_data = info.get('authors', {}).get('author', [])
         if isinstance(authors_data, dict): authors_data = [authors_data]
         authors_list = [a.get('text', 'Unknown') for a in authors_data]
@@ -158,18 +186,38 @@ def fetch_isbi_json(year):
             "year": str(year)
         })
 
+    # Save to disk
+    if processed:
+        with open(cache_path, 'w') as f:
+            json.dump(processed, f)
+
     _fetcher._cache['isbi'][year] = processed
     return processed
 
 
 def preload(config):
-    """Pre-fetch and cache paper data based on conference config."""
+    """Pre-fetch and cache paper data in parallel."""
+    from concurrent.futures import ThreadPoolExecutor
+    
+    tasks = []
     for conf, data in config.items():
         years = data.get('years', [])
         fetcher_fn = data.get('fetcher')
         for y in years:
-            fetcher_fn(y)
-            print(f"  Loaded {conf.upper()} {y}: {len(_fetcher._cache[conf].get(y, []))} papers")
+            tasks.append((conf, y, fetcher_fn))
+
+    print(f"Pre-loading {len(tasks)} conference years...")
+    
+    def _run_task(task):
+        conf, y, fetcher_fn = task
+        data = fetcher_fn(y)
+        return conf, y, len(data)
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(_run_task, tasks))
+    
+    for conf, y, count in results:
+        print(f"  Loaded {conf.upper()} {y}: {count} papers")
 
 
 @lru_cache(maxsize=1)
