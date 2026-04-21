@@ -2,7 +2,7 @@ import socketserver
 import threading
 from api.fetcher import preload, get_cache_info
 from api.handler import APIHandler
-from api.search import YEARS, get_stats
+from api.search import CONFERENCES, get_stats
 
 PORT = 8000
 BIND_ADDRESS = ""
@@ -10,8 +10,8 @@ BIND_ADDRESS = ""
 
 def run_server(workers=4):
     """Pre-load data and run the threaded HTTP server."""
-    print(f"Pre-loading paper data for {YEARS}...")
-    preload(YEARS)
+    print(f"Pre-loading paper data...")
+    preload(CONFERENCES)
 
     cache_info = get_cache_info()
     print(f"  Ready: {cache_info['total_cached']} papers cached.")

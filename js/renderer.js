@@ -86,7 +86,7 @@ function createCard(paper, highlightRegex) {
         <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <h3 class="font-masthead font-bold leading-snug group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.8rem,2.5vw,1rem)]">${title}</h3>
           <div class="hidden sm:inline font-serif text-[0.6rem] text-ink/40 uppercase tracking-widest font-bold whitespace-nowrap">
-            ${paper.venue} '${paper.year.slice(-2)}
+            ${paper.venue} '${(String(paper.year || '')).slice(-2)}
           </div>
         </div>
         <div class="font-serif text-ink/40 italic mt-0.5 leading-relaxed text-[clamp(0.6rem,1.8vw,0.7rem)]">${paper.authors || 'Unknown Authors'}</div>
