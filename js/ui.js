@@ -46,7 +46,7 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
  * @param {Function} onReset - callback to reset parent state (e.g. hasSearched)
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount, conferenceFilter, yearFilter } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
@@ -69,6 +69,8 @@ export function resetToHome(refs, onReset) {
     }, 400);
 
     input.value = '';
+    conferenceFilter.value = '';
+    yearFilter.value = '';
     resultsList.innerHTML = '';
     resultsCount.innerHTML = '';
 

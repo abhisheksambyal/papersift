@@ -63,23 +63,34 @@ def _score(lowered, terms):
     return score
 
 
-def run_search(query):
-    """Search cross-conference papers with relevance ranking."""
-    global _index, _query_cache
+def run_search(query, venue=None, year=None):
+    """Search cross-conference papers with relevance ranking and filters."""
+    global _index
     if _index is None: _build_index()
 
     terms = [t.lower() for t in query.split() if len(t) > 2]
-    if not terms:
-        # Return latest papers by default if no query
-        return [raw for _, raw in _index[:MAX_RESULTS]]
-
+    
     scored = []
     for lowered, raw in _index:
+        # Filter by venue if provided
+        if venue and venue.lower() not in raw["venue"].lower():
+            continue
+        
+        # Filter by year if provided
+        if year and str(year) != str(raw["year"]):
+            continue
+
+        if not terms:
+            # If no query, just add to results (will be sliced later)
+            scored.append({**raw, "score": 0})
+            continue
+
         s = _score(lowered, terms)
         if s > 0:
             scored.append({**raw, "score": s})
 
-    scored.sort(key=lambda x: x["score"], reverse=True)
+    # Sort by score (desc) then by year (desc) if scores are equal
+    scored.sort(key=lambda x: (x["score"], x.get("year", "0")), reverse=True)
     return scored[:MAX_RESULTS]
 
 

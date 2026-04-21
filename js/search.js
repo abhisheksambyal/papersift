@@ -7,11 +7,15 @@ let activeController = null;
  * @param {string} query
  * @returns {Promise<Array>}
  */
-export async function fetchResults(query) {
+export async function fetchResults(query, venue = '', year = '') {
   if (activeController) activeController.abort();
   activeController = new AbortController();
 
-  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+  let url = `/api/search?q=${encodeURIComponent(query)}`;
+  if (venue) url += `&venue=${encodeURIComponent(venue)}`;
+  if (year) url += `&year=${encodeURIComponent(year)}`;
+
+  const res = await fetch(url, {
     signal: activeController.signal,
   });
 

@@ -17,8 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsList    = document.getElementById('results-list');
   const resultsCount   = document.getElementById('results-count');
 
+  const conferenceFilter = document.getElementById('conference-filter');
+  const yearFilter       = document.getElementById('year-filter');
+
   // Shared refs object passed to UI functions
-  const domRefs = { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount };
+  const domRefs = { 
+    headerSection, logoTitle, subtitle, examplePills, resultsSection, 
+    input, resultsList, resultsCount, conferenceFilter, yearFilter 
+  };
 
   // ── State ─────────────────────────────────────────────────────────────────
   let hasSearched   = false;
@@ -39,12 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Search orchestration ──────────────────────────────────────────────────
   const initiateSearch = () => {
     const query = input.value.trim();
-    if (!query) {
+    const venue = conferenceFilter.value;
+    const year  = yearFilter.value;
+
+    if (!query && !venue && !year) {
       if (hasSearched) { resultsList.innerHTML = ''; resultsCount.innerHTML = ''; }
       return;
     }
     if (!hasSearched) { transitionToResults(domRefs); hasSearched = true; }
-    performSearch(query);
+    performSearch(query, venue, year);
   };
 
   // Debounced live search
@@ -52,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(initiateSearch, 300);
   });
+
+  // Filter change triggers immediate search
+  conferenceFilter.addEventListener('change', initiateSearch);
+  yearFilter.addEventListener('change', initiateSearch);
 
   // Explicit submit saves to history
   form.addEventListener('submit', e => {
@@ -72,11 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── API call ──────────────────────────────────────────────────────────────
-  async function performSearch(query) {
+  async function performSearch(query, venue = '', year = '') {
     resultsList.innerHTML  = '';
     resultsCount.innerHTML = '<span class="italic opacity-60">Scanning the archives...</span>';
     try {
-      const results = await fetchResults(query);
+      const results = await fetchResults(query, venue, year);
       const terms   = query.toLowerCase().split(' ').filter(t => t.length > 2);
       renderResults(results, terms, resultsList, resultsCount);
     } catch (err) {

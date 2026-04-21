@@ -70,10 +70,13 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
     def _handle_search(self, query_string):
         """Handle search requests with optimized JSON encoding and optional gzip."""
         # Parse query efficiently
-        query = urllib.parse.parse_qs(query_string).get("q", [""])[0].lower()
+        params = urllib.parse.parse_qs(query_string)
+        query = params.get("q", [""])[0].lower()
+        venue = params.get("venue", [None])[0]
+        year = params.get("year", [None])[0]
 
         # Get search results
-        results = run_search(query)
+        results = run_search(query, venue=venue, year=year)
 
         # Encode JSON efficiently
         payload = self._encode_json(results)
