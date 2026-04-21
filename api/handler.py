@@ -115,15 +115,3 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
             return orjson.dumps(data)
         except ImportError:
             return json.dumps(data, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
-
-
-def create_server(port=8000, bind=''):
-    """Create and configure the HTTP server."""
-    server = http.server.ThreadingHTTPServer(
-        (bind, port),
-        APIHandler,
-        bind_and_activate=False  # We'll bind manually for better control
-    )
-    server.allow_reuse_address = True
-    server.allow_reuse_port = True
-    return server

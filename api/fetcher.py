@@ -95,7 +95,4 @@ def get_cache_info():
     }
 
 
-def clear_cache():
-    """Clear the fetcher cache."""
-    _fetcher._cache.clear()
-    get_cache_info.cache_clear()
+

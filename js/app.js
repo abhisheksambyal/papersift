@@ -27,10 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Init ──────────────────────────────────────────────────────────────────
   renderPills(examplePills);
 
-  logoTitle.style.cursor = 'pointer';
+
   logoTitle.addEventListener('click', () => {
     if (hasSearched) {
-      // Clear any pending search timer
+
       clearTimeout(debounceTimer);
       resetToHome(domRefs, () => { hasSearched = false; });
     }
