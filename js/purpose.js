@@ -7,7 +7,7 @@ const QUESTIONS = [
   "Where can I find Few-Shot Learning papers?",
   "Which conferences include BRATS dataset papers?",
   "Tired of checking every conference manually?",
-  "Stop scouring 40+ conference sites manually.<br>Find the papers you need — faster."
+  "Stop scouring 40+ conference sites manually.<br>Enter the keywords and Find the papers you need — faster."
 ];
 
 let intervalId = null;
@@ -26,32 +26,54 @@ function shuffle(array) {
 export function startPurposeLoop(el) {
   if (!el) return;
 
-  // Create a copy and shuffle
-  const pool = [...QUESTIONS];
-  shuffle(pool);
+  const discoveryQuestions = QUESTIONS.slice(0, -1);
+  const finaleQuestion = QUESTIONS[QUESTIONS.length - 1];
 
+  shuffle(discoveryQuestions);
+  // The pool is just the discovery questions for the first cycle
+  const pool = [...discoveryQuestions];
   let idx = 0;
 
+  el.classList.add('opacity-0', 'translate-y-4');
+
+  const showFirst = () => {
+    el.innerHTML = pool[idx];
+    void el.offsetHeight;
+    el.classList.remove('opacity-0', 'translate-y-4');
+    idx++;
+  };
+
   const cycle = () => {
-    // Phase 1: Fade out and slide up
     el.classList.add('opacity-0', '-translate-y-4');
 
     setTimeout(() => {
-      // Phase 2: Change text while hidden and reset to bottom position instantly
-      el.innerHTML = pool[idx];
-      el.classList.remove('-translate-y-4');
-      el.classList.add('translate-y-4');
+      if (idx < pool.length) {
+        // Show next individual question
+        el.innerHTML = pool[idx];
+        el.classList.remove('-translate-y-4');
+        el.classList.add('translate-y-4');
+        void el.offsetHeight;
+        el.classList.remove('opacity-0', 'translate-y-4');
+        idx++;
+      } else {
+        // FINALE: Show 3 random questions + Solution, then STOP
+        const random3 = [...discoveryQuestions].sort(() => 0.5 - Math.random()).slice(0, 3);
+        const summary = random3.map(q => q.replace('?', '')).join(', ') + '?';
 
-      // Force reflow
-      void el.offsetHeight;
+        el.innerHTML = `<span class="block mb-2 opacity-60">${summary}</span> ${finaleQuestion}`;
+        el.classList.remove('-translate-y-4');
+        el.classList.add('translate-y-4');
+        void el.offsetHeight;
+        el.classList.remove('opacity-0', 'translate-y-4');
 
-      // Phase 3: Fade in and slide to center
-      el.classList.remove('opacity-0', 'translate-y-4');
-      idx = (idx + 1) % pool.length;
+        // Stop the animation
+        clearInterval(intervalId);
+        intervalId = null;
+      }
     }, 700);
   };
 
-  cycle();
+  showFirst();
   intervalId = setInterval(cycle, 5000);
 }
 
