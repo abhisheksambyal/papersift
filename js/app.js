@@ -111,7 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
   logoTitle.addEventListener('click', () => {
     if (hasSearched) {
       clearTimeout(debounceTimer);
-      resetToHome(domRefs, () => { hasSearched = false; });
+      resetToHome(domRefs, () => { 
+        hasSearched = false; 
+        // Clear highlights
+        document.querySelectorAll('#filter-container span').forEach(span => {
+          span.classList.remove('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+        });
+      });
     }
   });
 
@@ -158,18 +164,59 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── API call ──────────────────────────────────────────────────────────────
-  async function performSearch(query, venue = '', year = '') {
+  async function performSearch(query, selectedVenues = [], selectedYears = []) {
     resultsList.innerHTML  = '';
     resultsCount.innerHTML = '<span class="italic opacity-60">Scanning the archives...</span>';
     try {
-      const results = await fetchResults(query, venue, year);
+      const results = await fetchResults(query, selectedVenues, selectedYears);
       const terms   = query.toLowerCase().split(' ').filter(t => t.length > 2);
       renderResults(results, terms, resultsList, resultsCount);
+      
+      // Highlight filters that have results
+      updateFilterHighlights(results);
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.error('Search failed:', err);
       resultsCount.innerHTML = `Search error: ${err.message}`;
     }
+  }
+
+  function updateFilterHighlights(results) {
+    const activeVenues = new Set();
+    const activeYears = new Set();
+    
+    results.forEach(p => {
+      // Paper venue is like "MICCAI 2024"
+      const venueLower = p.venue.toLowerCase();
+      if (venueLower.includes('miccai')) activeVenues.add('miccai');
+      if (venueLower.includes('midl')) activeVenues.add('midl');
+      if (venueLower.includes('isbi')) activeVenues.add('isbi');
+      
+      if (p.year) activeYears.add(p.year.toString());
+    });
+
+    // Clear previous highlights
+    document.querySelectorAll('#filter-container span').forEach(span => {
+      span.classList.remove('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+    });
+
+    // Apply highlights to conferences
+    activeVenues.forEach(v => {
+      const cb = document.querySelector(`input[name="conference"][value="${v}"]`);
+      if (cb) {
+        const span = cb.nextElementSibling;
+        span.classList.add('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+      }
+    });
+
+    // Apply highlights to years
+    activeYears.forEach(y => {
+      const cb = document.querySelector(`input[name="year"][value="${y}"]`);
+      if (cb) {
+        const span = cb.nextElementSibling;
+        span.classList.add('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+      }
+    });
   }
 
 });
