@@ -71,14 +71,14 @@ function highlight(text, regex) {
 function createCard(paper, highlightRegex) {
   const title = highlight((paper.title || 'Untitled').toLowerCase(), highlightRegex);
   const abstract = paper.abstract ? highlight(paper.abstract, highlightRegex) : '';
-  
+
   const href = paper.url?.startsWith('http')
     ? paper.url
     : `https://papers.miccai.org${paper.url}`;
 
   const venueParts = (paper.venue || '').split(' ');
-  const venueName  = venueParts[0] || 'PAPER';
-  const shortYear  = (String(paper.year || '')).slice(-2);
+  const venueName = venueParts[0] || 'PAPER';
+  const shortYear = (String(paper.year || '')).slice(-2);
 
   const card = document.createElement('div');
   card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] transition-colors border-b border-ink/5 last:border-0';
@@ -144,8 +144,12 @@ function createCard(paper, highlightRegex) {
  * @param {HTMLElement} resultsCount
  */
 export function renderResults(results, terms, resultsList, resultsCount) {
+  const querySummary = terms.length > 0
+    ? ` <span class="opacity-70">for</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(' <span class="opacity-70 italic">and</span> ')}`
+    : '';
+
   if (!results.length) {
-    resultsCount.textContent = 'No papers found matching your query.';
+    resultsCount.innerHTML = `<span class="opacity-70">No papers found matching</span>${querySummary}`;
     resultsList.innerHTML = '';
     return;
   }
@@ -153,7 +157,7 @@ export function renderResults(results, terms, resultsList, resultsCount) {
   resultsCount.innerHTML = `
     <span class="opacity-70">Discovered</span>
     <span class="font-bold">${results.length}</span>
-    <span class="opacity-70">pertinent papers</span>`;
+    <span class="opacity-70">pertinent papers</span>${querySummary}`;
 
   const fragment = document.createDocumentFragment();
   const highlightRegex = getHighlightRegex(terms);
