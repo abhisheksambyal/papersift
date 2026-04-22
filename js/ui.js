@@ -46,7 +46,7 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
  * @param {Function} onReset - callback to reset parent state (e.g. hasSearched)
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount, conferenceFilter, yearFilter } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
@@ -69,8 +69,10 @@ export function resetToHome(refs, onReset) {
     }, 400);
 
     input.value = '';
-    conferenceFilter.value = '';
-    yearFilter.value = '';
+    // Clear all checkboxes and re-check "All" ones
+    document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
+    
     resultsList.innerHTML = '';
     resultsCount.innerHTML = '';
 

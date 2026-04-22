@@ -1,48 +1,37 @@
-
 import urllib.request
+import urllib.error
 import json
 import os
+import time
+import random
+import gzip
+import ssl
 from functools import lru_cache
 
 CACHE_DIR = "data_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 # Shared SSL context for connection reuse
-_ssl_context = None
-
-def _get_ssl_context():
-    """Get or create a shared SSL context for connection reuse."""
-    global _ssl_context
-    if _ssl_context is None:
-        import ssl
-        _ssl_context = ssl.create_default_context()
-    return _ssl_context
-
+_ssl_context = ssl.create_default_context()
 
 class Fetcher:
-    """Handles HTTP fetching with connection pooling, caching, and retries."""
+    """Handles HTTP fetching with connection pooling and retries."""
     __slots__ = ['_cache', '_opener']
 
     def __init__(self):
         self._cache = {}
         # Create opener with connection pooling via HTTP handler
-        https_handler = urllib.request.HTTPSHandler(
-            context=_get_ssl_context(),
-            check_hostname=True
-        )
+        https_handler = urllib.request.HTTPSHandler(context=_ssl_context)
         self._opener = urllib.request.build_opener(https_handler)
 
     def fetch(self, url, timeout=30, max_retries=3):
-        """Fetch URL with proper timeouts, connection reuse, and retries for 429s."""
-        import time
-        import random
-
+        """Fetch URL with proper timeouts, connection reuse, and retries."""
         req = urllib.request.Request(
             url,
             headers={
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip, deflate',
+                'Accept-Encoding': 'gzip',
                 'Connection': 'keep-alive',
             }
         )
@@ -50,27 +39,21 @@ class Fetcher:
         for attempt in range(max_retries):
             try:
                 with self._opener.open(req, timeout=timeout) as response:
+                    data = response.read()
                     if response.headers.get('Content-Encoding') == 'gzip':
-                        import gzip
-                        data = gzip.decompress(response.read())
-                    else:
-                        data = response.read()
+                        data = gzip.decompress(data)
                     return json.loads(data.decode('utf-8'))
             except urllib.error.HTTPError as e:
                 if e.code == 429 and attempt < max_retries - 1:
                     wait = (2 ** attempt) + random.random()
-                    print(f"  Rate limited (429) on {url}. Retrying in {wait:.1f}s...")
                     time.sleep(wait)
                     continue
-                if e.code == 404:
-                    return {} # Return empty for 404
-                print(f"HTTP Error {e.code} fetching {url}: {e}")
+                if e.code == 404: return {}
                 return {}
-            except Exception as e:
+            except Exception:
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     continue
-                print(f"Error fetching {url}: {e}")
                 return {}
         return {}
 
@@ -283,10 +266,10 @@ def preload(config):
 
     print(f"Pre-loading {len(tasks)} conference years...")
     
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     def _run_task(task):
-        import random
         conf, y, fetcher_fn = task
-        time.sleep(random.random() * 0.5)
         try:
             data = fetcher_fn(y)
             return conf, y, len(data)

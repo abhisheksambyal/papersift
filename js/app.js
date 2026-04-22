@@ -110,14 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   logoTitle.addEventListener('click', () => {
     if (hasSearched) {
-
       clearTimeout(debounceTimer);
-      resetToHome(domRefs, () => { 
-        hasSearched = false; 
-        // Reset checkboxes: specific ones off, ALL ones on
-        document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
-        document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
-      });
+      resetToHome(domRefs, () => { hasSearched = false; });
     }
   });
 
