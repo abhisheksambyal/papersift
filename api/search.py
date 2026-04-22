@@ -119,9 +119,12 @@ def get_stats():
 
 def get_search_config():
     """Return conference and year metadata for the UI."""
+    if _index is None: _build_index()
+    
     years = set()
-    for conf in CONFERENCES.values():
-        years.update(conf["years"])
+    for _, raw in _index:
+        y = raw.get("year")
+        if y: years.add(int(y))
     
     return {
         "conferences": [
