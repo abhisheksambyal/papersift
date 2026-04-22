@@ -99,8 +99,8 @@ def run_search(query, venue=None, year=None):
         if s > 0:
             scored.append({**raw, "score": s})
 
-    # Sort by score (desc) then by year (desc) if scores are equal
-    scored.sort(key=lambda x: (x["score"], x.get("year", "0")), reverse=True)
+    # Sort primarily by year (desc) then by relevance score (desc)
+    scored.sort(key=lambda x: (x.get("year", "0"), x["score"]), reverse=True)
     return scored[:MAX_RESULTS]
 
 
