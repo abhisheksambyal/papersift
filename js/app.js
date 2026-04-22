@@ -3,7 +3,7 @@
  * Orchestrates search, UI state, and interactions.
  */
 import { saveRecent }                           from './history.js';
-import { fetchResults }                          from './search.js';
+import { fetchResults, extractSearchTerms } from './search.js';
 import { renderResults }                         from './renderer_v2.js';
 import { renderPills, transitionToResults, resetToHome } from './ui.js';
 import { initializeFilters, updateFilterHighlights } from './filters.js';
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const results = await fetchResults(query, venues, years);
-      const terms   = query.toLowerCase().split(' ').filter(t => t.length > 2);
+      const { terms } = extractSearchTerms(query);
       
       renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount);
       updateFilterHighlights(results);

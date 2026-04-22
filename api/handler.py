@@ -55,9 +55,9 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
         if path.endswith(('.woff2', '.woff', '.ttf')):
             self._cache_headers = ("Cache-Control", "public, max-age=31536000, immutable")
         elif path.endswith(('.js', '.css')):
-            self._cache_headers = ("Cache-Control", "public, max-age=86400") # 24h
+            self._cache_headers = ("Cache-Control", "no-cache")
         elif path.endswith('.html') or path == '/':
-            self._cache_headers = ("Cache-Control", "public, max-age=3600") # 1h
+            self._cache_headers = ("Cache-Control", "no-cache")
         else:
             self._cache_headers = None
         super().do_GET()

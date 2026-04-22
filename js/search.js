@@ -46,6 +46,21 @@ async function loadPapers() {
 }
 
 /**
+ * Extract search terms from a query string.
+ * Supports comma-separated AND search and whitespace-separated OR search.
+ * 
+ * @param {string} query 
+ * @returns {{ terms: string[], isCommaSearch: boolean }}
+ */
+export function extractSearchTerms(query) {
+  const isCommaSearch = query.includes(',');
+  const terms = isCommaSearch
+    ? query.toLowerCase().split(',').map(t => t.trim()).filter(t => t.length > 0)
+    : query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  return { terms, isCommaSearch };
+}
+
+/**
  * Fetch search results (client-side).
  *
  * @param {string} query
@@ -55,8 +70,8 @@ async function loadPapers() {
  */
 export async function fetchResults(query, venue = '', year = '') {
   const papers = await loadPapers();
+  const { terms, isCommaSearch } = extractSearchTerms(query);
   
-  const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
   const venueSet = venue && (Array.isArray(venue) ? venue.length > 0 : true) 
     ? new Set((Array.isArray(venue) ? venue : [venue]).map(v => v.toLowerCase())) 
     : null;
@@ -90,16 +105,36 @@ export async function fetchResults(query, venue = '', year = '') {
     // 3. Search Terms / Scoring
     let score = 0;
     if (terms.length > 0) {
-      for (let j = 0; j < SCORE_FIELDS.length; j++) {
-        const { field, weight } = SCORE_FIELDS[j];
-        const text = p._searchable[field];
-        for (let k = 0; k < terms.length; k++) {
-          if (text.includes(terms[k])) {
+      let titleOrAbstractMatchCount = 0;
+      
+      for (let k = 0; k < terms.length; k++) {
+        const term = terms[k];
+        let termFoundInTitleOrAbstract = false;
+        let termFoundInAnyField = false;
+        
+        for (let j = 0; j < SCORE_FIELDS.length; j++) {
+          const { field, weight } = SCORE_FIELDS[j];
+          if (p._searchable[field].includes(term)) {
             score += weight;
+            termFoundInAnyField = true;
+            if (field === 'title' || field === 'abstract') {
+              termFoundInTitleOrAbstract = true;
+            }
           }
         }
+        
+        if (termFoundInTitleOrAbstract) titleOrAbstractMatchCount++;
+        else if (!isCommaSearch && termFoundInAnyField) {
+          // Keep score but don't count towards AND logic for title/abstract
+        }
       }
-      if (score === 0) continue; // No match found
+      
+      // If comma search, all terms must match specifically in Title or Abstract
+      if (isCommaSearch) {
+        if (titleOrAbstractMatchCount < terms.length) continue;
+      } else if (score === 0) {
+        continue;
+      }
     }
 
     results.push({ ...p, score });
