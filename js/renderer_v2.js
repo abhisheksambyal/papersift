@@ -98,18 +98,19 @@ function createCard(paper, highlightRegex) {
           <a href="${href}" target="_blank" rel="noopener noreferrer" class="hover:underline underline-offset-4 decoration-1">
             <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
           </a>
-          <div class="flex-shrink-0 flex items-center gap-3">
-             ${paper.abstract ? `
-              <button class="abstract-toggle text-[0.6rem] uppercase tracking-widest font-black text-ink/30 hover:text-ink transition-colors flex items-center gap-1">
-                <span>Abstract</span>
-                <svg class="w-2.5 h-2.5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-              </button>` : ''}
-            <a href="${href}" target="_blank" class="text-ink/30 hover:text-ink transition-colors font-serif text-[0.8rem] font-bold">&rarr;</a>
-          </div>
+          <a href="${href}" target="_blank" class="text-ink/30 hover:text-ink transition-colors font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
         </div>
         <div class="font-serif text-ink/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
           ${paper.authors || 'Unknown Authors'}
         </div>
+        
+        ${paper.abstract ? `
+          <div class="mt-2.5">
+            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 hover:text-ink hover:bg-black/[0.04] px-2 py-1 -ml-2 rounded transition-all flex items-center gap-2 group/btn">
+              <span>Read Abstract</span>
+              <svg class="w-2.5 h-2.5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>` : ''}
         
         ${paper.abstract ? `
           <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 font-serif border-t border-ink/5 pt-4 abstract-expansion">
@@ -127,11 +128,8 @@ function createCard(paper, highlightRegex) {
   if (toggleBtn && abstractDiv) {
     toggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const isHidden = abstractDiv.classList.contains('hidden');
       abstractDiv.classList.toggle('hidden');
       arrow.classList.toggle('rotate-180');
-      toggleBtn.classList.toggle('text-ink', isHidden);
-      toggleBtn.classList.toggle('text-ink/30', !isHidden);
     });
   }
 
