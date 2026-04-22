@@ -48,10 +48,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let idx = 0;
     
     const cycle = () => {
-      el.classList.add('opacity-0');
+      // Phase 1: Fade out and slide up
+      el.classList.add('opacity-0', '-translate-y-4');
+      
       setTimeout(() => {
+        // Phase 2: Change text while hidden and reset to bottom position instantly
         el.textContent = questions[idx];
-        el.classList.remove('opacity-0');
+        el.classList.remove('-translate-y-4');
+        el.classList.add('translate-y-4');
+        
+        // Force reflow to ensure the jump to bottom isn't animated
+        void el.offsetHeight; 
+        
+        // Phase 3: Fade in and slide to center
+        el.classList.remove('opacity-0', 'translate-y-4');
         idx = (idx + 1) % questions.length;
       }, 700);
     };
