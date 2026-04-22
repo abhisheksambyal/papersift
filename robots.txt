@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /data_cache/
+
+Sitemap: https://papersift.app/sitemap.xml
