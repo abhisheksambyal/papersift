@@ -147,7 +147,7 @@ function createCard(paper, highlightRegex) {
 export function renderResults(results, terms, resultsList, resultsCount, isCommaSearch = false) {
   const joiner = isCommaSearch ? 'and' : 'or';
   const querySummary = terms.length > 0
-    ? ` <span class="opacity-70">for</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
+    ? ` <span class="opacity-70">with</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
     : '';
 
   if (!results.length) {
