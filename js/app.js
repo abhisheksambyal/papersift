@@ -40,7 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const config = await res.json();
       
       // Populate Conferences
-      conferenceFilters.innerHTML = config.conferences.map(c => `
+      const allConfHtml = `
+        <label class="flex items-center gap-2 cursor-pointer group no-tap">
+          <input type="checkbox" name="conference-all" value="all" class="hidden peer" checked>
+          <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+            All
+          </span>
+        </label>
+      `;
+      conferenceFilters.innerHTML = allConfHtml + config.conferences.map(c => `
         <label class="flex items-center gap-2 cursor-pointer group no-tap">
           <input type="checkbox" name="conference" value="${c.id}" class="hidden peer">
           <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
@@ -50,7 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
       
       // Populate Years
-      yearFilters.innerHTML = config.years.map(y => `
+      const allYearHtml = `
+        <label class="flex items-center gap-2 cursor-pointer group no-tap">
+          <input type="checkbox" name="year-all" value="all" class="hidden peer" checked>
+          <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+            All
+          </span>
+        </label>
+      `;
+      yearFilters.innerHTML = allYearHtml + config.years.map(y => `
         <label class="flex items-center gap-2 cursor-pointer group no-tap">
           <input type="checkbox" name="year" value="${y}" class="hidden peer">
           <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
@@ -62,7 +78,28 @@ document.addEventListener('DOMContentLoaded', () => {
       // Listen for any checkbox change
       [conferenceFilters, yearFilters].forEach(container => {
         container.addEventListener('change', (e) => {
-          if (e.target.type === 'checkbox') initiateSearch();
+          if (e.target.type !== 'checkbox') return;
+
+          const isAll = e.target.name.endsWith('-all');
+          const groupName = e.target.name.replace('-all', '');
+          
+          if (isAll && e.target.checked) {
+            // Uncheck all specific items if ALL is checked
+            document.querySelectorAll(`input[name="${groupName}"]`).forEach(cb => cb.checked = false);
+          } else if (!isAll && e.target.checked) {
+            // Uncheck ALL if a specific item is checked
+            const allCb = document.querySelector(`input[name="${groupName}-all"]`);
+            if (allCb) allCb.checked = false;
+          }
+
+          // If nothing is checked, re-check ALL
+          const anyChecked = document.querySelectorAll(`input[name="${groupName}"], input[name="${groupName}-all"]:checked`).length > 0;
+          const specificChecked = document.querySelectorAll(`input[name="${groupName}"]:checked`).length > 0;
+          const allCb = document.querySelector(`input[name="${groupName}-all"]`);
+          
+          if (!specificChecked && allCb) allCb.checked = true;
+
+          initiateSearch();
         });
       });
     } catch (err) {
@@ -77,8 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(debounceTimer);
       resetToHome(domRefs, () => { 
         hasSearched = false; 
-        // Reset checkboxes
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        // Reset checkboxes: specific ones off, ALL ones on
+        document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
+        document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
       });
     }
   });
