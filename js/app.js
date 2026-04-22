@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hasSearched = false; 
         // Clear highlights
         document.querySelectorAll('#filter-container span').forEach(span => {
-          span.classList.remove('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+          span.classList.remove('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
         });
       });
     }
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Clear previous highlights
     document.querySelectorAll('#filter-container span').forEach(span => {
-      span.classList.remove('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+      span.classList.remove('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
     });
 
     // Apply highlights to conferences
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cb = document.querySelector(`input[name="conference"][value="${v}"]`);
       if (cb) {
         const span = cb.nextElementSibling;
-        span.classList.add('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+        span.classList.add('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
       }
     });
 
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cb = document.querySelector(`input[name="year"][value="${y}"]`);
       if (cb) {
         const span = cb.nextElementSibling;
-        span.classList.add('bg-[#e8f5e9]', 'px-1', '-mx-1', 'rounded-sm');
+        span.classList.add('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
       }
     });
   }
