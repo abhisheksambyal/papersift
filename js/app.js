@@ -17,13 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsList    = document.getElementById('results-list');
   const resultsCount   = document.getElementById('results-count');
 
-  const conferenceFilter = document.getElementById('conference-filter');
-  const yearFilter       = document.getElementById('year-filter');
+  const conferenceFilters = document.getElementById('conference-filters');
+  const yearFilters       = document.getElementById('year-filters');
 
   // Shared refs object passed to UI functions
   const domRefs = { 
     headerSection, logoTitle, subtitle, examplePills, resultsSection, 
-    input, resultsList, resultsCount, conferenceFilter, yearFilter 
+    input, resultsList, resultsCount, conferenceFilters, yearFilters 
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -40,14 +40,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const config = await res.json();
       
       // Populate Conferences
-      const confHtml = '<option value="">All Archives</option>' + 
-        config.conferences.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-      conferenceFilter.innerHTML = confHtml;
+      conferenceFilters.innerHTML = config.conferences.map(c => `
+        <label class="flex items-center gap-2 cursor-pointer group no-tap">
+          <input type="checkbox" name="conference" value="${c.id}" class="hidden peer">
+          <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+            ${c.name}
+          </span>
+        </label>
+      `).join('');
       
       // Populate Years
-      const yearHtml = '<option value="">All Time</option>' + 
-        config.years.map(y => `<option value="${y}">${y}</option>`).join('');
-      yearFilter.innerHTML = yearHtml;
+      yearFilters.innerHTML = config.years.map(y => `
+        <label class="flex items-center gap-2 cursor-pointer group no-tap">
+          <input type="checkbox" name="year" value="${y}" class="hidden peer">
+          <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+            ${y}
+          </span>
+        </label>
+      `).join('');
+
+      // Listen for any checkbox change
+      [conferenceFilters, yearFilters].forEach(container => {
+        container.addEventListener('change', (e) => {
+          if (e.target.type === 'checkbox') initiateSearch();
+        });
+      });
     } catch (err) {
       console.error('Failed to load filter config:', err);
     }
@@ -58,22 +75,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hasSearched) {
 
       clearTimeout(debounceTimer);
-      resetToHome(domRefs, () => { hasSearched = false; });
+      resetToHome(domRefs, () => { 
+        hasSearched = false; 
+        // Reset checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      });
     }
   });
 
   // ── Search orchestration ──────────────────────────────────────────────────
   const initiateSearch = () => {
     const query = input.value.trim();
-    const venue = conferenceFilter.value;
-    const year  = yearFilter.value;
+    
+    // Collect all checked values
+    const selectedVenues = Array.from(document.querySelectorAll('input[name="conference"]:checked'))
+      .map(cb => cb.value);
+    const selectedYears = Array.from(document.querySelectorAll('input[name="year"]:checked'))
+      .map(cb => cb.value);
 
-    if (!query && !venue && !year) {
+    if (!query && !selectedVenues.length && !selectedYears.length) {
       if (hasSearched) { resultsList.innerHTML = ''; resultsCount.innerHTML = ''; }
       return;
     }
     if (!hasSearched) { transitionToResults(domRefs); hasSearched = true; }
-    performSearch(query, venue, year);
+    performSearch(query, selectedVenues, selectedYears);
   };
 
   // Debounced live search
@@ -81,10 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(initiateSearch, 300);
   });
-
-  // Filter change triggers immediate search
-  conferenceFilter.addEventListener('change', initiateSearch);
-  yearFilter.addEventListener('change', initiateSearch);
 
   // Explicit submit saves to history
   form.addEventListener('submit', e => {

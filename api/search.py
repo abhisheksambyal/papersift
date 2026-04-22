@@ -82,13 +82,17 @@ def run_search(query, venue=None, year=None):
     
     scored = []
     for lowered, raw in _index:
-        # Filter by venue if provided
-        if venue and venue.lower() not in raw["venue"].lower():
-            continue
+        # Filter by venue if provided (can be a list)
+        if venue:
+            venue_list = [v.lower() for v in venue] if isinstance(venue, list) else [venue.lower()]
+            if not any(v in raw["venue"].lower() for v in venue_list):
+                continue
         
-        # Filter by year if provided
-        if year and str(year) != str(raw["year"]):
-            continue
+        # Filter by year if provided (can be a list)
+        if year:
+            year_list = [str(y) for y in year] if isinstance(year, list) else [str(year)]
+            if str(raw["year"]) not in year_list:
+                continue
 
         if not terms:
             # If no query, just add to results (will be sliced later)

@@ -74,8 +74,8 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
         # Parse query efficiently
         params = urllib.parse.parse_qs(query_string)
         query = params.get("q", [""])[0].lower()
-        venue = params.get("venue", [None])[0]
-        year = params.get("year", [None])[0]
+        venue = params.get("venue", None)
+        year = params.get("year", None)
 
         # Get search results
         results = run_search(query, venue=venue, year=year)
