@@ -53,11 +53,11 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
     def _handle_static(self, path):
         """Serve static files with optimized caching headers."""
         if path.endswith(('.woff2', '.woff', '.ttf')):
-            self._cache_headers = ("Cache-Control", "public, max-age=3600, immutable")
+            self._cache_headers = ("Cache-Control", "public, max-age=31536000, immutable")
         elif path.endswith(('.js', '.css')):
-            self._cache_headers = ("Cache-Control", "no-cache, no-store, must-revalidate")
+            self._cache_headers = ("Cache-Control", "public, max-age=86400") # 24h
         elif path.endswith('.html') or path == '/':
-            self._cache_headers = ("Cache-Control", "public, max-age=300")
+            self._cache_headers = ("Cache-Control", "public, max-age=3600") # 1h
         else:
             self._cache_headers = None
         super().do_GET()
@@ -67,6 +67,10 @@ class APIHandler(http.server.SimpleHTTPRequestHandler):
         if hasattr(self, '_cache_headers') and self._cache_headers:
             self.send_header(*self._cache_headers)
             delattr(self, '_cache_headers')
+        
+        # Add basic security headers
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         super().end_headers()
 
     def _handle_search(self, query_string):

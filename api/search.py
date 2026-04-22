@@ -80,30 +80,37 @@ def run_search(query, venue=None, year=None):
 
     terms = [t.lower() for t in query.split() if len(t) > 2]
     
+    # Pre-process filters for faster lookups
+    venue_set = set(v.lower() for v in (venue if isinstance(venue, list) else [venue])) if venue else None
+    year_set = set(str(y) for y in (year if isinstance(year, list) else [year])) if year else None
+    
     scored = []
     for lowered, raw in _index:
-        # Filter by venue if provided (can be a list)
-        if venue:
-            venue_list = [v.lower() for v in venue] if isinstance(venue, list) else [venue.lower()]
-            if not any(v in raw["venue"].lower() for v in venue_list):
+        # Fast filter checks
+        if venue_set:
+            if not any(v in raw["venue"].lower() for v in venue_set):
                 continue
         
-        # Filter by year if provided (can be a list)
-        if year:
-            year_list = [str(y) for y in year] if isinstance(year, list) else [str(year)]
-            if str(raw["year"]) not in year_list:
+        if year_set:
+            if str(raw["year"]) not in year_set:
                 continue
 
         if not terms:
-            # If no query, just add to results (will be sliced later)
             scored.append({**raw, "score": 0})
             continue
 
-        s = _score(lowered, terms)
+        # Score relevance
+        s = 0
+        for field, weight in _SCORE_FIELDS:
+            text = lowered[field]
+            for term in terms:
+                if term in text:
+                    s += weight
+        
         if s > 0:
             scored.append({**raw, "score": s})
 
-    # Sort primarily by year (desc) then by relevance score (desc)
+    # Chronological sort (primary) then relevance (secondary)
     scored.sort(key=lambda x: (x.get("year", "0"), x["score"]), reverse=True)
     return scored[:MAX_RESULTS]
 
