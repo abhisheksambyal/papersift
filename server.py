@@ -1,10 +1,11 @@
+import os
 import socketserver
 import threading
 from api.fetcher import preload, get_cache_info
 from api.handler import APIHandler
 from api.search import CONFERENCES, get_stats
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))
 BIND_ADDRESS = ""
 
 

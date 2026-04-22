@@ -1,0 +1,3 @@
+# No external dependencies currently needed as we use standard libraries
+# (http.server, json, urllib, ssl, threading, etc.)
+# If you add libraries like 'requests' or 'flask' later, list them here.
