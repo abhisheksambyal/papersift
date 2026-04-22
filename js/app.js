@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoTitle      = logoContainer.querySelector('h1');
   const subtitle       = document.getElementById('subtitle');
   const examplePills   = document.getElementById('example-pills');
+  const purposeSection = document.getElementById('purpose-section');
+  const purposeText    = document.getElementById('purpose-text');
   const resultsSection = document.getElementById('results-section');
   const resultsList    = document.getElementById('results-list');
   const resultsCount   = document.getElementById('results-count');
@@ -22,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Shared refs object passed to UI functions
   const domRefs = { 
-    headerSection, logoTitle, subtitle, examplePills, resultsSection, 
-    input, resultsList, resultsCount, conferenceFilters, yearFilters 
+    headerSection, logoTitle, subtitle, examplePills, purposeSection,
+    resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters 
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -33,6 +35,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Init ──────────────────────────────────────────────────────────────────
   renderPills(examplePills);
   initializeFilters();
+  startPurposeLoop(purposeText);
+
+  function startPurposeLoop(el) {
+    const questions = [
+      "Not able to find how many papers are on Few-Shot learning?",
+      "Not able to find how many papers are on Calibration?",
+      "Not able to find how many papers use Brats dataset?",
+      "Seeking where the ISIC 2019 dataset was applied?",
+      "Stop scouring 40+ conference sites manually."
+    ];
+    let idx = 0;
+    
+    const cycle = () => {
+      el.classList.add('opacity-0');
+      setTimeout(() => {
+        el.textContent = questions[idx];
+        el.classList.remove('opacity-0');
+        idx = (idx + 1) % questions.length;
+      }, 700);
+    };
+    
+    cycle();
+    setInterval(cycle, 5000);
+  }
 
   async function initializeFilters() {
     try {

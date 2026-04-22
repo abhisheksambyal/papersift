@@ -12,7 +12,7 @@ export function renderPills(examplePills) {
  * Collapse the header into compact search mode and reveal the results section.
  * @param {{ headerSection, logoTitle, subtitle, examplePills, resultsSection }} refs
  */
-export function transitionToResults({ headerSection, logoTitle, subtitle, examplePills, resultsSection }) {
+export function transitionToResults({ headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection }) {
   // Use requestAnimationFrame to ensure the transition starts smoothly
   requestAnimationFrame(() => {
     headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
@@ -25,11 +25,13 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
     // Instead of hiding immediately, fade out if needed (subtitle already has transition)
     subtitle.classList.add('opacity-0', 'pointer-events-none');
     examplePills.classList.add('opacity-0', 'pointer-events-none');
+    purposeSection.classList.add('opacity-0', 'pointer-events-none');
     
     // Hide them from layout after fade
     setTimeout(() => {
       subtitle.classList.add('hidden');
       examplePills.classList.add('hidden');
+      purposeSection.classList.add('hidden');
     }, 500);
 
     setTimeout(() => {
@@ -42,11 +44,11 @@ export function transitionToResults({ headerSection, logoTitle, subtitle, exampl
 
 /**
  * Restore the landing page layout.
- * @param {{ headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount }} refs
+ * @param {{ headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount }} refs
  * @param {Function} onReset - callback to reset parent state (e.g. hasSearched)
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
@@ -64,6 +66,7 @@ export function resetToHome(refs, onReset) {
 
       subtitle.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
       examplePills.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      purposeSection.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
       
       renderPills(examplePills);
     }, 400);
