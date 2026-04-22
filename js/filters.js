@@ -12,7 +12,7 @@ import { renderResults } from './renderer_v2.js';
  */
 export async function initializeFilters(confContainer, yearContainer, onSearch) {
   try {
-    const res = await fetch('/api/config');
+    const res = await fetch('data/config.json');
     const config = await res.json();
     
     // Populate Conferences
