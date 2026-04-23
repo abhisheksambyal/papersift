@@ -8,8 +8,6 @@ const SCORE_FIELDS = [
   { field: 'venue', weight: 1 }
 ];
 
-const MAX_RESULTS = 300;
-
 /**
  * Load papers from the static JSON file.
  * Returns a promise that resolves when loading is complete.
@@ -107,29 +105,19 @@ export async function fetchResults(query, venue = '', year = '') {
     if (terms.length > 0) {
       let titleOrAbstractMatchCount = 0;
       
-      for (let k = 0; k < terms.length; k++) {
-        const term = terms[k];
+      for (const term of terms) {
         let termFoundInTitleOrAbstract = false;
-        let termFoundInAnyField = false;
         
-        for (let j = 0; j < SCORE_FIELDS.length; j++) {
-          const { field, weight } = SCORE_FIELDS[j];
+        for (const { field, weight } of SCORE_FIELDS) {
           if (p._searchable[field].includes(term)) {
             score += weight;
-            termFoundInAnyField = true;
-            if (field === 'title' || field === 'abstract') {
-              termFoundInTitleOrAbstract = true;
-            }
+            if (field === 'title' || field === 'abstract') termFoundInTitleOrAbstract = true;
           }
         }
         
         if (termFoundInTitleOrAbstract) titleOrAbstractMatchCount++;
-        else if (!isCommaSearch && termFoundInAnyField) {
-          // Keep score but don't count towards AND logic for title/abstract
-        }
       }
       
-      // If comma search, all terms must match specifically in Title or Abstract
       if (isCommaSearch) {
         if (titleOrAbstractMatchCount < terms.length) continue;
       } else if (score === 0) {

@@ -87,10 +87,8 @@ export function updateFilterHighlights(results) {
   const activeYears = new Set();
   
   results.forEach(p => {
-    const venueLower = p.venue.toLowerCase();
-    if (venueLower.includes('miccai')) activeVenues.add('miccai');
-    if (venueLower.includes('midl')) activeVenues.add('midl');
-    if (venueLower.includes('isbi')) activeVenues.add('isbi');
+    const venueLower = p._searchable.venue;
+    ['miccai', 'midl', 'isbi'].forEach(v => { if (venueLower.includes(v)) activeVenues.add(v); });
     if (p.year) activeYears.add(p.year.toString());
   });
 
