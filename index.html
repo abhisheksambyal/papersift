@@ -46,6 +46,71 @@
   }
   </script>
 
+  <!-- Theme Initialization -->
+  <script>
+    (function () {
+      const THEME_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+
+      async function initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const savedTime = localStorage.getItem('theme_timestamp');
+        const now = Date.now();
+
+        let isDark = false;
+        let useAuto = true;
+
+        // Check if a manual preference exists and hasn't expired
+        if (savedTheme && savedTime && (now - parseInt(savedTime)) < THEME_EXPIRY) {
+          isDark = savedTheme === 'dark';
+          useAuto = false;
+        } else {
+          // Clear expired preference
+          localStorage.removeItem('theme');
+          localStorage.removeItem('theme_timestamp');
+
+          // Default to automatic logic (initial quick check)
+          const hour = new Date().getHours();
+          isDark = hour < 6 || hour >= 19;
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            isDark = true;
+          }
+        }
+
+        if (isDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+
+        // Refine with precise sunrise/sunset if using auto mode
+        if (useAuto) {
+          try {
+            const geoRes = await fetch('https://ipapi.co/json/');
+            const geo = await geoRes.json();
+            if (geo.latitude && geo.longitude) {
+              const sunRes = await fetch(`https://api.sunrise-sunset.org/json?lat=${geo.latitude}&lng=${geo.longitude}&formatted=0`);
+              const sunData = await sunRes.json();
+              if (sunData.status === 'OK') {
+                const sunrise = new Date(sunData.results.sunrise);
+                const sunset = new Date(sunData.results.sunset);
+                const currentTime = new Date();
+                isDark = currentTime < sunrise || currentTime > sunset;
+
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+              }
+            }
+          } catch (e) { }
+        }
+      }
+
+      window.toggleTheme = function () {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('theme_timestamp', Date.now().toString());
+      };
+
+      initTheme();
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -59,6 +124,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -77,12 +143,19 @@
   <style type="text/tailwindcss">
     @layer base {
       body {
-        @apply bg-paper text-ink font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper;
+        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink transition-colors duration-500;
         background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
         background-size: 16px 16px;
         background-attachment: fixed;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Soft theme transitions for all themed elements */
+      body, body * {
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+        transition-duration: 500ms;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .dark body {
+        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
       }
     }
 
@@ -138,6 +211,25 @@
 </head>
 
 <body class="no-tap">
+  <!-- Theme Toggle -->
+  <div class="fixed top-4 right-4 sm:top-6 sm:right-8 z-[100]">
+    <button onclick="toggleTheme()"
+      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap group"
+      aria-label="Toggle Theme">
+      <svg id="sun-icon" class="w-5 h-5 hidden dark:block text-paper/70 group-hover:text-paper" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z">
+        </path>
+      </svg>
+      <svg id="moon-icon" class="w-5 h-5 block dark:hidden text-ink/70 group-hover:text-ink" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+      </svg>
+    </button>
+  </div>
+
   <div class="app-container-safe" id="app-container">
 
     <header id="header-section"
@@ -146,29 +238,30 @@
       <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform"
         id="logo-container">
         <h1 id="logo-title"
-          class="font-masthead font-black tracking-tight text-ink transition-[font-size,transform] duration-700 ease-in-out title-landing will-change-[font-size] cursor-pointer">
+          class="font-masthead font-black tracking-tight text-ink dark:text-paper transition-[font-size,transform] duration-700 ease-in-out title-landing will-change-[font-size] cursor-pointer">
           PaperSift
         </h1>
-        <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif opacity-100 transition-opacity duration-500 ease-in-out"
+        <p class="italic text-sm text-ink/60 dark:text-paper/60 mt-1 mb-6 font-serif opacity-100 transition-opacity duration-500 ease-in-out"
           id="subtitle">"Find the papers you need."</p>
       </div>
 
       <div class="w-full max-w-xl transition-transform duration-500 ease-in-out will-change-transform"
         id="search-container">
         <form id="search-form" class="w-full">
-          <div class="flex items-center border-b-2 border-ink/30 focus-within:border-ink transition-colors pb-1">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0 text-ink/50" xmlns="http://www.w3.org/2000/svg" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <div
+            class="flex items-center border-b-2 border-ink/30 dark:border-paper/30 focus-within:border-ink dark:focus-within:border-paper transition-colors pb-1">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0 text-ink/50 dark:text-paper/50" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             <!-- font-size:16px prevents iOS auto-zoom on focus -->
             <input type="text" id="search-input"
-              class="w-full bg-transparent border-none outline-none text-ink font-serif py-3 placeholder-ink/30 text-base"
+              class="w-full bg-transparent border-none outline-none text-ink dark:text-paper font-serif py-3 placeholder-ink/30 dark:placeholder-paper/30 text-base"
               placeholder="Search the archives…" autocomplete="off" autocorrect="off" autocapitalize="none"
               spellcheck="false">
             <button type="submit"
-              class="flex-shrink-0 text-ink uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation no-tap">
+              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation no-tap">
               Search
             </button>
           </div>
@@ -176,13 +269,15 @@
 
         <div id="filter-container" class="flex flex-col gap-6 mt-8 transition-all duration-500 ease-in-out">
           <div class="flex flex-col">
-            <label class="text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 mb-3 font-bold">Archives</label>
+            <label
+              class="text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-3 font-bold">Archives</label>
             <div id="conference-filters" class="flex flex-wrap gap-x-4 gap-y-2">
               <!-- Dynamically populated -->
             </div>
           </div>
           <div class="flex flex-col">
-            <label class="text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 mb-3 font-bold">Chronology</label>
+            <label
+              class="text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-3 font-bold">Chronology</label>
             <div id="year-filters" class="flex flex-wrap gap-x-4 gap-y-2 no-tap">
               <!-- Dynamically populated -->
             </div>
@@ -192,18 +287,19 @@
         <!-- Example / recent-search pills -->
         <div id="example-pills" class="flex flex-wrap gap-2 mt-6 text-[0.65rem] uppercase tracking-widest">
           <span
-            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">mri</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
           <span
-            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">classification</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">classification</span>
           <span
-            class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation">calibration</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">calibration</span>
         </div>
       </div>
 
       <!-- Purpose Loop / Help Text -->
-      <div id="purpose-section" class="mt-[clamp(2rem,10vh,7rem)] text-center transition-all duration-700 delay-500 [perspective:1000px]">
+      <div id="purpose-section"
+        class="mt-[clamp(2rem,10vh,7rem)] text-center transition-all duration-700 delay-500 [perspective:1000px]">
         <p id="purpose-text"
-          class="italic text-[0.8rem] sm:text-[0.9rem] text-ink/40 font-serif min-h-[6rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
+          class="italic text-[0.8rem] sm:text-[0.9rem] text-ink/40 dark:text-paper/40 font-serif min-h-[6rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
           <!-- Dynamically populated loop -->
         </p>
       </div>
@@ -212,7 +308,8 @@
     <main id="results-section"
       class="opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
       <div class="py-2 mb-4">
-        <h2 id="results-count" class="font-masthead italic text-base sm:text-lg font-bold text-center opacity-60"></h2>
+        <h2 id="results-count"
+          class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
       </div>
       <div id="results-list" class="flex flex-col gap-1"></div>
     </main>

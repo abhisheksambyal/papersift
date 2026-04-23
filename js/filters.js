@@ -19,7 +19,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     const allConfHtml = `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="conference-all" value="all" class="hidden peer" checked>
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">
           All
         </span>
       </label>
@@ -27,7 +27,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     confContainer.innerHTML = allConfHtml + config.conferences.map(c => `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="conference" value="${c.id}" class="hidden peer">
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">
           ${c.name}
         </span>
       </label>
@@ -37,7 +37,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     const allYearHtml = `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="year-all" value="all" class="hidden peer" checked>
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">
           All
         </span>
       </label>
@@ -45,7 +45,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     yearContainer.innerHTML = allYearHtml + config.years.map(y => `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="year" value="${y}" class="hidden peer">
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 peer-checked:text-ink peer-checked:font-black group-hover:text-ink/70 transition-all border-b border-transparent peer-checked:border-ink/20">
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">
           ${y}
         </span>
       </label>
@@ -94,18 +94,18 @@ export function updateFilterHighlights(results) {
 
   // Clear previous
   document.querySelectorAll('#filter-container span').forEach(span => {
-    span.classList.remove('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
+    span.classList.remove('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
   });
 
   // Highlight Venues
   activeVenues.forEach(v => {
     const cb = document.querySelector(`input[name="conference"][value="${v}"]`);
-    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
+    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
   });
 
   // Highlight Years
   activeYears.forEach(y => {
     const cb = document.querySelector(`input[name="year"][value="${y}"]`);
-    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black');
+    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
   });
 }

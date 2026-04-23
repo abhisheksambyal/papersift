@@ -4,7 +4,7 @@ import { getRecent, DEFAULTS } from './history.js';
 export function renderPills(examplePills) {
   const terms = getRecent().length ? getRecent() : DEFAULTS;
   examplePills.innerHTML = terms
-    .map(t => `<span class="pill-example bg-ink/[0.03] border border-ink/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper active:bg-ink active:text-paper transition-all touch-manipulation no-tap">${t}</span>`)
+    .map(t => `<span class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation no-tap">${t}</span>`)
     .join('');
 }
 

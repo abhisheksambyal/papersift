@@ -63,7 +63,7 @@ function highlight(text, regex) {
   const parts = text.split(/(\$.*?\$)/g);
   return parts.map(p => {
     if (p.startsWith('$') && p.endsWith('$')) return p;
-    return p.replace(regex, '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>');
+    return p.replace(regex, '<span class="bg-ink text-paper dark:bg-paper dark:text-ink px-0.5 font-bold mx-0.5">$1</span>');
   }).join('');
 }
 
@@ -86,39 +86,39 @@ function createCard(paper, highlightRegex) {
   const shortYear = (String(paper.year || '')).slice(-2);
 
   const card = document.createElement('div');
-  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] transition-colors border-b border-ink/5 last:border-0';
+  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors border-b border-ink/5 dark:border-paper/5 last:border-0';
 
   card.innerHTML = `
     <div class="flex items-start gap-4 sm:gap-8 py-1">
       <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
-        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 uppercase tracking-widest font-black leading-none">
+        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">
           ${venueName}
         </div>
-        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 -mt-1 tabular-nums tracking-tighter">
+        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 dark:text-paper/20 -mt-1 tabular-nums tracking-tighter">
           '${shortYear}
         </div>
       </div>
-      <div class="flex-grow min-w-0 border-l border-ink/10 pl-4 sm:pl-8">
+      <div class="flex-grow min-w-0 border-l border-ink/10 dark:border-paper/10 pl-4 sm:pl-8">
         <div class="flex items-start justify-between gap-4">
           <a href="${href}" target="_blank" rel="noopener noreferrer" class="hover:underline underline-offset-4 decoration-1">
-            <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
+            <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 dark:group-hover:text-paper/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
           </a>
-          <a href="${href}" target="_blank" class="text-ink/30 hover:text-ink transition-colors font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
+          <a href="${href}" target="_blank" class="text-ink/30 dark:text-paper/30 hover:text-ink dark:hover:text-paper transition-colors font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
         </div>
-        <div class="font-serif text-ink/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
+        <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
           ${paper.authors || 'Unknown Authors'}
         </div>
         
         ${paper.abstract ? `
           <div class="mt-2.5">
-            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 hover:text-ink hover:bg-black/[0.04] px-2 py-1 -ml-2 rounded transition-all flex items-center gap-2 group/btn">
+            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 dark:text-paper/60 hover:text-ink dark:hover:text-paper hover:bg-black/[0.04] dark:hover:bg-white/[0.04] px-2 py-1 -ml-2 rounded transition-all flex items-center gap-2 group/btn">
               <span>Read Abstract</span>
               <svg class="w-2.5 h-2.5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
             </button>
           </div>` : ''}
         
         ${paper.abstract ? `
-          <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 font-serif border-t border-ink/5 pt-4 abstract-expansion">
+          <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 dark:text-paper/70 font-serif border-t border-ink/5 dark:border-paper/5 pt-4 abstract-expansion">
             ${abstract}
           </div>
         ` : ''}
@@ -179,7 +179,7 @@ function renderNextChunk(container) {
     sentinel.className = 'h-32 flex items-center justify-center py-8';
     sentinel.innerHTML = `
       <div class="flex flex-col items-center gap-2 opacity-20 italic text-[0.6rem] uppercase tracking-[0.2em] font-black">
-        <div class="w-1 h-1 bg-ink rounded-full animate-bounce"></div>
+        <div class="w-1 h-1 bg-ink dark:bg-paper rounded-full animate-bounce"></div>
         <span>Loading more entries</span>
       </div>
     `;
