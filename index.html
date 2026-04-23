@@ -142,18 +142,19 @@
 
   <style type="text/tailwindcss">
     @layer base {
+      /* Unified soft transition for all themed elements */
+      body, h1, h2, h3, p, span, a, input, button, .pill-example, .abstract-toggle, .group, .abstract-content {
+        @apply transition-colors duration-500 ease-in-out;
+        transition-property: color, background-color, border-color, opacity;
+      }
+
       body {
-        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink transition-colors duration-500;
+        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
         background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
         background-size: 16px 16px;
         background-attachment: fixed;
       }
-      /* Soft theme transitions for all themed elements */
-      body, body * {
-        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-        transition-duration: 500ms;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      }
+
       .dark body {
         background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
       }
