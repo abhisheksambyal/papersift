@@ -59,7 +59,12 @@ function getHighlightRegex(terms) {
  */
 function highlight(text, regex) {
   if (!regex || !text) return text;
-  return text.replace(regex, '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>');
+  // Split by $...$ to protect math mode content from being highlighted
+  const parts = text.split(/(\$.*?\$)/g);
+  return parts.map(p => {
+    if (p.startsWith('$') && p.endsWith('$')) return p;
+    return p.replace(regex, '<span class="bg-ink text-paper px-0.5 font-bold mx-0.5">$1</span>');
+  }).join('');
 }
 
 /**
@@ -180,6 +185,11 @@ function renderNextChunk(container) {
     `;
     container.appendChild(sentinel);
     observer.observe(sentinel);
+  }
+  
+  // Trigger MathJax re-typesetting if available
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([container]).catch((err) => console.error('MathJax typeset failed:', err));
   }
 }
 
