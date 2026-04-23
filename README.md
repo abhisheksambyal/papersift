@@ -1,57 +1,54 @@
 # PaperSift
 
-A high-performance research paper search engine for NeurIPS, MICCAI, MIDL, and ISBI papers.
+A high-performance research paper search engine designed for clinical and medical imaging researchers. Search across NeurIPS, MICCAI, MIDL, and ISBI proceedings instantly.
 
-## GitHub Pages Deployment
+## Architecture & Project Structure
 
-This project is configured to work as a static site on GitHub Pages. The search functionality is handled entirely client-side using a pre-built JSON index.
+PaperSift is built as a static, client-side application for maximum performance and easy deployment.
 
-### Updating the Data
+- **`api/`**: Backend logic for scrapers, search indexing, and conference configurations.
+- **`data/`**: Production data index (`papers.json` and `config.json`) consumed by the frontend.
+- **`data_cache/`**: Segregated local cache (by conference/year) to enable incremental updates.
+- **`js/`**: Frontend search logic, filtering, theme management, and animations.
+- **`scripts/`**: Maintenance utilities for data synchronization and static site generation.
+- **`index.html`**: The primary search interface with a "Newsprint" aesthetic.
 
-If you update the scrapers or add new papers, you must regenerate the static JSON files:
+## Data Management
 
-1. Ensure you have the dependencies installed:
-   ```bash
-   pip install -r requirements.txt
-   ```
+We use a unified synchronization pipeline to keep the database fresh.
 
-2. Run the export script:
-   ```bash
-   export PYTHONPATH=$PYTHONPATH:.
-   python3 scripts/export_static.py
-   ```
+### Synchronize Data
+Fetch missing records and update the frontend index in one step:
+```bash
+python3 scripts/sync.py
+```
 
-3. Commit and push the updated `data/papers.json` and `data/config.json`.
+### Full Rebuild
+Clear the cache and re-fetch all historical data from scratch:
+```bash
+python3 scripts/sync.py --full
+```
 
-## Local Development (Dynamic API)
+### Cache & Indexing Logic
+- **Incremental Fetching**: The system skips existing files in `data_cache/` by default.
+- **Global Index**: `full_index.json` is a merged snapshot of the cache. If deleted, run `scripts/sync.py` to rebuild it from local files without re-downloading from the web.
+- **Production Index**: `data/papers.json` is a minified index optimized for browser-side search.
 
-You can still run the dynamic backend for development:
+## Deployment
+
+PaperSift is optimized for **GitHub Pages**. All search operations are performed client-side using the pre-built JSON index, eliminating the need for a live backend server in production.
+
+## Development
+
+To run the application locally with the dynamic backend:
 ```bash
 python3 server.py
 ```
-This will serve the API at `localhost:8000`. Note that the frontend is currently configured to use static files in `data/` to ensure compatibility with GitHub Pages.
-
-## To-Do
-- [ ] Add abstract for MICCAI and ISBI papers.
-- [ ] Add neurips paper till 2024. 2025 paper is not there.
-- [ ] Add more conferences (CVPR, ICCV, ECCV, NeurIPS, ICLR, ICML, IJCAI, AAAI, UAI)
-- [x] Add Light/Dark mode toggle.
- 
 
 ## Features
 
-- **High-Performance Search**: Instant, client-side filtering of over 39,000 research papers.
-- **Dynamic Theme**: Automatic Night/Day theme based on your location's sunset and sunrise times.
-- **Manual Toggle**: Override the automatic theme at any time. Manual choices are remembered for 1 hour before reverting to astronomical time.
-- **LaTeX Support**: MathJax integration for rendering complex mathematical notation in paper abstracts.
-- **Extensive Archive**: Includes MICCAI, MIDL, ISBI, and a full 1987–2024 archive of NeurIPS proceedings.
-
-### Light/Dark Mode Logic
-- **Automatic Default**: Upon visiting the site, the `initTheme()` function runs. It first checks your local hour and system preference for an immediate result, then refines it by fetching your precise location and astronomical data (sunrise/sunset) via API.
-- **Geolocation Powered**: It uses `https://ipapi.co/json/` for IP-based geolocation (so users aren't prompted for permission) and `https://api.sunrise-sunset.org/json` for the exact timing.
-- **Timeout Logic**: Manual choices stay active for **1 hour** before the site reverts back to the automatic geolocation-based theme.
-- **Verification of the Logic**:
-  - No manual preference? $\rightarrow$ Follows the sun.
-  - Preference older than 1 hour? $\rightarrow$ Clears preference and follows the sun.
-  - Preference within 1 hour? $\rightarrow$ Respects your manual choice.
-
+- **Instant Search**: Client-side filtering of 40,000+ papers with sub-millisecond latency.
+- **Extensive Archive**: Full proceedings for NeurIPS (1987-2024), MICCAI, MIDL, and ISBI.
+- **Dynamic Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset times.
+- **LaTeX Support**: MathJax integration for rendering mathematical notation in abstracts.
+- **Responsive Design**: A clean, "Newsprint" aesthetic optimized for mobile and desktop research.

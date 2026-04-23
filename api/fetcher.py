@@ -74,8 +74,11 @@ def fetch_miccai_json(year):
 
     if 'miccai' not in _fetcher._cache: _fetcher._cache['miccai'] = {}
     
-    # Try disk cache first
-    cache_path = os.path.join(CACHE_DIR, f"miccai_{year}.json")
+    # Segregated disk cache
+    conf_dir = os.path.join(CACHE_DIR, "miccai")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+    
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
             papers = json.load(f)
@@ -141,7 +144,10 @@ def fetch_midl_json(year):
 
     if 'midl' not in _fetcher._cache: _fetcher._cache['midl'] = {}
 
-    cache_path = os.path.join(CACHE_DIR, f"midl_{year}.json")
+    conf_dir = os.path.join(CACHE_DIR, "midl")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
             processed = json.load(f)
@@ -195,7 +201,10 @@ def fetch_isbi_json(year):
 
     if 'isbi' not in _fetcher._cache: _fetcher._cache['isbi'] = {}
 
-    cache_path = os.path.join(CACHE_DIR, f"isbi_{year}.json")
+    conf_dir = os.path.join(CACHE_DIR, "isbi")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
             processed = json.load(f)
@@ -243,7 +252,10 @@ def fetch_neurips_json(year):
 
     if 'neurips' not in _fetcher._cache: _fetcher._cache['neurips'] = {}
 
-    cache_path = os.path.join(CACHE_DIR, f"neurips_{year}.json")
+    conf_dir = os.path.join(CACHE_DIR, "neurips")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as f:
             papers = json.load(f)
@@ -273,36 +285,31 @@ def fetch_neurips_json(year):
     papers = []
     
     def _fetch_abstract(match):
-        paper_url = base_url + match.group('url')
+        rel_url = match.group('url')
+        paper_url = base_url + rel_url
         title = match.group('title').strip()
         authors = match.group('authors').strip()
         
-        abstract = ""
-        final_pdf_url = paper_url.replace("/hash/", "/file/").replace("-Abstract", "-Paper").replace(".html", ".pdf")
+        # The user requested the paper webpage (HTML) instead of the PDF.
+        # Note: NeurIPS uses /hash/ for HTML pages and /file/ for PDFs.
+        # Since the webpage is requested, we use the original URL which contains /hash/.
+        final_url = paper_url
         
+        abstract = ""
         try:
-            # Use a new request to avoid session issues in threads
+            # Fetch the abstract page to get the abstract text
             abs_req = urllib.request.Request(paper_url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(abs_req, timeout=10) as abs_res:
+            with urllib.request.urlopen(abs_req, timeout=15) as abs_res:
                 abs_html = abs_res.read().decode('utf-8')
                 
-                # Try to find the correct PDF URL from meta tags first
-                pdf_match = re.search(r'name="citation_pdf_url"\s+content="([^"]+)"', abs_html)
-                if pdf_match:
-                    final_pdf_url = pdf_match.group(1)
-                    if final_pdf_url.startswith('/'):
-                        final_pdf_url = base_url + final_pdf_url
-
-                # Look for <p class="paper-abstract"> or similar
+                # Extract abstract text
                 abs_match = re.search(r'class="paper-abstract">(.*?)</p>', abs_html, re.DOTALL)
                 if abs_match:
                     abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
                 else:
-                    # Fallback for older years or different structure
                     abs_match = re.search(r'Abstract</h2>\s*<p>(.*?)</p>', abs_html, re.DOTALL | re.IGNORECASE)
                     if not abs_match:
                         abs_match = re.search(r'Abstract</h4>\s*<p>(.*?)</p>', abs_html, re.DOTALL | re.IGNORECASE)
-                    
                     if abs_match:
                         abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
         except Exception:
@@ -311,17 +318,21 @@ def fetch_neurips_json(year):
         return {
             "title": title,
             "authors": authors,
-            "url": final_pdf_url,
+            "url": final_url,
             "venue": f"NeurIPS {year}",
             "year": str(year),
             "abstract": abstract
         }
 
-    # Fetch abstracts in parallel (max 10 threads to avoid blocking)
+    # Fetch abstracts in parallel
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_paper = {executor.submit(_fetch_abstract, m): m for m in matches}
         for i, future in enumerate(as_completed(future_to_paper)):
-            papers.append(future.result())
+            try:
+                res = future.result()
+                if res: papers.append(res)
+            except Exception:
+                continue
             if (i + 1) % 100 == 0:
                 print(f"    Processed {i+1}/{len(matches)} abstracts...")
 
