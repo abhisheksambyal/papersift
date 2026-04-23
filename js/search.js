@@ -44,18 +44,26 @@ async function loadPapers() {
 }
 
 /**
- * Extract search terms from a query string.
- * Supports comma-separated AND search and whitespace-separated OR search.
+ * Extract search terms and determine logic (AND vs OR).
  * 
  * @param {string} query 
- * @returns {{ terms: string[], isCommaSearch: boolean }}
+ * @returns {{ terms: string[], isOrSearch: boolean }}
  */
 export function extractSearchTerms(query) {
-  const isCommaSearch = query.includes(',');
-  const terms = isCommaSearch
-    ? query.toLowerCase().split(',').map(t => t.trim()).filter(t => t.length > 0)
-    : query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-  return { terms, isCommaSearch };
+  const lowerQuery = query.toLowerCase();
+  
+  // Explicit OR search
+  if (lowerQuery.includes(' or ')) {
+    const terms = lowerQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
+    return { terms, isOrSearch: true };
+  }
+  
+  // Default: AND search
+  // Normalize ' and ' and ',' to spaces then split
+  const normalized = lowerQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
+  const terms = normalized.split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
+  
+  return { terms, isOrSearch: false };
 }
 
 /**
@@ -68,7 +76,7 @@ export function extractSearchTerms(query) {
  */
 export async function fetchResults(query, venue = '', year = '') {
   const papers = await loadPapers();
-  const { terms, isCommaSearch } = extractSearchTerms(query);
+  const { terms, isOrSearch } = extractSearchTerms(query);
   
   const venueSet = venue && (Array.isArray(venue) ? venue.length > 0 : true) 
     ? new Set((Array.isArray(venue) ? venue : [venue]).map(v => v.toLowerCase())) 
@@ -103,25 +111,23 @@ export async function fetchResults(query, venue = '', year = '') {
     // 3. Search Terms / Scoring
     let score = 0;
     if (terms.length > 0) {
-      let titleOrAbstractMatchCount = 0;
+      let matchCount = 0;
       
       for (const term of terms) {
-        let termFoundInTitleOrAbstract = false;
-        
+        let termFound = false;
         for (const { field, weight } of SCORE_FIELDS) {
           if (p._searchable[field].includes(term)) {
             score += weight;
-            if (field === 'title' || field === 'abstract') termFoundInTitleOrAbstract = true;
+            if (field === 'title' || field === 'abstract') termFound = true;
           }
         }
-        
-        if (termFoundInTitleOrAbstract) titleOrAbstractMatchCount++;
+        if (termFound) matchCount++;
       }
       
-      if (isCommaSearch) {
-        if (titleOrAbstractMatchCount < terms.length) continue;
-      } else if (score === 0) {
-        continue;
+      if (isOrSearch) {
+        if (matchCount === 0) continue;
+      } else {
+        if (matchCount < terms.length) continue;
       }
     }
 

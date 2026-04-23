@@ -105,9 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const results = await fetchResults(query, venues, years);
-      const { terms, isCommaSearch } = extractSearchTerms(query);
+      const { terms, isOrSearch } = extractSearchTerms(query);
       
-      renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isCommaSearch);
+      renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isOrSearch);
       updateFilterHighlights(results);
     } catch (err) {
       if (err.name === 'AbortError') return;

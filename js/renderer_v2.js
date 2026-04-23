@@ -189,10 +189,10 @@ function renderNextChunk(container) {
  * @param {string[]} terms
  * @param {HTMLElement} resultsList
  * @param {HTMLElement} resultsCount
- * @param {boolean} isCommaSearch
+ * @param {boolean} isOrSearch
  */
-export function renderResults(results, terms, resultsList, resultsCount, isCommaSearch = false) {
-  const joiner = isCommaSearch ? 'and' : 'or';
+export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false) {
+  const joiner = isOrSearch ? 'or' : 'and';
   const querySummary = terms.length > 0
     ? ` <span class="opacity-70">with</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
     : '';
