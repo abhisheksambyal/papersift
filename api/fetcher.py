@@ -278,11 +278,21 @@ def fetch_neurips_json(year):
         authors = match.group('authors').strip()
         
         abstract = ""
+        final_pdf_url = paper_url.replace("/hash/", "/file/").replace("-Abstract", "-Paper").replace(".html", ".pdf")
+        
         try:
             # Use a new request to avoid session issues in threads
             abs_req = urllib.request.Request(paper_url, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(abs_req, timeout=10) as abs_res:
                 abs_html = abs_res.read().decode('utf-8')
+                
+                # Try to find the correct PDF URL from meta tags first
+                pdf_match = re.search(r'name="citation_pdf_url"\s+content="([^"]+)"', abs_html)
+                if pdf_match:
+                    final_pdf_url = pdf_match.group(1)
+                    if final_pdf_url.startswith('/'):
+                        final_pdf_url = base_url + final_pdf_url
+
                 # Look for <p class="paper-abstract"> or similar
                 abs_match = re.search(r'class="paper-abstract">(.*?)</p>', abs_html, re.DOTALL)
                 if abs_match:
@@ -301,7 +311,7 @@ def fetch_neurips_json(year):
         return {
             "title": title,
             "authors": authors,
-            "url": paper_url.replace("-Abstract", "-Paper").replace(".html", ".pdf"), # Direct PDF link if possible
+            "url": final_pdf_url,
             "venue": f"NeurIPS {year}",
             "year": str(year),
             "abstract": abstract
