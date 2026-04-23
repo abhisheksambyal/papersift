@@ -86,7 +86,7 @@ function createCard(paper, highlightRegex) {
   const shortYear = (String(paper.year || '')).slice(-2);
 
   const card = document.createElement('div');
-  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors border-b border-ink/5 dark:border-paper/5 last:border-0';
+  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] border-b border-ink/5 dark:border-paper/5 last:border-0';
 
   card.innerHTML = `
     <div class="flex items-start gap-4 sm:gap-8 py-1">
@@ -101,9 +101,9 @@ function createCard(paper, highlightRegex) {
       <div class="flex-grow min-w-0 border-l border-ink/10 dark:border-paper/10 pl-4 sm:pl-8">
         <div class="flex items-start justify-between gap-4">
           <a href="${href}" target="_blank" rel="noopener noreferrer" class="hover:underline underline-offset-4 decoration-1">
-            <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 dark:group-hover:text-paper/80 transition-colors capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
+            <h3 class="font-masthead font-bold leading-tight group-hover:text-ink/80 dark:group-hover:text-paper/80 capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
           </a>
-          <a href="${href}" target="_blank" class="text-ink/30 dark:text-paper/30 hover:text-ink dark:hover:text-paper transition-colors font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
+          <a href="${href}" target="_blank" class="text-ink/30 dark:text-paper/30 hover:text-ink dark:hover:text-paper font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
         </div>
         <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
           ${paper.authors || 'Unknown Authors'}

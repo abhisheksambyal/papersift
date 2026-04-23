@@ -142,12 +142,6 @@
 
   <style type="text/tailwindcss">
     @layer base {
-      /* Unified soft transition for all themed elements */
-      body, h1, h2, h3, p, span, a, input, button, .pill-example, .abstract-toggle, .group, .abstract-content {
-        @apply transition-colors duration-500 ease-in-out;
-        transition-property: color, background-color, border-color, opacity;
-      }
-
       body {
         @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
         background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
