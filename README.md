@@ -30,3 +30,7 @@ You can still run the dynamic backend for development:
 python3 server.py
 ```
 This will serve the API at `localhost:8000`. Note that the frontend is currently configured to use static files in `data/` to ensure compatibility with GitHub Pages.
+
+# To-Do
+- [ ] Add abstract for MICCAI and ISBI papers.
+- [ ] Add more conferences (CVPR, ICCV, ECCV, NeurIPS, ICLR, ICML, IJCAI, AAAI, UAI)
