@@ -4,6 +4,7 @@
 
 const QUESTIONS = [
   "Which papers use the ISIC 2019 dataset?",
+  "Where can I find NeurIPS 2024 breakthroughs?",
   "Where can I find Few-Shot Learning papers?",
   "Which conferences include BRATS dataset papers?",
   "Tired of checking every conference manually?",

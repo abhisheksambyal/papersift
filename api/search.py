@@ -1,4 +1,4 @@
-from api.fetcher import fetch_miccai_json, fetch_midl_json, fetch_isbi_json
+from api.fetcher import fetch_miccai_json, fetch_midl_json, fetch_isbi_json, fetch_neurips_json
 from functools import lru_cache
 from datetime import date
 
@@ -17,6 +17,10 @@ CONFERENCES = {
     "isbi": {
         "years": tuple(range(2004, CURRENT_YEAR + 1)),
         "fetcher": fetch_isbi_json,
+    },
+    "neurips": {
+        "years": tuple(range(1987, 2025)),
+        "fetcher": fetch_neurips_json,
     }
 }
 
@@ -137,7 +141,8 @@ def get_search_config():
         "conferences": [
             {"id": "miccai", "name": "MICCAI"},
             {"id": "midl", "name": "MIDL"},
-            {"id": "isbi", "name": "ISBI"}
+            {"id": "isbi", "name": "ISBI"},
+            {"id": "neurips", "name": "NeurIPS"}
         ],
         "years": sorted(list(years), reverse=True)
     }

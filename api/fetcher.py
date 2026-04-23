@@ -13,6 +13,11 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 # Shared SSL context for connection reuse
 _ssl_context = ssl.create_default_context()
+_ssl_context.check_hostname = False
+_ssl_context.verify_mode = ssl.CERT_NONE
+
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Fetcher:
     """Handles HTTP fetching with connection pooling and retries."""
@@ -229,6 +234,95 @@ def fetch_isbi_json(year):
 
     _fetcher._cache['isbi'][year] = processed
     return processed
+
+
+def fetch_neurips_json(year):
+    """Fetch NeurIPS papers for a given year (1987-2024)."""
+    if year in _fetcher._cache.get('neurips', {}):
+        return _fetcher._cache['neurips'][year]
+
+    if 'neurips' not in _fetcher._cache: _fetcher._cache['neurips'] = {}
+
+    cache_path = os.path.join(CACHE_DIR, f"neurips_{year}.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['neurips'][year] = papers
+            return papers
+
+    print(f"Fetching NeurIPS {year}...")
+    base_url = "https://papers.nips.cc"
+    index_url = f"{base_url}/paper_files/paper/{year}"
+    
+    # We use a slightly different approach for NeurIPS as it's large
+    req = urllib.request.Request(index_url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        with _fetcher._opener.open(req, timeout=30) as response:
+            html = response.read().decode('utf-8')
+    except Exception as e:
+        print(f"  Error fetching NeurIPS {year} index: {e}")
+        return []
+
+    # Regex to find papers: href="{url}">{title}</a> ... paper-authors">{authors}</span>
+    # Note: Structure varies slightly over 30 years, so we try to be robust.
+    paper_pattern = re.compile(r'href="(?P<url>/paper_files/paper/\d+/hash/[^"]+Abstract[^"]*)">(?P<title>[^<]+)</a>.*?paper-authors">(?P<authors>[^<]+)</span>', re.DOTALL)
+    
+    matches = list(paper_pattern.finditer(html))
+    print(f"  Found {len(matches)} papers for NeurIPS {year}. Fetching abstracts...")
+    
+    papers = []
+    
+    def _fetch_abstract(match):
+        paper_url = base_url + match.group('url')
+        title = match.group('title').strip()
+        authors = match.group('authors').strip()
+        
+        abstract = ""
+        try:
+            # Use a new request to avoid session issues in threads
+            abs_req = urllib.request.Request(paper_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(abs_req, timeout=10) as abs_res:
+                abs_html = abs_res.read().decode('utf-8')
+                # Look for <p class="paper-abstract"> or similar
+                abs_match = re.search(r'class="paper-abstract">(.*?)</p>', abs_html, re.DOTALL)
+                if abs_match:
+                    abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
+                else:
+                    # Fallback for older years or different structure
+                    abs_match = re.search(r'Abstract</h2>\s*<p>(.*?)</p>', abs_html, re.DOTALL | re.IGNORECASE)
+                    if not abs_match:
+                        abs_match = re.search(r'Abstract</h4>\s*<p>(.*?)</p>', abs_html, re.DOTALL | re.IGNORECASE)
+                    
+                    if abs_match:
+                        abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
+        except Exception:
+            pass
+        
+        return {
+            "title": title,
+            "authors": authors,
+            "url": paper_url.replace("-Abstract", "-Paper").replace(".html", ".pdf"), # Direct PDF link if possible
+            "venue": f"NeurIPS {year}",
+            "year": str(year),
+            "abstract": abstract
+        }
+
+    # Fetch abstracts in parallel (max 10 threads to avoid blocking)
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_paper = {executor.submit(_fetch_abstract, m): m for m in matches}
+        for i, future in enumerate(as_completed(future_to_paper)):
+            papers.append(future.result())
+            if (i + 1) % 100 == 0:
+                print(f"    Processed {i+1}/{len(matches)} abstracts...")
+
+    if papers:
+        # Sort by title for consistency
+        papers.sort(key=lambda x: x['title'])
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache['neurips'][year] = papers
+    return papers
 
 
 def preload(config):
