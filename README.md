@@ -35,3 +35,5 @@ This will serve the API at `localhost:8000`. Note that the frontend is currently
 - [ ] Add abstract for MICCAI and ISBI papers.
 - [ ] Add neurips paper till 2024. 2025 paper is not there.
 - [ ] Add more conferences (CVPR, ICCV, ECCV, NeurIPS, ICLR, ICML, IJCAI, AAAI, UAI)
+- [x] Add Light/Dark mode toggle.
+ 
