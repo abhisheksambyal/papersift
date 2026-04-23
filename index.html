@@ -6,22 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f4f1ea">
   <title>PaperSift | Find the papers you need — faster.</title>
-  <meta name="description" content="PaperSift: The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
-  <meta name="keywords" content="medical imaging, research papers, MICCAI, MIDL, ISBI, medical AI, deep learning, paper search">
+  <meta name="description"
+    content="PaperSift: The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
+  <meta name="keywords"
+    content="medical imaging, research papers, MICCAI, MIDL, ISBI, medical AI, deep learning, paper search">
   <meta name="author" content="PaperSift">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://papersift.app/">
   <meta property="og:title" content="PaperSift | Find the papers you need — faster.">
-  <meta property="og:description" content="The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
+  <meta property="og:description"
+    content="The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
   <meta property="og:image" content="https://papersift.app/og-image.jpg">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://papersift.app/">
   <meta property="twitter:title" content="PaperSift | Find the papers you need — faster.">
-  <meta property="twitter:description" content="The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
+  <meta property="twitter:description"
+    content="The high-performance research engine for MICCAI, MIDL, and ISBI papers. Search thousands of medical imaging publications instantly.">
   <meta property="twitter:image" content="https://papersift.app/og-image.jpg">
 
   <!-- Structured Data -->
@@ -44,7 +48,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    rel="stylesheet">
 
   <link rel="preload" href="js/app.js" as="script" crossorigin>
   <link rel="preload" href="js/search.js" as="script" crossorigin>
@@ -110,6 +116,23 @@
       .abstract-expansion {
         animation: abstract-fade 0.3s ease-out forwards;
       }
+
+      @keyframes purpose-in {
+        from { opacity: 0; transform: translateY(-20px) rotateX(-20deg); }
+        to { opacity: 1; transform: translateY(0) rotateX(0); }
+      }
+      @keyframes purpose-out {
+        from { opacity: 1; transform: translateY(0) rotateX(0); }
+        to { opacity: 0; transform: translateY(20px) rotateX(20deg); }
+      }
+      .purpose-in { 
+        animation: purpose-in 0.4s ease-out forwards; 
+        backface-visibility: hidden;
+      }
+      .purpose-out { 
+        animation: purpose-out 0.4s ease-in forwards; 
+        backface-visibility: hidden;
+      }
     }
   </style>
 </head>
@@ -127,7 +150,7 @@
           PaperSift
         </h1>
         <p class="italic text-sm text-ink/60 mt-1 mb-6 font-serif opacity-100 transition-opacity duration-500 ease-in-out"
-          id="subtitle">"Find the papers you need — faster."</p>
+          id="subtitle">"Find the papers you need."</p>
       </div>
 
       <div class="w-full max-w-xl transition-transform duration-500 ease-in-out will-change-transform"
@@ -178,9 +201,9 @@
       </div>
 
       <!-- Purpose Loop / Help Text -->
-      <div id="purpose-section" class="mt-20 text-center transition-all duration-700 delay-500">
+      <div id="purpose-section" class="mt-20 text-center transition-all duration-700 delay-500 [perspective:1000px]">
         <p id="purpose-text"
-          class="italic text-[0.8rem] sm:text-[0.9rem] text-ink/40 font-serif min-h-[3rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform">
+          class="italic text-[0.8rem] sm:text-[0.9rem] text-ink/40 font-serif min-h-[6rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
           <!-- Dynamically populated loop -->
         </p>
       </div>

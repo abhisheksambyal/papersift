@@ -39,21 +39,21 @@ export function startPurposeLoop(el) {
   const showFirst = () => {
     el.innerHTML = pool[idx];
     void el.offsetHeight;
-    el.classList.remove('opacity-0', 'translate-y-4');
+    el.classList.add('purpose-in');
     idx++;
   };
 
   const cycle = () => {
-    el.classList.add('opacity-0', '-translate-y-4');
+    el.classList.remove('purpose-in');
+    el.classList.add('purpose-out');
 
     setTimeout(() => {
       if (idx < pool.length) {
         // Show next individual question
         el.innerHTML = pool[idx];
-        el.classList.remove('-translate-y-4');
-        el.classList.add('translate-y-4');
+        el.classList.remove('purpose-out');
         void el.offsetHeight;
-        el.classList.remove('opacity-0', 'translate-y-4');
+        el.classList.add('purpose-in');
         idx++;
       } else {
         // FINALE: Show 3 random questions + Solution, then STOP
@@ -61,20 +61,19 @@ export function startPurposeLoop(el) {
         const summary = random3.map(q => q.replace('?', '')).join(', ') + '?';
 
         el.innerHTML = `<span class="block mb-2 opacity-60">${summary}</span> ${finaleQuestion}`;
-        el.classList.remove('-translate-y-4');
-        el.classList.add('translate-y-4');
+        el.classList.remove('purpose-out');
         void el.offsetHeight;
-        el.classList.remove('opacity-0', 'translate-y-4');
+        el.classList.add('purpose-in');
 
         // Stop the animation
         clearInterval(intervalId);
         intervalId = null;
       }
-    }, 700);
+    }, 400);
   };
 
   showFirst();
-  intervalId = setInterval(cycle, 5000);
+  intervalId = setInterval(cycle, 3000);
 }
 
 /**
