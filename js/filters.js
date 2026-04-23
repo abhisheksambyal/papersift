@@ -80,32 +80,26 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
 
 /**
  * Highlight filters that are present in the results.
- * @param {Array} results
+ * @param {Set} activeVenues
+ * @param {Set} activeYears
  */
-export function updateFilterHighlights(results) {
-  const activeVenues = new Set();
-  const activeYears = new Set();
-  
-  results.forEach(p => {
-    const venueLower = p.venue ? p.venue.toLowerCase() : '';
-    ['miccai', 'midl', 'isbi', 'neurips'].forEach(v => { if (venueLower.includes(v)) activeVenues.add(v); });
-    if (p.year) activeYears.add(p.year.toString());
-  });
-
-  // Clear previous
+export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set()) {
+  // Clear all previous highlights in one go
   document.querySelectorAll('#filter-container span').forEach(span => {
     span.classList.remove('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
   });
 
-  // Highlight Venues
+  const highlightClasses = ['bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
+
+  // Apply highlights to matching Venues
   activeVenues.forEach(v => {
-    const cb = document.querySelector(`input[name="conference"][value="${v}"]`);
-    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
+    const el = document.querySelector(`input[name="conference"][value="${v}"]`);
+    if (el) el.nextElementSibling.classList.add(...highlightClasses);
   });
 
-  // Highlight Years
+  // Apply highlights to matching Years
   activeYears.forEach(y => {
-    const cb = document.querySelector(`input[name="year"][value="${y}"]`);
-    if (cb) cb.nextElementSibling.classList.add('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
+    const el = document.querySelector(`input[name="year"][value="${y}"]`);
+    if (el) el.nextElementSibling.classList.add(...highlightClasses);
   });
 }

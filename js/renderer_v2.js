@@ -74,16 +74,13 @@ function highlight(text, regex) {
  * @returns {HTMLElement}
  */
 function createCard(paper, highlightRegex) {
-  const title = highlight((paper.title || 'Untitled').toLowerCase(), highlightRegex);
+  const title = highlight((paper.title || 'Untitled'), highlightRegex);
+  const authors = paper.authors || 'Unknown Authors';
   const abstract = paper.abstract ? highlight(paper.abstract, highlightRegex) : '';
 
-  const href = paper.url?.startsWith('http')
-    ? paper.url
-    : `https://papers.miccai.org${paper.url}`;
-
-  const venueParts = (paper.venue || '').split(' ');
-  const venueName = venueParts[0] || 'PAPER';
-  const shortYear = (String(paper.year || '')).slice(-2);
+  const href = paper.url?.startsWith('http') ? paper.url : `https://papers.miccai.org${paper.url}`;
+  const [venueName] = (paper.venue || 'PAPER').split(' ');
+  const shortYear = String(paper.year || '').slice(-2);
 
   const card = document.createElement('div');
   card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] border-b border-ink/5 dark:border-paper/5 last:border-0';
@@ -91,12 +88,8 @@ function createCard(paper, highlightRegex) {
   card.innerHTML = `
     <div class="flex items-start gap-4 sm:gap-8 py-1">
       <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
-        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">
-          ${venueName}
-        </div>
-        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 dark:text-paper/20 -mt-1 tabular-nums tracking-tighter">
-          '${shortYear}
-        </div>
+        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">${venueName}</div>
+        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 dark:text-paper/20 -mt-1 tabular-nums tracking-tighter">'${shortYear}</div>
       </div>
       <div class="flex-grow min-w-0 border-l border-ink/10 dark:border-paper/10 pl-4 sm:pl-8">
         <div class="flex items-start justify-between gap-4">
@@ -105,9 +98,7 @@ function createCard(paper, highlightRegex) {
           </a>
           <a href="${href}" target="_blank" class="text-ink/30 dark:text-paper/30 hover:text-ink dark:hover:text-paper font-serif text-[0.8rem] font-bold flex-shrink-0 pt-0.5">&rarr;</a>
         </div>
-        <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">
-          ${paper.authors || 'Unknown Authors'}
-        </div>
+        <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 leading-relaxed text-[clamp(0.7rem,1.8vw,0.8rem)]">${authors}</div>
         
         ${paper.abstract ? `
           <div class="mt-2.5">
@@ -115,22 +106,17 @@ function createCard(paper, highlightRegex) {
               <span>Read Abstract</span>
               <svg class="w-2.5 h-2.5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
             </button>
+            <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 dark:text-paper/70 font-serif border-t border-ink/5 dark:border-paper/5 pt-4 abstract-expansion italic">
+              ${abstract}
+            </div>
           </div>` : ''}
-        
-        ${paper.abstract ? `
-          <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed text-ink/70 dark:text-paper/70 font-serif border-t border-ink/5 dark:border-paper/5 pt-4 abstract-expansion">
-            ${abstract}
-          </div>
-        ` : ''}
       </div>
     </div>`;
 
-  // Add toggle functionality
   const toggleBtn = card.querySelector('.abstract-toggle');
-  const abstractDiv = card.querySelector('.abstract-content');
-  const arrow = toggleBtn?.querySelector('svg');
-
-  if (toggleBtn && abstractDiv) {
+  if (toggleBtn) {
+    const abstractDiv = card.querySelector('.abstract-content');
+    const arrow = toggleBtn.querySelector('svg');
     toggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
       abstractDiv.classList.toggle('hidden');
@@ -142,24 +128,22 @@ function createCard(paper, highlightRegex) {
 }
 
 const CHUNK_SIZE = 40;
-let currentResults = [];
-let currentIndex = 0;
-let currentTerms = [];
-let observer = null;
+let currentResults = [], currentIndex = 0, currentTerms = [], observer = null;
 
 /**
  * Render the next chunk of results.
- * @param {HTMLElement} container 
  */
 function renderNextChunk(container) {
   if (currentIndex >= currentResults.length) return;
 
   const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
-  const highlightRegex = getHighlightRegex(currentTerms);
+  const regex = getHighlightRegex(currentTerms);
   const fragment = document.createDocumentFragment();
 
+  // Create temporary container to hold the elements for MathJax
+  const temp = document.createElement('div');
   for (const paper of chunk) {
-    fragment.appendChild(createCard(paper, highlightRegex));
+    temp.appendChild(createCard(paper, regex));
   }
 
   // Remove old sentinel
@@ -169,37 +153,30 @@ function renderNextChunk(container) {
     oldSentinel.remove();
   }
 
+  // Move elements to fragment
+  while (temp.firstChild) fragment.appendChild(temp.firstChild);
+  
   container.appendChild(fragment);
+  const newElements = Array.from(container.children).slice(currentIndex);
   currentIndex += chunk.length;
 
-  // Add new sentinel if more results exist
   if (currentIndex < currentResults.length) {
     const sentinel = document.createElement('div');
     sentinel.id = 'scroll-sentinel';
-    sentinel.className = 'h-32 flex items-center justify-center py-8';
-    sentinel.innerHTML = `
-      <div class="flex flex-col items-center gap-2 opacity-20 italic text-[0.6rem] uppercase tracking-[0.2em] font-black">
-        <div class="w-1 h-1 bg-ink dark:bg-paper rounded-full animate-bounce"></div>
-        <span>Loading more entries</span>
-      </div>
-    `;
+    sentinel.className = 'h-32 flex items-center justify-center py-8 opacity-20 italic text-[0.6rem] uppercase tracking-[0.2em] font-black';
+    sentinel.innerHTML = '<div class="w-1 h-1 bg-ink dark:bg-paper rounded-full animate-bounce"></div><span class="ml-2">Loading more entries</span>';
     container.appendChild(sentinel);
     observer.observe(sentinel);
   }
   
-  // Trigger MathJax re-typesetting if available
-  if (window.MathJax && window.MathJax.typesetPromise) {
-    window.MathJax.typesetPromise([container]).catch((err) => console.error('MathJax typeset failed:', err));
+  // Performance fix: Only typeset the newly added chunk
+  if (window.MathJax?.typesetPromise) {
+    window.MathJax.typesetPromise(newElements).catch(e => console.error('MathJax error:', e));
   }
 }
 
 /**
  * Render a list of results into the DOM with infinite scroll.
- * @param {Paper[]} results
- * @param {string[]} terms
- * @param {HTMLElement} resultsList
- * @param {HTMLElement} resultsCount
- * @param {boolean} isOrSearch
  */
 export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false) {
   const joiner = isOrSearch ? 'or' : 'and';
@@ -218,7 +195,6 @@ export function renderResults(results, terms, resultsList, resultsCount, isOrSea
     <span class="font-bold">${results.length.toLocaleString()}</span>
     <span class="opacity-70">pertinent papers</span>${querySummary}`;
 
-  // Reset infinite scroll state
   currentResults = results;
   currentTerms = terms;
   currentIndex = 0;
@@ -226,13 +202,8 @@ export function renderResults(results, terms, resultsList, resultsCount, isOrSea
 
   if (observer) observer.disconnect();
   observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      renderNextChunk(resultsList);
-    }
-  }, { 
-    rootMargin: '600px' // Start loading before the user reaches the bottom
-  });
+    if (entries[0].isIntersecting) renderNextChunk(resultsList);
+  }, { rootMargin: '600px' });
 
-  // Initial render
   renderNextChunk(resultsList);
 }

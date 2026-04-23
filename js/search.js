@@ -22,15 +22,19 @@ async function loadPapers() {
       if (!res.ok) throw new Error(`Failed to load paper data: ${res.status}`);
       const data = await res.json();
       
-      // Pre-process for faster searching
-      data.forEach(p => {
-        p._searchable = {
-          title: (p.title || '').toLowerCase(),
-          authors: (p.authors || '').toLowerCase(),
-          abstract: (p.abstract || '').toLowerCase(),
-          venue: (p.venue || '').toLowerCase()
-        };
-      });
+      // Pre-process for high-performance searching
+      for (const p of data) {
+        const t = (p.title || '').toLowerCase();
+        const a = (p.authors || '').toLowerCase();
+        const abs = (p.abstract || '').toLowerCase();
+        const v = (p.venue || '').toLowerCase();
+        
+        // Single joined string for fast initial filtering
+        p._search_joined = `${t} ${a} ${abs} ${v}`;
+        
+        // Individual fields kept for scoring only
+        p._searchable = { title: t, authors: a, abstract: abs, venue: v };
+      }
       
       papersCache = data;
       return papersCache;
@@ -45,34 +49,24 @@ async function loadPapers() {
 
 /**
  * Extract search terms and determine logic (AND vs OR).
- * 
- * @param {string} query 
- * @returns {{ terms: string[], isOrSearch: boolean }}
  */
 export function extractSearchTerms(query) {
-  const lowerQuery = query.toLowerCase();
+  const lowerQuery = query.toLowerCase().trim();
+  if (!lowerQuery) return { terms: [], isOrSearch: false };
   
-  // Explicit OR search
   if (lowerQuery.includes(' or ')) {
     const terms = lowerQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
     return { terms, isOrSearch: true };
   }
   
-  // Default: AND search
-  // Normalize ' and ' and ',' to spaces then split
   const normalized = lowerQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
   const terms = normalized.split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
-  
   return { terms, isOrSearch: false };
 }
 
 /**
  * Fetch search results (client-side).
- *
- * @param {string} query
- * @param {string|string[]} venue
- * @param {string|string[]} year
- * @returns {Promise<Array>}
+ * @returns {Promise<{results: Array, activeVenues: Set, activeYears: Set}>}
  */
 export async function fetchResults(query, venue = '', year = '') {
   const papers = await loadPapers();
@@ -86,42 +80,37 @@ export async function fetchResults(query, venue = '', year = '') {
     : null;
 
   const results = [];
+  const activeVenues = new Set();
+  const activeYears = new Set();
+  const hasTerms = terms.length > 0;
   
-  for (let i = 0; i < papers.length; i++) {
+  for (let i = 0, len = papers.length; i < len; i++) {
     const p = papers[i];
     
-    // 1. Filter by Venue
+    // 1. Fast Venue/Year filtering
     if (venueSet) {
-      const pVenue = p._searchable.venue;
       let match = false;
       for (const v of venueSet) {
-        if (pVenue.includes(v)) {
-          match = true;
-          break;
-        }
+        if (p._searchable.venue.includes(v)) { match = true; break; }
       }
       if (!match) continue;
     }
+    if (yearSet && !yearSet.has(String(p.year))) continue;
 
-    // 2. Filter by Year
-    if (yearSet) {
-      if (!yearSet.has(String(p.year))) continue;
-    }
-
-    // 3. Search Terms / Scoring
+    // 2. High-performance Search matching
     let score = 0;
-    if (terms.length > 0) {
+    if (hasTerms) {
       let matchCount = 0;
+      const joined = p._search_joined;
       
       for (const term of terms) {
-        let termFound = false;
-        for (const { field, weight } of SCORE_FIELDS) {
-          if (p._searchable[field].includes(term)) {
-            score += weight;
-            if (field === 'title' || field === 'abstract') termFound = true;
+        if (joined.includes(term)) {
+          matchCount++;
+          // Detailed scoring only if matched
+          for (const { field, weight } of SCORE_FIELDS) {
+            if (p._searchable[field].includes(term)) score += weight;
           }
         }
-        if (termFound) matchCount++;
       }
       
       if (isOrSearch) {
@@ -132,15 +121,18 @@ export async function fetchResults(query, venue = '', year = '') {
     }
 
     results.push({ ...p, score });
+    
+    // Track facets for filter highlighting
+    const venueLower = p._searchable.venue;
+    if (venueLower.includes('miccai')) activeVenues.add('miccai');
+    if (venueLower.includes('midl')) activeVenues.add('midl');
+    if (venueLower.includes('isbi')) activeVenues.add('isbi');
+    if (venueLower.includes('neurips')) activeVenues.add('neurips');
+    if (p.year) activeYears.add(String(p.year));
   }
 
-  // Sort: Year (desc), then Score (desc)
-  results.sort((a, b) => {
-    const yearA = parseInt(a.year) || 0;
-    const yearB = parseInt(b.year) || 0;
-    if (yearB !== yearA) return yearB - yearA;
-    return b.score - a.score;
-  });
-
-  return results;
+  // Optimized sort: Year (desc), then Score (desc)
+  results.sort((a, b) => (b.year - a.year) || (b.score - a.score));
+  
+  return { results, activeVenues, activeYears };
 }

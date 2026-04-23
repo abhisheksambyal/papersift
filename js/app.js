@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (hasSearched) { 
         domRefs.resultsList.innerHTML = ''; 
         domRefs.resultsCount.innerHTML = ''; 
-        updateFilterHighlights([]);
+        updateFilterHighlights(new Set(), new Set());
       }
       return;
     }
@@ -104,11 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
     domRefs.resultsCount.innerHTML = '<span class="italic opacity-60">Scanning the archives...</span>';
     
     try {
-      const results = await fetchResults(query, venues, years);
+      const { results, activeVenues, activeYears } = await fetchResults(query, venues, years);
       const { terms, isOrSearch } = extractSearchTerms(query);
       
       renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isOrSearch);
-      updateFilterHighlights(results);
+      updateFilterHighlights(activeVenues, activeYears);
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.error('Search failed:', err);
