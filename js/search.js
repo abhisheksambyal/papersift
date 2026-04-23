@@ -8,7 +8,7 @@ const SCORE_FIELDS = [
   { field: 'venue', weight: 1 }
 ];
 
-const MAX_RESULTS = 100;
+const MAX_RESULTS = 300;
 
 /**
  * Load papers from the static JSON file.
@@ -148,5 +148,5 @@ export async function fetchResults(query, venue = '', year = '') {
     return b.score - a.score;
   });
 
-  return results.slice(0, MAX_RESULTS);
+  return results;
 }

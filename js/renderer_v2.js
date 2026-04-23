@@ -136,8 +136,55 @@ function createCard(paper, highlightRegex) {
   return card;
 }
 
+const CHUNK_SIZE = 40;
+let currentResults = [];
+let currentIndex = 0;
+let currentTerms = [];
+let observer = null;
+
 /**
- * Render a list of results into the DOM.
+ * Render the next chunk of results.
+ * @param {HTMLElement} container 
+ */
+function renderNextChunk(container) {
+  if (currentIndex >= currentResults.length) return;
+
+  const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
+  const highlightRegex = getHighlightRegex(currentTerms);
+  const fragment = document.createDocumentFragment();
+
+  for (const paper of chunk) {
+    fragment.appendChild(createCard(paper, highlightRegex));
+  }
+
+  // Remove old sentinel
+  const oldSentinel = container.querySelector('#scroll-sentinel');
+  if (oldSentinel) {
+    observer.unobserve(oldSentinel);
+    oldSentinel.remove();
+  }
+
+  container.appendChild(fragment);
+  currentIndex += chunk.length;
+
+  // Add new sentinel if more results exist
+  if (currentIndex < currentResults.length) {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'scroll-sentinel';
+    sentinel.className = 'h-32 flex items-center justify-center py-8';
+    sentinel.innerHTML = `
+      <div class="flex flex-col items-center gap-2 opacity-20 italic text-[0.6rem] uppercase tracking-[0.2em] font-black">
+        <div class="w-1 h-1 bg-ink rounded-full animate-bounce"></div>
+        <span>Loading more entries</span>
+      </div>
+    `;
+    container.appendChild(sentinel);
+    observer.observe(sentinel);
+  }
+}
+
+/**
+ * Render a list of results into the DOM with infinite scroll.
  * @param {Paper[]} results
  * @param {string[]} terms
  * @param {HTMLElement} resultsList
@@ -158,16 +205,24 @@ export function renderResults(results, terms, resultsList, resultsCount, isComma
 
   resultsCount.innerHTML = `
     <span class="opacity-70">Discovered</span>
-    <span class="font-bold">${results.length}</span>
+    <span class="font-bold">${results.length.toLocaleString()}</span>
     <span class="opacity-70">pertinent papers</span>${querySummary}`;
 
-  const fragment = document.createDocumentFragment();
-  const highlightRegex = getHighlightRegex(terms);
-
-  for (const paper of results) {
-    fragment.appendChild(createCard(paper, highlightRegex));
-  }
-
+  // Reset infinite scroll state
+  currentResults = results;
+  currentTerms = terms;
+  currentIndex = 0;
   resultsList.innerHTML = '';
-  resultsList.appendChild(fragment);
+
+  if (observer) observer.disconnect();
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      renderNextChunk(resultsList);
+    }
+  }, { 
+    rootMargin: '600px' // Start loading before the user reaches the bottom
+  });
+
+  // Initial render
+  renderNextChunk(resultsList);
 }
