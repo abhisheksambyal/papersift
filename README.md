@@ -8,7 +8,7 @@ A high-performance, monochromatic research search engine designed for clinical a
 - **📚 Extensive Archive**: Full proceedings for NeurIPS (1987-2024), MICCAI, MIDL, and ISBI.
 - **🎨 Newsprint Aesthetic**: A clean, monochromatic interface optimized for focus.
 - **🌓 Adaptive Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset.
-- **🔢 LaTeX Support**: Integrated MathJax for rendering complex mathematical abstracts.
+- **🔢 LaTeX Support**: Integrated KaTeX for rendering complex mathematical abstracts.
 - **🚀 Static Architecture**: Optimized for GitHub Pages with zero-server dependency in production.
 
 ---

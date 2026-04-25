@@ -76,7 +76,7 @@ function highlight(text, regex) {
  */
 function createCard(paper, highlightRegex, authorHighlightRegex) {
   const title = highlight((paper.title || 'Untitled'), highlightRegex);
-  const authors = authorHighlightRegex 
+  const authors = authorHighlightRegex
     ? highlight((paper.authors || 'Unknown Authors'), authorHighlightRegex)
     : (paper.authors || 'Unknown Authors');
   const abstract = paper.abstract ? highlight(paper.abstract, highlightRegex) : '';
@@ -141,13 +141,13 @@ function renderNextChunk(container) {
 
   const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
   const regex = getHighlightRegex(currentTerms);
-  const authorRegex = currentAuthorSubTerms.length 
-    ? new RegExp(`(${currentAuthorSubTerms.map(escapeRegex).join('|')})`, 'gi') 
+  const authorRegex = currentAuthorSubTerms.length
+    ? new RegExp(`(${currentAuthorSubTerms.map(escapeRegex).join('|')})`, 'gi')
     : null;
-  
+
   const fragment = document.createDocumentFragment();
 
-  // Create temporary container to hold the elements for MathJax
+  // Create temporary container to hold the elements for KaTeX
   const temp = document.createElement('div');
   for (const paper of chunk) {
     temp.appendChild(createCard(paper, regex, authorRegex));
@@ -162,7 +162,7 @@ function renderNextChunk(container) {
 
   // Move elements to fragment
   while (temp.firstChild) fragment.appendChild(temp.firstChild);
-  
+
   container.appendChild(fragment);
   const newElements = Array.from(container.children).slice(currentIndex);
   currentIndex += chunk.length;
@@ -175,16 +175,16 @@ function renderNextChunk(container) {
     container.appendChild(sentinel);
     observer.observe(sentinel);
   }
-  
+
   // Performance fix: Only typeset the newly added chunk
   if (window.renderMathInElement) {
     newElements.forEach(el => {
       window.renderMathInElement(el, {
         delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '\\[', right: '\\]', display: true},
-          {left: '$', right: '$', display: false},
-          {left: '\\(', right: '\\)', display: false}
+          { left: '$$', right: '$$', display: true },
+          { left: '\\[', right: '\\]', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false }
         ],
         throwOnError: false
       });
@@ -197,11 +197,11 @@ function renderNextChunk(container) {
  */
 export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false, authorTerm = null, authorSubTerms = []) {
   const joiner = isOrSearch ? 'or' : 'and';
-  
-  const authorSummary = authorTerm 
-    ? ` <span class="opacity-70">by</span> <span class="font-bold">${authorTerm}</span>` 
+
+  const authorSummary = authorTerm
+    ? ` <span class="opacity-70">by</span> <span class="font-bold">${authorTerm}</span>`
     : '';
-    
+
   const querySummary = terms.length > 0
     ? ` <span class="opacity-70">${authorTerm ? 'and' : 'with'}</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
     : '';
