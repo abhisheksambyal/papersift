@@ -156,10 +156,10 @@
 
     @layer components {
       .app-container-safe {
-        @apply max-w-5xl mx-auto py-4 sm:py-8 flex flex-col min-h-screen;
+        @apply max-w-5xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen;
         padding-left: max(0.75rem, env(safe-area-inset-left));
         padding-right: max(0.75rem, env(safe-area-inset-right));
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
         transform: translateZ(0);
       }
 
@@ -228,7 +228,7 @@
   <div class="app-container-safe" id="app-container">
 
     <header id="header-section"
-      class="flex flex-col items-center justify-center flex-1 transition-[min-height,padding] duration-700 ease-in-out will-change-[min-height]">
+      class="flex flex-col items-center justify-start sm:justify-center flex-1 transition-[min-height,padding] duration-700 ease-in-out will-change-[min-height] pt-4 sm:pt-0">
 
       <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform"
         id="logo-container">
@@ -284,15 +284,15 @@
           </div>
           <div class="flex flex-col">
             <label
-              class="text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-3 font-bold">Chronology</label>
-            <div id="year-filters" class="flex flex-wrap gap-x-4 gap-y-2 no-tap">
+              class="text-[0.55rem] sm:text-[0.6rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-2 sm:mb-3 font-bold">Chronology</label>
+            <div id="year-filters" class="flex flex-wrap md:flex-wrap gap-x-2 sm:gap-x-4 gap-y-1 sm:gap-y-2 no-tap overflow-x-auto max-h-[80px] md:max-h-none py-1">
               <!-- Dynamically populated -->
             </div>
           </div>
         </div>
 
         <!-- Example / recent-search pills -->
-        <div id="example-pills" class="flex flex-wrap gap-2 mt-6 text-[0.65rem] uppercase tracking-widest">
+        <div id="example-pills" class="flex flex-wrap gap-2 mt-4 sm:mt-6 text-[0.65rem] uppercase tracking-widest">
           <span
             class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
           <span
@@ -302,7 +302,7 @@
         </div>
         <!-- Purpose Loop / Help Text -->
         <div id="purpose-section"
-          class="mt-6 sm:mt-10 text-center transition-all duration-700 delay-500 [perspective:1000px]">
+          class="mt-4 sm:mt-10 text-center transition-all duration-700 delay-500 [perspective:1000px]">
           <p id="purpose-text"
             class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[4rem] sm:min-h-[8rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
             <!-- Dynamically populated loop -->
