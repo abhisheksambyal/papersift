@@ -105,9 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const { results, activeVenues, activeYears } = await fetchResults(query, venues, years);
-      const { terms, isOrSearch } = extractSearchTerms(query);
+      const { terms, isOrSearch, authorTerm } = extractSearchTerms(query);
       
-      renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isOrSearch);
+      renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isOrSearch, authorTerm);
       updateFilterHighlights(activeVenues, activeYears);
     } catch (err) {
       if (err.name === 'AbortError') return;

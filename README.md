@@ -13,6 +13,19 @@ PaperSift is built as a static, client-side application for maximum performance 
 - **`scripts/`**: Maintenance utilities for data synchronization and static site generation.
 - **`index.html`**: The primary search interface with a "Newsprint" aesthetic.
 
+## Search Tips
+
+PaperSift supports advanced query syntax to help you find research quickly:
+
+- **General Search**: Enter keywords to search through paper **titles** and **abstracts** (e.g., `diffusion models`).
+- **Author Search**: Use the `author:` prefix to search specifically for researchers.
+  - `author: sambyal` — Finds papers where "sambyal" is in the author list.
+  - `author: abhishek sambyal;` — Finds specific author names (the semicolon is optional).
+- **Boolean Logic**:
+  - `transformer and vision` (or just space separated) — Finds papers containing both terms.
+  - `cnn or rnn` — Finds papers containing either term.
+- **Filters**: Use the sidebar to narrow results by conference (NeurIPS, MICCAI, etc.) and year.
+
 ## Data Management
 
 We use a unified synchronization pipeline to keep the database fresh.

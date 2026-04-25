@@ -1,12 +1,14 @@
 let papersCache = null;
 let loadingPromise = null;
 
-const SCORE_FIELDS = [
-  { field: 'title', weight: 10 },
-  { field: 'authors', weight: 2 },
-  { field: 'abstract', weight: 5 },
-  { field: 'venue', weight: 1 }
-];
+/**
+ * Search field weights for relevance scoring.
+ */
+const WEIGHTS = {
+  TITLE: 10,
+  ABSTRACT: 5,
+  AUTHOR_MATCH: 100 // High priority for explicit author prefix search
+};
 
 /**
  * Load papers from the static JSON file.
@@ -29,10 +31,10 @@ async function loadPapers() {
         const abs = (p.abstract || '').toLowerCase();
         const v = (p.venue || '').toLowerCase();
         
-        // Single joined string for fast initial filtering
-        p._search_joined = `${t} ${a} ${abs} ${v}`;
+        // Combined for papers (titles) and abstracts only
+        p._search_paper_abstract = `${t} ${abs}`;
         
-        // Individual fields kept for scoring only
+        // Individual fields kept for scoring and specific filtering
         p._searchable = { title: t, authors: a, abstract: abs, venue: v };
       }
       
@@ -49,19 +51,42 @@ async function loadPapers() {
 
 /**
  * Extract search terms and determine logic (AND vs OR).
+ * Supports author: prefix (semicolon optional).
  */
 export function extractSearchTerms(query) {
   const lowerQuery = query.toLowerCase().trim();
-  if (!lowerQuery) return { terms: [], isOrSearch: false };
+  if (!lowerQuery) return { terms: [], isOrSearch: false, authorTerm: null };
   
-  if (lowerQuery.includes(' or ')) {
-    const terms = lowerQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
-    return { terms, isOrSearch: true };
+  let authorTerm = null;
+  let processedQuery = lowerQuery;
+
+  // Extract author search if present
+  if (lowerQuery.includes('author:')) {
+    const start = lowerQuery.indexOf('author:') + 7;
+    const end = lowerQuery.indexOf(';', start);
+    
+    if (end !== -1) {
+      authorTerm = lowerQuery.substring(start, end).trim();
+      processedQuery = (lowerQuery.substring(0, lowerQuery.indexOf('author:')) + lowerQuery.substring(end + 1)).trim();
+    } else {
+      // No semicolon: treat everything after "author:" as the author term
+      authorTerm = lowerQuery.substring(start).trim();
+      processedQuery = lowerQuery.substring(0, lowerQuery.indexOf('author:')).trim();
+    }
+    
+    if (!authorTerm) authorTerm = null;
+  }
+
+  // Handle OR search
+  if (processedQuery.includes(' or ')) {
+    const terms = processedQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
+    return { terms, isOrSearch: true, authorTerm };
   }
   
-  const normalized = lowerQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
+  // Handle AND search (default)
+  const normalized = processedQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
   const terms = normalized.split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
-  return { terms, isOrSearch: false };
+  return { terms, isOrSearch: false, authorTerm };
 }
 
 /**
@@ -70,7 +95,7 @@ export function extractSearchTerms(query) {
  */
 export async function fetchResults(query, venue = '', year = '') {
   const papers = await loadPapers();
-  const { terms, isOrSearch } = extractSearchTerms(query);
+  const { terms, isOrSearch, authorTerm } = extractSearchTerms(query);
   
   const venueSet = venue && (Array.isArray(venue) ? venue.length > 0 : true) 
     ? new Set((Array.isArray(venue) ? venue : [venue]).map(v => v.toLowerCase())) 
@@ -87,7 +112,7 @@ export async function fetchResults(query, venue = '', year = '') {
   for (let i = 0, len = papers.length; i < len; i++) {
     const p = papers[i];
     
-    // 1. Fast Venue/Year filtering
+    // 1. Venue/Year filtering
     if (venueSet) {
       let match = false;
       for (const v of venueSet) {
@@ -97,22 +122,29 @@ export async function fetchResults(query, venue = '', year = '') {
     }
     if (yearSet && !yearSet.has(String(p.year))) continue;
 
-    // 2. High-performance Search matching
+    // 2. Search matching and Scoring
     let score = 0;
-    if (hasTerms) {
+    
+    // Mode A: Author search (takes precedence if prefix is used)
+    if (authorTerm) {
+      if (!p._searchable.authors.includes(authorTerm)) continue;
+      score = WEIGHTS.AUTHOR_MATCH;
+    } 
+    // Mode B: Keyword search (searches title and abstract only)
+    else if (hasTerms) {
       let matchCount = 0;
-      const joined = p._search_joined;
+      const blob = p._search_paper_abstract;
+      const searchable = p._searchable;
       
       for (const term of terms) {
-        if (joined.includes(term)) {
+        if (blob.includes(term)) {
           matchCount++;
-          // Detailed scoring only if matched
-          for (const { field, weight } of SCORE_FIELDS) {
-            if (p._searchable[field].includes(term)) score += weight;
-          }
+          if (searchable.title.includes(term))    score += WEIGHTS.TITLE;
+          if (searchable.abstract.includes(term)) score += WEIGHTS.ABSTRACT;
         }
       }
       
+      // Enforce AND/OR logic
       if (isOrSearch) {
         if (matchCount === 0) continue;
       } else {
@@ -124,9 +156,9 @@ export async function fetchResults(query, venue = '', year = '') {
     
     // Track facets for filter highlighting
     const venueLower = p._searchable.venue;
-    if (venueLower.includes('miccai')) activeVenues.add('miccai');
-    if (venueLower.includes('midl')) activeVenues.add('midl');
-    if (venueLower.includes('isbi')) activeVenues.add('isbi');
+    if (venueLower.includes('miccai'))  activeVenues.add('miccai');
+    if (venueLower.includes('midl'))    activeVenues.add('midl');
+    if (venueLower.includes('isbi'))    activeVenues.add('isbi');
     if (venueLower.includes('neurips')) activeVenues.add('neurips');
     if (p.year) activeYears.add(String(p.year));
   }

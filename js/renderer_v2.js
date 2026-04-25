@@ -71,11 +71,14 @@ function highlight(text, regex) {
  * Create a result card element.
  * @param {Paper} paper
  * @param {RegExp | null} highlightRegex
+ * @param {RegExp | null} authorHighlightRegex
  * @returns {HTMLElement}
  */
-function createCard(paper, highlightRegex) {
+function createCard(paper, highlightRegex, authorHighlightRegex) {
   const title = highlight((paper.title || 'Untitled'), highlightRegex);
-  const authors = paper.authors || 'Unknown Authors';
+  const authors = authorHighlightRegex 
+    ? highlight((paper.authors || 'Unknown Authors'), authorHighlightRegex)
+    : (paper.authors || 'Unknown Authors');
   const abstract = paper.abstract ? highlight(paper.abstract, highlightRegex) : '';
 
   const href = paper.url?.startsWith('http') ? paper.url : `https://papers.miccai.org${paper.url}`;
@@ -128,7 +131,7 @@ function createCard(paper, highlightRegex) {
 }
 
 const CHUNK_SIZE = 40;
-let currentResults = [], currentIndex = 0, currentTerms = [], observer = null;
+let currentResults = [], currentIndex = 0, currentTerms = [], currentAuthorTerm = null, observer = null;
 
 /**
  * Render the next chunk of results.
@@ -138,12 +141,13 @@ function renderNextChunk(container) {
 
   const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
   const regex = getHighlightRegex(currentTerms);
+  const authorRegex = currentAuthorTerm ? new RegExp(`(${escapeRegex(currentAuthorTerm)})`, 'gi') : null;
   const fragment = document.createDocumentFragment();
 
   // Create temporary container to hold the elements for MathJax
   const temp = document.createElement('div');
   for (const paper of chunk) {
-    temp.appendChild(createCard(paper, regex));
+    temp.appendChild(createCard(paper, regex, authorRegex));
   }
 
   // Remove old sentinel
@@ -178,14 +182,21 @@ function renderNextChunk(container) {
 /**
  * Render a list of results into the DOM with infinite scroll.
  */
-export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false) {
+export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false, authorTerm = null) {
   const joiner = isOrSearch ? 'or' : 'and';
+  
+  const authorSummary = authorTerm 
+    ? ` <span class="opacity-70">by</span> <span class="font-bold">${authorTerm}</span>` 
+    : '';
+    
   const querySummary = terms.length > 0
-    ? ` <span class="opacity-70">with</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
+    ? ` <span class="opacity-70">${authorTerm ? 'and' : 'with'}</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}`
     : '';
 
+  const totalSummary = authorSummary + querySummary;
+
   if (!results.length) {
-    resultsCount.innerHTML = `<span class="opacity-70">No papers found matching</span>${querySummary}`;
+    resultsCount.innerHTML = `<span class="opacity-70">No papers found matching</span>${totalSummary}`;
     resultsList.innerHTML = '';
     return;
   }
@@ -193,10 +204,11 @@ export function renderResults(results, terms, resultsList, resultsCount, isOrSea
   resultsCount.innerHTML = `
     <span class="opacity-70">Discovered</span>
     <span class="font-bold">${results.length.toLocaleString()}</span>
-    <span class="opacity-70">pertinent papers</span>${querySummary}`;
+    <span class="opacity-70">pertinent papers</span>${totalSummary}`;
 
   currentResults = results;
   currentTerms = terms;
+  currentAuthorTerm = authorTerm;
   currentIndex = 0;
   resultsList.innerHTML = '';
 
