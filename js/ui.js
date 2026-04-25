@@ -27,14 +27,12 @@ export function transitionToResults(refs) {
     subtitle.classList.add('opacity-0', 'pointer-events-none');
     examplePills.classList.add('opacity-0', 'pointer-events-none');
     purposeSection.classList.add('opacity-0', 'pointer-events-none');
-    if (searchHints) searchHints.classList.add('opacity-0', 'pointer-events-none');
     
     // Hide them from layout after fade
     setTimeout(() => {
       subtitle.classList.add('hidden');
       examplePills.classList.add('hidden');
       purposeSection.classList.add('hidden');
-      if (searchHints) searchHints.classList.add('hidden');
     }, 500);
 
     setTimeout(() => {
