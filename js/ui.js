@@ -27,7 +27,6 @@ export function transitionToResults(refs) {
     fadeOutAndHide(subtitle);
     fadeOutAndHide(examplePills);
     fadeOutAndHide(purposeSection);
-    fadeOutAndHide(searchHints);
 
     // Show results section smoothly after layout settles
     setTimeout(() => {
