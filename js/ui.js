@@ -14,9 +14,8 @@ export function renderPills(examplePills) {
  */
 export function transitionToResults(refs) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints } = refs;
-  // Use requestAnimationFrame to ensure the transition starts smoothly
   requestAnimationFrame(() => {
-    headerSection.classList.replace('min-h-[70vh]', 'min-h-0');
+    headerSection.classList.remove('flex-1');
     headerSection.classList.add('pb-4', 'pt-2');
     
     // Toggle title size classes
@@ -36,7 +35,7 @@ export function transitionToResults(refs) {
     }, 500);
 
     setTimeout(() => {
-      resultsSection.classList.remove('invisible');
+      resultsSection.classList.remove('hidden', 'invisible');
       resultsSection.classList.add('opacity-100', 'translate-y-0');
       resultsSection.classList.remove('opacity-0', 'translate-y-4');
     }, 200);
@@ -57,9 +56,9 @@ export function resetToHome(refs, onReset) {
     resultsSection.classList.remove('opacity-100', 'translate-y-0');
 
     setTimeout(() => {
-      resultsSection.classList.add('invisible');
+      resultsSection.classList.add('invisible', 'hidden');
       
-      headerSection.classList.replace('min-h-0', 'min-h-[70vh]');
+      headerSection.classList.add('flex-1');
       headerSection.classList.remove('pb-4', 'pt-2');
 
       logoTitle.classList.remove('title-compact');
