@@ -69,4 +69,10 @@ Optimized for **GitHub Pages**. Since all search operations are client-side, the
 
 ---
 
+## 📜 License
+
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for the full text.
+
+---
+
 *Designed for researchers, by researchers.*
