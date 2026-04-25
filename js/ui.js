@@ -10,10 +10,10 @@ export function renderPills(examplePills) {
 
 /**
  * Collapse the header into compact search mode and reveal the results section.
- * @param {{ headerSection, logoTitle, subtitle, examplePills, resultsSection }} refs
  */
 export function transitionToResults(refs) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
+  
   requestAnimationFrame(() => {
     appContainer.classList.remove('justify-center');
     headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
@@ -22,17 +22,20 @@ export function transitionToResults(refs) {
     logoTitle.classList.remove('title-landing');
     logoTitle.classList.add('title-compact');
     
-    // Instead of hiding immediately, fade out if needed (subtitle already has transition)
+    // Fade out elements
     subtitle.classList.add('opacity-0', 'pointer-events-none');
     examplePills.classList.add('opacity-0', 'pointer-events-none');
     purposeSection.classList.add('opacity-0', 'pointer-events-none');
     
+    if (searchHints) searchHints.classList.add('opacity-0', 'pointer-events-none');
+
     // Hide them from layout after fade
     setTimeout(() => {
       subtitle.classList.add('hidden');
       examplePills.classList.add('hidden');
       purposeSection.classList.add('hidden');
-    }, 500);
+      if (searchHints) searchHints.classList.add('hidden');
+    }, 400);
 
     setTimeout(() => {
       resultsSection.classList.remove('hidden', 'invisible');
@@ -44,11 +47,9 @@ export function transitionToResults(refs) {
 
 /**
  * Restore the landing page layout.
- * @param {{ headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount }} refs
- * @param {Function} onReset - callback to reset parent state (e.g. hasSearched)
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters, searchHints, appContainer } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, appContainer, searchHints } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
@@ -59,7 +60,7 @@ export function resetToHome(refs, onReset) {
       resultsSection.classList.add('invisible', 'hidden');
       
       appContainer.classList.add('justify-center');
-      headerSection.classList.remove('pb-4', 'pt-2');
+      headerSection.classList.remove('pb-4', 'pt-6', 'sm:pt-2');
 
       logoTitle.classList.remove('title-compact');
       logoTitle.classList.add('title-landing');
@@ -73,7 +74,6 @@ export function resetToHome(refs, onReset) {
     }, 400);
 
     input.value = '';
-    // Clear all checkboxes and re-check "All" ones
     document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
     document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
     

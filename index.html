@@ -178,26 +178,29 @@
       }
 
       @keyframes abstract-fade {
-        from { opacity: 0; transform: translateY(-5px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translate3d(0, -5px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
       }
       .abstract-expansion {
+        @apply will-change-[transform,opacity];
         animation: abstract-fade 0.3s ease-out forwards;
       }
 
       @keyframes purpose-in {
-        from { opacity: 0; transform: translateY(-20px) rotateX(-20deg); }
-        to { opacity: 1; transform: translateY(0) rotateX(0); }
+        from { opacity: 0; transform: translate3d(0, 15px, 0) rotateX(10deg); }
+        to { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
       }
       @keyframes purpose-out {
-        from { opacity: 1; transform: translateY(0) rotateX(0); }
-        to { opacity: 0; transform: translateY(20px) rotateX(20deg); }
+        from { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
+        to { opacity: 0; transform: translate3d(0, 20px, 0) rotateX(20deg); }
       }
       .purpose-in { 
+        @apply will-change-[transform,opacity];
         animation: purpose-in 0.4s ease-out forwards; 
         backface-visibility: hidden;
       }
       .purpose-out { 
+        @apply will-change-[transform,opacity];
         animation: purpose-out 0.4s ease-in forwards; 
         backface-visibility: hidden;
       }
