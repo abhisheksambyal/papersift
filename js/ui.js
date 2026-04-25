@@ -48,7 +48,7 @@ export function transitionToResults(refs) {
  * @param {Function} onReset - callback to reset parent state (e.g. hasSearched)
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters, searchHints } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, conferenceFilters, yearFilters, searchHints, appContainer } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
