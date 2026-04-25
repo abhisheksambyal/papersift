@@ -127,7 +127,8 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="assets/css/katex.min.css">
+  <link rel="stylesheet" href="assets/css/tailwind.min.css">
 
   <link rel="modulepreload" href="js/app.js?v=3">
   <link rel="modulepreload" href="js/search.js">
@@ -137,91 +138,7 @@
   <link rel="modulepreload" href="js/filters.js">
   <link rel="modulepreload" href="js/purpose.js">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            paper: '#f4f1ea',
-            ink: '#1c1c1c',
-          },
-          fontFamily: {
-            serif: ['Merriweather', 'serif'],
-            masthead: ['"Playfair Display"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
 
-  <style type="text/tailwindcss">
-    @layer base {
-      body {
-        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
-        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
-        background-size: 16px 16px;
-        background-attachment: fixed;
-      }
-
-      .dark body {
-        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
-      }
-    }
-
-    @layer components {
-      .app-container-safe {
-        @apply max-w-5xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen justify-center;
-        padding-left: max(0.75rem, env(safe-area-inset-left));
-        padding-right: max(0.75rem, env(safe-area-inset-right));
-        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-        transform: translateZ(0);
-      }
-
-      .no-tap {
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .title-landing {
-        @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
-        transform: translateZ(0);
-      }
-
-      .title-compact {
-        @apply !text-[clamp(1.5rem,5vw,2.2rem)] !leading-[1.2];
-        transform: translateZ(0);
-      }
-
-      @keyframes abstract-fade {
-        from { opacity: 0; transform: translate3d(0, -5px, 0); }
-        to { opacity: 1; transform: translate3d(0, 0, 0); }
-      }
-      .abstract-expansion {
-        @apply will-change-[transform,opacity];
-        animation: abstract-fade 0.3s ease-out forwards;
-      }
-
-      @keyframes purpose-in {
-        from { opacity: 0; transform: translate3d(0, 15px, 0) rotateX(10deg); }
-        to { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
-      }
-      @keyframes purpose-out {
-        from { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
-        to { opacity: 0; transform: translate3d(0, 20px, 0) rotateX(20deg); }
-      }
-      .purpose-in { 
-        @apply will-change-[transform,opacity];
-        animation: purpose-in 0.4s ease-out forwards; 
-        backface-visibility: hidden;
-      }
-      .purpose-out { 
-        @apply will-change-[transform,opacity];
-        animation: purpose-out 0.4s ease-in forwards; 
-        backface-visibility: hidden;
-      }
-    }
-  </style>
 </head>
 
 <body class="no-tap">
