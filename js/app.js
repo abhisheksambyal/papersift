@@ -2,12 +2,9 @@
  * Main application entry point.
  * Orchestrates search, UI state, and interactions.
  */
-import { saveRecent }                           from './history.js';
-import { fetchResults, extractSearchTerms } from './search.js';
-import { renderResults }                         from './renderer_v2.js';
-import { renderPills, transitionToResults, resetToHome } from './ui.js';
-import { initializeFilters, updateFilterHighlights } from './filters.js';
-import { startPurposeLoop }                     from './purpose.js';
+import { saveRecent } from './core.js';
+import { fetchResults, extractSearchTerms } from './core.js';
+import { renderResults, renderPills, transitionToResults, resetToHome, initializeFilters, updateFilterHighlights, startPurposeLoop } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
