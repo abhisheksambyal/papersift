@@ -177,8 +177,18 @@ function renderNextChunk(container) {
   }
   
   // Performance fix: Only typeset the newly added chunk
-  if (window.MathJax?.typesetPromise) {
-    window.MathJax.typesetPromise(newElements).catch(e => console.error('MathJax error:', e));
+  if (window.renderMathInElement) {
+    newElements.forEach(el => {
+      window.renderMathInElement(el, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '\\[', right: '\\]', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false}
+        ],
+        throwOnError: false
+      });
+    });
   }
 }
 
