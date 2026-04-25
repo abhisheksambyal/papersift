@@ -131,7 +131,7 @@ function createCard(paper, highlightRegex, authorHighlightRegex) {
 }
 
 const CHUNK_SIZE = 40;
-let currentResults = [], currentIndex = 0, currentTerms = [], currentAuthorTerm = null, observer = null;
+let currentResults = [], currentIndex = 0, currentTerms = [], currentAuthorSubTerms = [], observer = null;
 
 /**
  * Render the next chunk of results.
@@ -141,7 +141,10 @@ function renderNextChunk(container) {
 
   const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
   const regex = getHighlightRegex(currentTerms);
-  const authorRegex = currentAuthorTerm ? new RegExp(`(${escapeRegex(currentAuthorTerm)})`, 'gi') : null;
+  const authorRegex = currentAuthorSubTerms.length 
+    ? new RegExp(`(${currentAuthorSubTerms.map(escapeRegex).join('|')})`, 'gi') 
+    : null;
+  
   const fragment = document.createDocumentFragment();
 
   // Create temporary container to hold the elements for MathJax
@@ -182,7 +185,7 @@ function renderNextChunk(container) {
 /**
  * Render a list of results into the DOM with infinite scroll.
  */
-export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false, authorTerm = null) {
+export function renderResults(results, terms, resultsList, resultsCount, isOrSearch = false, authorTerm = null, authorSubTerms = []) {
   const joiner = isOrSearch ? 'or' : 'and';
   
   const authorSummary = authorTerm 
@@ -208,7 +211,7 @@ export function renderResults(results, terms, resultsList, resultsCount, isOrSea
 
   currentResults = results;
   currentTerms = terms;
-  currentAuthorTerm = authorTerm;
+  currentAuthorSubTerms = authorSubTerms;
   currentIndex = 0;
   resultsList.innerHTML = '';
 

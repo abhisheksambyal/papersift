@@ -55,7 +55,7 @@ async function loadPapers() {
  */
 export function extractSearchTerms(query) {
   const lowerQuery = query.toLowerCase().trim();
-  if (!lowerQuery) return { terms: [], isOrSearch: false, authorTerm: null };
+  if (!lowerQuery) return { terms: [], isOrSearch: false, authorTerm: null, authorSubTerms: [] };
   
   let authorTerm = null;
   let processedQuery = lowerQuery;
@@ -73,20 +73,20 @@ export function extractSearchTerms(query) {
       authorTerm = lowerQuery.substring(start).trim();
       processedQuery = lowerQuery.substring(0, lowerQuery.indexOf('author:')).trim();
     }
-    
-    if (!authorTerm) authorTerm = null;
   }
+
+  const authorSubTerms = authorTerm ? authorTerm.split(/\s+/).filter(t => t.length > 0) : [];
 
   // Handle OR search
   if (processedQuery.includes(' or ')) {
     const terms = processedQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
-    return { terms, isOrSearch: true, authorTerm };
+    return { terms, isOrSearch: true, authorTerm, authorSubTerms };
   }
   
   // Handle AND search (default)
   const normalized = processedQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
   const terms = normalized.split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
-  return { terms, isOrSearch: false, authorTerm };
+  return { terms, isOrSearch: false, authorTerm, authorSubTerms };
 }
 
 /**
@@ -95,10 +95,10 @@ export function extractSearchTerms(query) {
  */
 export async function fetchResults(query, venue = '', year = '') {
   const papers = await loadPapers();
-  const { terms, isOrSearch, authorTerm } = extractSearchTerms(query);
+  const { terms, isOrSearch, authorSubTerms } = extractSearchTerms(query);
   
   const venueSet = venue && (Array.isArray(venue) ? venue.length > 0 : true) 
-    ? new Set((Array.isArray(venue) ? venue : [venue]).map(v => v.toLowerCase())) 
+    ? (Array.isArray(venue) ? venue : [venue]).map(v => v.toLowerCase()) 
     : null;
   const yearSet = year && (Array.isArray(year) ? year.length > 0 : true)
     ? new Set((Array.isArray(year) ? year : [year]).map(String)) 
@@ -107,35 +107,30 @@ export async function fetchResults(query, venue = '', year = '') {
   const results = [];
   const activeVenues = new Set();
   const activeYears = new Set();
-  const hasTerms = terms.length > 0;
+  const hasKeywords = terms.length > 0;
+  const hasAuthorTerms = authorSubTerms.length > 0;
   
   for (let i = 0, len = papers.length; i < len; i++) {
     const p = papers[i];
+    const searchable = p._searchable;
     
     // 1. Venue/Year filtering
-    if (venueSet) {
-      let match = false;
-      for (const v of venueSet) {
-        if (p._searchable.venue.includes(v)) { match = true; break; }
-      }
-      if (!match) continue;
-    }
+    if (venueSet && !venueSet.some(v => searchable.venue.includes(v))) continue;
     if (yearSet && !yearSet.has(String(p.year))) continue;
 
     // 2. Search matching and Scoring
     let score = 0;
     
-    // A. Author Match (Strict Filter)
-    if (authorTerm) {
-      if (!p._searchable.authors.includes(authorTerm)) continue;
+    // A. Author Match (Strict Filter - All terms must match)
+    if (hasAuthorTerms) {
+      if (!authorSubTerms.every(t => searchable.authors.includes(t))) continue;
       score += WEIGHTS.AUTHOR_MATCH;
     }
 
     // B. Keyword Match (Searches title and abstract only)
-    if (hasTerms) {
+    if (hasKeywords) {
       let matchCount = 0;
       const blob = p._search_paper_abstract;
-      const searchable = p._searchable;
       
       for (const term of terms) {
         if (blob.includes(term)) {
@@ -152,19 +147,19 @@ export async function fetchResults(query, venue = '', year = '') {
         if (matchCount < terms.length) continue;
       }
     } 
-    // If no keywords and no author term, and no filters, skip scoring
-    else if (!authorTerm && !venueSet && !yearSet) {
+    // Skip if no filters/terms were actually provided
+    else if (!hasAuthorTerms && !venueSet && !yearSet) {
       continue;
     }
 
     results.push({ ...p, score });
     
     // Track facets for filter highlighting
-    const venueLower = p._searchable.venue;
-    if (venueLower.includes('miccai'))  activeVenues.add('miccai');
-    if (venueLower.includes('midl'))    activeVenues.add('midl');
-    if (venueLower.includes('isbi'))    activeVenues.add('isbi');
-    if (venueLower.includes('neurips')) activeVenues.add('neurips');
+    const v = searchable.venue;
+    if (v.includes('miccai'))  activeVenues.add('miccai');
+    if (v.includes('midl'))    activeVenues.add('midl');
+    if (v.includes('isbi'))    activeVenues.add('isbi');
+    if (v.includes('neurips')) activeVenues.add('neurips');
     if (p.year) activeYears.add(String(p.year));
   }
 
