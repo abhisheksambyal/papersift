@@ -1,4 +1,5 @@
 import { getRecent, DEFAULTS } from './history.js';
+import { fadeOutAndHide, showAndFadeIn } from './animations.js';
 
 /** Re-render the example/recent-search pills. */
 export function renderPills(examplePills) {
@@ -22,25 +23,15 @@ export function transitionToResults(refs) {
     logoTitle.classList.remove('title-landing');
     logoTitle.classList.add('title-compact');
     
-    // Fade out elements
-    subtitle.classList.add('opacity-0', 'pointer-events-none');
-    examplePills.classList.add('opacity-0', 'pointer-events-none');
-    purposeSection.classList.add('opacity-0', 'pointer-events-none');
-    
-    if (searchHints) searchHints.classList.add('opacity-0', 'pointer-events-none');
+    // Fade out elements smoothly
+    fadeOutAndHide(subtitle);
+    fadeOutAndHide(examplePills);
+    fadeOutAndHide(purposeSection);
+    fadeOutAndHide(searchHints);
 
-    // Hide them from layout after fade
+    // Show results section smoothly after layout settles
     setTimeout(() => {
-      subtitle.classList.add('hidden');
-      examplePills.classList.add('hidden');
-      purposeSection.classList.add('hidden');
-      if (searchHints) searchHints.classList.add('hidden');
-    }, 400);
-
-    setTimeout(() => {
-      resultsSection.classList.remove('hidden', 'invisible');
-      resultsSection.classList.add('opacity-100', 'translate-y-0');
-      resultsSection.classList.remove('opacity-0', 'translate-y-4');
+      showAndFadeIn(resultsSection);
     }, 200);
   });
 }
@@ -53,22 +44,19 @@ export function resetToHome(refs, onReset) {
 
   requestAnimationFrame(() => {
     // Hide results first
-    resultsSection.classList.add('opacity-0', 'translate-y-4');
-    resultsSection.classList.remove('opacity-100', 'translate-y-0');
+    fadeOutAndHide(resultsSection);
 
     setTimeout(() => {
-      resultsSection.classList.add('invisible', 'hidden');
-      
       appContainer.classList.add('justify-center');
       headerSection.classList.remove('pb-4', 'pt-6', 'sm:pt-2');
 
       logoTitle.classList.remove('title-compact');
       logoTitle.classList.add('title-landing');
 
-      subtitle.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-      examplePills.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-      purposeSection.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-      if (searchHints) searchHints.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      showAndFadeIn(subtitle);
+      showAndFadeIn(examplePills);
+      showAndFadeIn(purposeSection);
+      if (searchHints) showAndFadeIn(searchHints);
       
       renderPills(examplePills);
     }, 400);

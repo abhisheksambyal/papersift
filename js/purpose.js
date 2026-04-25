@@ -2,6 +2,8 @@
  * Logic for the rotating purpose questions on the landing page.
  */
 
+import { restartAnimation } from './animations.js';
+
 const QUESTIONS = [
   "Which MICCAI 2024 papers use the BraTS dataset?",
   "Where can I find Few-Shot Learning papers?",
@@ -38,8 +40,7 @@ export function startPurposeLoop(el) {
 
   const showFirst = () => {
     el.innerHTML = pool[idx];
-    void el.offsetHeight;
-    el.classList.add('purpose-in');
+    restartAnimation(el, 'purpose-in');
     idx++;
   };
 
@@ -52,8 +53,7 @@ export function startPurposeLoop(el) {
         // Show next individual question
         el.innerHTML = pool[idx];
         el.classList.remove('purpose-out');
-        void el.offsetHeight;
-        el.classList.add('purpose-in');
+        restartAnimation(el, 'purpose-in');
         idx++;
       } else {
         // FINALE: Show 3 random questions + Solution, then STOP
@@ -62,8 +62,7 @@ export function startPurposeLoop(el) {
 
         el.innerHTML = `<span class="block mb-2 opacity-60">${summary}</span> ${finaleQuestion}`;
         el.classList.remove('purpose-out');
-        void el.offsetHeight;
-        el.classList.add('purpose-in');
+        restartAnimation(el, 'purpose-in');
 
         // Stop the animation
         clearInterval(intervalId);
