@@ -63,13 +63,13 @@ export function extractSearchTerms(query) {
   // Extract author search if present
   if (lowerQuery.includes('author:')) {
     const start = lowerQuery.indexOf('author:') + 7;
-    const end = lowerQuery.indexOf(';', start);
+    const end = lowerQuery.indexOf(',', start);
     
     if (end !== -1) {
       authorTerm = lowerQuery.substring(start, end).trim();
       processedQuery = (lowerQuery.substring(0, lowerQuery.indexOf('author:')) + lowerQuery.substring(end + 1)).trim();
     } else {
-      // No semicolon: treat everything after "author:" as the author term
+      // No comma: treat everything after "author:" as the author term
       authorTerm = lowerQuery.substring(start).trim();
       processedQuery = lowerQuery.substring(0, lowerQuery.indexOf('author:')).trim();
     }
