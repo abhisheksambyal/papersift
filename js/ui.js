@@ -16,7 +16,7 @@ export function transitionToResults(refs) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
   requestAnimationFrame(() => {
     appContainer.classList.remove('justify-center');
-    headerSection.classList.add('pb-4', 'pt-2');
+    headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
     
     // Toggle title size classes
     logoTitle.classList.remove('title-landing');
