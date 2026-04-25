@@ -3,10 +3,9 @@
  */
 
 const QUESTIONS = [
-  "Which papers use the ISIC 2019 dataset?",
-  "Where can I find NeurIPS 2024 breakthroughs?",
+  "Which MICCAI 2024 papers use the BraTS dataset?",
   "Where can I find Few-Shot Learning papers?",
-  "Which conferences include BRATS dataset papers?",
+  "Which papers are based on cardiac data?",
   "Tired of checking every conference manually?",
   "Stop scouring 40+ conference sites manually.<br>Enter the keywords and Find the papers you need — faster."
 ];
