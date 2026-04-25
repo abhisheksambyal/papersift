@@ -125,13 +125,14 @@ export async function fetchResults(query, venue = '', year = '') {
     // 2. Search matching and Scoring
     let score = 0;
     
-    // Mode A: Author search (takes precedence if prefix is used)
+    // A. Author Match (Strict Filter)
     if (authorTerm) {
       if (!p._searchable.authors.includes(authorTerm)) continue;
-      score = WEIGHTS.AUTHOR_MATCH;
-    } 
-    // Mode B: Keyword search (searches title and abstract only)
-    else if (hasTerms) {
+      score += WEIGHTS.AUTHOR_MATCH;
+    }
+
+    // B. Keyword Match (Searches title and abstract only)
+    if (hasTerms) {
       let matchCount = 0;
       const blob = p._search_paper_abstract;
       const searchable = p._searchable;
@@ -144,12 +145,16 @@ export async function fetchResults(query, venue = '', year = '') {
         }
       }
       
-      // Enforce AND/OR logic
+      // Enforce AND/OR logic for keywords
       if (isOrSearch) {
         if (matchCount === 0) continue;
       } else {
         if (matchCount < terms.length) continue;
       }
+    } 
+    // If no keywords and no author term, and no filters, skip scoring
+    else if (!authorTerm && !venueSet && !yearSet) {
+      continue;
     }
 
     results.push({ ...p, score });
