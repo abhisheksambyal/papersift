@@ -1,68 +1,72 @@
-# PaperSift
+# 📰 PaperSift
 
-A high-performance research paper search engine designed for clinical and medical imaging researchers. Search across NeurIPS, MICCAI, MIDL, and ISBI proceedings instantly.
+A high-performance, monochromatic research search engine designed for clinical and medical imaging researchers. PaperSift provides sub-millisecond access to over 40,000 papers from major conferences including NeurIPS, MICCAI, MIDL, and ISBI.
 
-## Architecture & Project Structure
+## ✨ Key Features
 
-PaperSift is built as a static, client-side application for maximum performance and easy deployment.
+- **⚡ Instant Search**: Client-side filtering of 40,000+ papers with negligible latency.
+- **📚 Extensive Archive**: Full proceedings for NeurIPS (1987-2024), MICCAI, MIDL, and ISBI.
+- **🎨 Newsprint Aesthetic**: A clean, monochromatic interface optimized for focus.
+- **🌓 Adaptive Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset.
+- **🔢 LaTeX Support**: Integrated MathJax for rendering complex mathematical abstracts.
+- **🚀 Static Architecture**: Optimized for GitHub Pages with zero-server dependency in production.
 
-- **`api/`**: Backend logic for scrapers, search indexing, and conference configurations.
-- **`data/`**: Production data index (`papers.json` and `config.json`) consumed by the frontend.
-- **`data_cache/`**: Segregated local cache (by conference/year) to enable incremental updates.
-- **`js/`**: Frontend search logic, filtering, theme management, and animations.
-- **`scripts/`**: Maintenance utilities for data synchronization and static site generation.
-- **`index.html`**: The primary search interface with a "Newsprint" aesthetic.
+---
 
-## Search Tips
+## 🔍 Search Syntax
 
-PaperSift supports advanced query syntax to help you find research quickly:
+PaperSift supports advanced query syntax for precision literature discovery:
 
-- **General Search**: Enter keywords to search through paper **titles** and **abstracts** (e.g., `diffusion models`).
-- **Author Search**: Use the `author:` prefix to search specifically for researchers.
-  - `author: sambyal` — Finds papers where "sambyal" is in the author list.
-  - `author: sambyal; calibration` — Finds papers by "sambyal" that also mention "calibration" in the title or abstract.
-  - `author: abhishek sambyal;` — Finds specific author names (the semicolon is optional).
-- **Boolean Logic**:
-  - `transformer and vision` (or just space separated) — Finds papers containing both terms.
-  - `cnn or rnn` — Finds papers containing either term.
-- **Filters**: Use the sidebar to narrow results by conference (NeurIPS, MICCAI, etc.) and year.
+### General Search
+By default, keywords search through paper **titles** and **abstracts**.
+- `diffusion models` — Finds papers containing both words in any order.
+- `transformer or vision` — Finds papers containing either term.
 
-## Data Management
+### Author Search
+Use the `author:` prefix to target specific researchers or labs.
+- `author: sambyal` — Papers where "sambyal" is an author.
+- `author: doe smith` — Papers co-authored by "doe" and "smith" (Nested AND search).
+- `author: Hinton; deep learning` — Papers by "Hinton" containing "deep learning" in the title/abstract.
+- `author: abhishek sambyal;` — Captures the name explicitly (semicolon is optional).
 
-We use a unified synchronization pipeline to keep the database fresh.
+---
 
-### Synchronize Data
-Fetch missing records and update the frontend index in one step:
-```bash
-python3 scripts/sync.py
-```
+## 🛠️ Installation & Development
 
-### Full Rebuild
-Clear the cache and re-fetch all historical data from scratch:
-```bash
-python3 scripts/sync.py --full
-```
-
-### Cache & Indexing Logic
-- **Incremental Fetching**: The system skips existing files in `data_cache/` by default.
-- **Global Index**: `full_index.json` is a merged snapshot of the cache. If deleted, run `scripts/sync.py` to rebuild it from local files without re-downloading from the web.
-- **Production Index**: `data/papers.json` is a minified index optimized for browser-side search.
-
-## Deployment
-
-PaperSift is optimized for **GitHub Pages**. All search operations are performed client-side using the pre-built JSON index, eliminating the need for a live backend server in production.
-
-## Development
-
-To run the application locally with the dynamic backend:
+### Local Development
+To run the search engine locally with the dynamic backend:
 ```bash
 python3 server.py
 ```
 
-## Features
+### Data Synchronization
+The database is maintained via a unified synchronization pipeline.
 
-- **Instant Search**: Client-side filtering of 40,000+ papers with sub-millisecond latency.
-- **Extensive Archive**: Full proceedings for NeurIPS (1987-2024), MICCAI, MIDL, and ISBI.
-- **Dynamic Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset times.
-- **LaTeX Support**: MathJax integration for rendering mathematical notation in abstracts.
-- **Responsive Design**: A clean, "Newsprint" aesthetic optimized for mobile and desktop research.
+**Sync missing records:**
+```bash
+python3 scripts/sync.py
+```
+
+**Full rebuild from scratch:**
+```bash
+python3 scripts/sync.py --full
+```
+
+---
+
+## 🏗️ Technical Architecture
+
+PaperSift is built as a **Static Web Application**. Search indexing and filtering are performed entirely in the browser using an optimized JSON blob.
+
+- **`js/`**: Core search logic and rendering engine.
+- **`data/`**: Minified production index (`papers.json`).
+- **`api/`**: Backend ingestion logic and configuration.
+- **`scripts/`**: Maintenance utilities for data sync and site generation.
+
+## 🚢 Deployment
+
+Optimized for **GitHub Pages**. Since all search operations are client-side, the project requires no live backend server in production.
+
+---
+
+*Designed for researchers, by researchers.*
