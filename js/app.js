@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsCount:      document.getElementById('results-count'),
     conferenceFilters: document.getElementById('conference-filters'),
     yearFilters:       document.getElementById('year-filters'),
+    searchHints:       document.getElementById('search-hints'),
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
