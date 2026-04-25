@@ -228,7 +228,7 @@
   <div class="app-container-safe" id="app-container">
 
     <header id="header-section"
-      class="flex flex-col items-center justify-center min-h-[70vh] transition-[min-height,padding] duration-700 ease-in-out will-change-[min-height]">
+      class="flex flex-col items-center justify-center flex-1 transition-[min-height,padding] duration-700 ease-in-out will-change-[min-height]">
 
       <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform"
         id="logo-container">
@@ -313,17 +313,17 @@
     </header>
 
     <main id="results-section"
-      class="opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
+      class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
       <div class="py-2 mb-4">
         <h2 id="results-count"
           class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
       </div>
       <div id="results-list" class="flex flex-col gap-1"></div>
-  </main>
+    </main>
 
-    <footer class="mt-auto pt-12 pb-6 text-center border-t border-ink/5 dark:border-paper/5">
+    <footer class="mt-auto pt-0 pb-0 text-center border-ink/5 dark:border-paper/5 max-w-xs mx-auto w-full">
       <p class="text-[0.65rem] uppercase tracking-[0.3em] text-ink/30 dark:text-paper/30 font-serif italic">
-        © 2026 PaperSift — <a href="LICENSE" class="hover:text-ink dark:hover:text-paper transition-colors">MIT License</a>
+        © 2026 PaperSift
       </p>
     </footer>
   </div>
