@@ -13,9 +13,9 @@ export function renderPills(examplePills) {
  * @param {{ headerSection, logoTitle, subtitle, examplePills, resultsSection }} refs
  */
 export function transitionToResults(refs) {
-  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
   requestAnimationFrame(() => {
-    headerSection.classList.remove('flex-1');
+    appContainer.classList.remove('justify-center');
     headerSection.classList.add('pb-4', 'pt-2');
     
     // Toggle title size classes
@@ -58,7 +58,7 @@ export function resetToHome(refs, onReset) {
     setTimeout(() => {
       resultsSection.classList.add('invisible', 'hidden');
       
-      headerSection.classList.add('flex-1');
+      appContainer.classList.add('justify-center');
       headerSection.classList.remove('pb-4', 'pt-2');
 
       logoTitle.classList.remove('title-compact');
