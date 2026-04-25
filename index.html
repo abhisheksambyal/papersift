@@ -127,9 +127,9 @@
     href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet">
 
-  <link rel="preload" href="js/app.js" as="script" crossorigin>
-  <link rel="preload" href="js/search.js" as="script" crossorigin>
-  <link rel="preload" href="js/renderer_v2.js" as="script" crossorigin>
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/search.js">
+  <link rel="modulepreload" href="js/renderer_v2.js">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -353,7 +353,7 @@
       }
     };
   </script>
-  <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
+  <script defer data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
     data-id="abhisheksinghsambyal" data-description="Support me on Buy me a coffee!"
     data-message=" Thanks for supporting PaperSift 🚀 It really helps me build and improve tools for researchers like you."
     data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
