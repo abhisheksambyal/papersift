@@ -500,8 +500,8 @@ export function transitionToResults(refs) {
 
     requestAnimationFrame(() => {
       // 1. First animate the papersift to smaller size
-      appContainer.classList.add('justify-start');
-      appContainer.classList.remove('justify-center');
+      appContainer.classList.add('justify-between');
+      appContainer.classList.remove('justify-center', 'justify-start');
       headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
       logoTitle.classList.remove('title-landing');
       logoTitle.classList.add('title-compact');
@@ -538,7 +538,7 @@ export function resetToHome(refs, onReset) {
 
     setTimeout(() => {
       appContainer.classList.add('justify-center');
-      appContainer.classList.remove('justify-start');
+      appContainer.classList.remove('justify-start', 'justify-between');
       headerSection.classList.remove('pb-4', 'pt-6', 'sm:pt-2');
 
       logoTitle.classList.remove('title-compact');
