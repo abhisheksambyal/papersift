@@ -512,7 +512,6 @@ export function transitionToResults(refs) {
       setTimeout(() => {
         fadeOutAndHide(examplePills);
         fadeOutAndHide(purposeSection);
-        if (searchHints) fadeOutAndHide(searchHints);
         
         // Stop background animations to save CPU overhead
         stopPurposeLoop();
