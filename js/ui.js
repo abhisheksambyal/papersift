@@ -13,7 +13,7 @@ import { DEFAULTS, getRecent } from './core.js';
 export function fadeOutAndHide(element, duration = 400) {
   if (!element) return;
   element.classList.add('opacity-0', 'pointer-events-none');
-  
+
   setTimeout(() => {
     element.classList.add('hidden');
   }, duration);
@@ -27,7 +27,7 @@ export function fadeOutAndHide(element, duration = 400) {
 export function showAndFadeIn(element) {
   if (!element) return;
   element.classList.remove('hidden', 'invisible');
-  
+
   // Wait a frame to ensure display:block is calculated before animating opacity
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -45,7 +45,7 @@ export function showAndFadeIn(element) {
 export function restartAnimation(element, animationClass) {
   if (!element) return;
   element.classList.remove(animationClass);
-  
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       element.classList.add(animationClass);
@@ -155,7 +155,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
   try {
     const res = await fetch('data/config.json');
     const config = await res.json();
-    
+
     // Populate Conferences
     const allConfHtml = `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
@@ -173,7 +173,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
         </span>
       </label>
     `).join('');
-    
+
     // Populate Years
     const allYearHtml = `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
@@ -199,7 +199,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
 
         const isAll = e.target.name.endsWith('-all');
         const groupName = e.target.name.replace('-all', '');
-        
+
         if (isAll && e.target.checked) {
           document.querySelectorAll(`input[name="${groupName}"]`).forEach(cb => cb.checked = false);
         } else if (!isAll && e.target.checked) {
@@ -378,7 +378,7 @@ function createCard(paper, highlightRegex, authorHighlightRegex) {
   return card;
 }
 
-const CHUNK_SIZE = 40;
+const CHUNK_SIZE = 10;
 let currentResults = [], currentIndex = 0, currentTerms = [], currentAuthorSubTerms = [], observer = null;
 
 /**
@@ -496,15 +496,15 @@ export function renderPills(examplePills) {
  */
 export function transitionToResults(refs) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
-  
+
   requestAnimationFrame(() => {
     appContainer.classList.remove('justify-center');
     headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
-    
+
     // Toggle title size classes
     logoTitle.classList.remove('title-landing');
     logoTitle.classList.add('title-compact');
-    
+
     // Fade out elements smoothly
     fadeOutAndHide(subtitle);
     fadeOutAndHide(examplePills);
@@ -538,14 +538,14 @@ export function resetToHome(refs, onReset) {
       showAndFadeIn(examplePills);
       showAndFadeIn(purposeSection);
       if (searchHints) showAndFadeIn(searchHints);
-      
+
       renderPills(examplePills);
     }, 400);
 
     input.value = '';
     document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
     document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
-    
+
     resultsList.innerHTML = '';
     resultsCount.innerHTML = '';
 
