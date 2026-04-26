@@ -496,13 +496,13 @@ export function renderPills(examplePills) {
  */
 export function transitionToResults(refs) {
   return new Promise(resolve => {
-    const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
+    const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection } = refs;
 
     requestAnimationFrame(() => {
       // 1. First animate the papersift to smaller size
-      appContainer.classList.add('justify-between');
-      appContainer.classList.remove('justify-center', 'justify-start');
-      headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
+      headerSection.classList.remove('header-landing');
+      headerSection.classList.add('header-compact');
+      
       logoTitle.classList.remove('title-landing');
       logoTitle.classList.add('title-compact');
       subtitle.classList.remove('subtitle-landing');
@@ -530,16 +530,15 @@ export function transitionToResults(refs) {
  * Restore the landing page layout.
  */
 export function resetToHome(refs, onReset) {
-  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, appContainer, searchHints } = refs;
+  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, searchHints } = refs;
 
   requestAnimationFrame(() => {
     // Hide results first
     fadeOutAndHide(resultsSection);
 
     setTimeout(() => {
-      appContainer.classList.add('justify-center');
-      appContainer.classList.remove('justify-start', 'justify-between');
-      headerSection.classList.remove('pb-4', 'pt-6', 'sm:pt-2');
+      headerSection.classList.remove('header-compact');
+      headerSection.classList.add('header-landing');
 
       logoTitle.classList.remove('title-compact');
       logoTitle.classList.add('title-landing');

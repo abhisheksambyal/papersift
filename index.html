@@ -124,9 +124,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.buymeacoffee.com">
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
   </noscript>
   <link rel="preload" href="assets/css/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
@@ -139,8 +142,12 @@
   <link rel="modulepreload" href="js/ui.js">
 
   <style>
+    .app-container-safe { min-height: 100dvh !important; }
     .subtitle-landing { font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 1.5rem; }
     .subtitle-compact { font-size: 0.75rem; margin-top: 0.125rem; margin-bottom: 0.75rem; }
+    .header-landing { padding-top: 2.5rem; padding-bottom: 1rem; }
+    .header-compact { padding-top: 1.5rem; padding-bottom: 1rem; }
+    @media (min-width: 640px) { .header-compact { padding-top: 0.5rem; } }
   </style>
 </head>
 
@@ -164,9 +171,10 @@
     </button>
   </div>
 
-  <main class="app-container-safe" id="app-container">
+  <main class="app-container-safe justify-start" id="app-container">
 
-    <header id="header-section" class="flex flex-col items-center transition-[padding] duration-700 ease-in-out">
+    <header id="header-section"
+      class="flex flex-col items-center transition-[padding] duration-700 ease-in-out header-landing">
 
       <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform"
         id="logo-container">
@@ -231,7 +239,8 @@
         </div>
 
         <!-- Example / recent-search pills -->
-        <div id="example-pills" class="flex flex-wrap gap-2 mt-4 sm:mt-6 text-[0.65rem] uppercase tracking-widest transition-opacity duration-500 ease-in-out">
+        <div id="example-pills"
+          class="flex flex-wrap gap-2 mt-4 sm:mt-6 text-[0.65rem] uppercase tracking-widest transition-opacity duration-500 ease-in-out">
           <span
             class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
           <span
@@ -243,32 +252,35 @@
 
     </header>
 
-    <section id="results-section"
-      class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
-      <div class="py-2 mb-4">
-        <h2 id="results-count"
-          class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
-      </div>
-      <div id="results-list" class="flex flex-col gap-1"></div>
-    </section>
+    <div class="flex-grow flex flex-col">
+      <section id="results-section"
+        class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
+        <div class="py-2 mb-4">
+          <h2 id="results-count"
+            class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
+        </div>
+        <div id="results-list" class="flex flex-col gap-1"></div>
+      </section>
 
-    <!-- Purpose Loop / Help Text -->
-    <div id="purpose-section"
-      class="flex flex-col items-center justify-center text-center transition-opacity duration-500 ease-in-out [perspective:1000px] py-8">
-      <p id="purpose-text"
-        class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[5rem] sm:min-h-[8rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
-        <!-- Dynamically populated loop -->
-      </p>
+      <!-- Purpose Loop / Help Text -->
+      <div id="purpose-section" class="flex flex-col items-center justify-start text-center transition-opacity duration-500 ease-in-out [perspective:1000px] pt-0">
+        <p id="purpose-text" class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[5rem] sm:min-h-[8rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
+          <!-- Dynamically populated loop -->
+        </p>
+      </div>
     </div>
 
-    <footer class="pt-0 pb-0 text-center border-ink/5 dark:border-paper/5 max-w-xs mx-auto w-full">
+    <div class="h-[15vh] min-h-[4rem]"></div>
+
+    <footer class="py-6 text-center border-ink/5 dark:border-paper/5 max-w-xs mx-auto w-full">
       <p class="text-[0.65rem] uppercase tracking-[0.3em] text-ink/30 dark:text-paper/30 font-serif italic">
         © 2026 PaperSift
       </p>
     </footer>
   </main>
-  <script defer data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
-    data-id="abhisheksinghsambyal" data-description="Support me on Buy me a coffee!"
+  <script defer data-name="BMC-Widget" data-cfasync="false"
+    src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="abhisheksinghsambyal"
+    data-description="Support me on Buy me a coffee!"
     data-message=" Thanks for supporting PaperSift 🚀 It really helps me build and improve tools for researchers like you."
     data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
   <script defer src="assets/js/katex.min.js"></script>
