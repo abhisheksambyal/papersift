@@ -495,25 +495,28 @@ export function renderPills(examplePills) {
  * Collapse the header into compact search mode and reveal the results section.
  */
 export function transitionToResults(refs) {
-  const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
+  return new Promise(resolve => {
+    const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
 
-  requestAnimationFrame(() => {
-    appContainer.classList.remove('justify-center');
-    headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
+    requestAnimationFrame(() => {
+      appContainer.classList.remove('justify-center');
+      headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
 
-    // Toggle title size classes
-    logoTitle.classList.remove('title-landing');
-    logoTitle.classList.add('title-compact');
+      // Toggle title size classes
+      logoTitle.classList.remove('title-landing');
+      logoTitle.classList.add('title-compact');
 
-    // Fade out elements smoothly
-    fadeOutAndHide(subtitle);
-    fadeOutAndHide(examplePills);
-    fadeOutAndHide(purposeSection);
+      // Fade out elements smoothly
+      fadeOutAndHide(subtitle);
+      fadeOutAndHide(examplePills);
+      fadeOutAndHide(purposeSection);
 
-    // Show results section smoothly after layout settles
-    setTimeout(() => {
-      showAndFadeIn(resultsSection);
-    }, 200);
+      // Show results section smoothly after layout settles
+      setTimeout(() => {
+        showAndFadeIn(resultsSection);
+        resolve();
+      }, 400);
+    });
   });
 }
 

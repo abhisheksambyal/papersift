@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── State ─────────────────────────────────────────────────────────────────
   let hasSearched   = false;
   let debounceTimer = null;
+  let transitionPromise = Promise.resolve();
 
   // ── Initialization ────────────────────────────────────────────────────────
   renderPills(domRefs.examplePills);
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(debounceTimer);
       resetToHome(domRefs, () => { 
         hasSearched = false; 
+        transitionPromise = Promise.resolve();
         // Clear highlights after reset animation
         setTimeout(() => updateFilterHighlights([]), 500);
       });
@@ -52,8 +54,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Live Search
   domRefs.input.addEventListener('input', () => {
+    const query = domRefs.input.value.trim();
+    const selectedVenues = Array.from(document.querySelectorAll('input[name="conference"]:checked')).map(cb => cb.value);
+    const selectedYears = Array.from(document.querySelectorAll('input[name="year"]:checked')).map(cb => cb.value);
+    
+    // Start transition immediately on first input to hide top elements
+    if (!hasSearched && (query || selectedVenues.length || selectedYears.length)) {
+      transitionPromise = transitionToResults(domRefs);
+      hasSearched = true;
+    }
+
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(initiateSearch, 300);
+    debounceTimer = setTimeout(initiateSearch, 500); // 500ms debounce
   });
 
   // History Save & Search
@@ -70,6 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const term = e.target.textContent.trim();
     domRefs.input.value = term;
     saveRecent(term);
+    
+    if (!hasSearched) {
+      transitionPromise = transitionToResults(domRefs);
+      hasSearched = true;
+    }
     initiateSearch();
   });
 
@@ -91,11 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!hasSearched) {
-      transitionToResults(domRefs);
+      transitionPromise = transitionToResults(domRefs);
       hasSearched = true;
     }
     
-    performSearch(query, selectedVenues, selectedYears);
+    // Wait for UI layout transitions to finish before blocking main thread with results render
+    transitionPromise.then(() => {
+      performSearch(query, selectedVenues, selectedYears);
+    });
   }
 
   async function performSearch(query, venues, years) {
