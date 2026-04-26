@@ -124,10 +124,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.buymeacoffee.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/katex.min.css">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
+  </noscript>
+  <link rel="preload" href="assets/css/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="assets/css/katex.min.css">
+  </noscript>
   <link rel="stylesheet" href="assets/css/tailwind.min.css">
 
   <link rel="modulepreload" href="js/app.js?v=3">
@@ -157,7 +161,7 @@
     </button>
   </div>
 
-  <div class="app-container-safe" id="app-container">
+  <main class="app-container-safe" id="app-container">
 
     <header id="header-section" class="flex flex-col items-center transition-[padding] duration-700 ease-in-out">
 
@@ -236,14 +240,14 @@
 
     </header>
 
-    <main id="results-section"
+    <section id="results-section"
       class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform]">
       <div class="py-2 mb-4">
         <h2 id="results-count"
           class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
       </div>
       <div id="results-list" class="flex flex-col gap-1"></div>
-    </main>
+    </section>
 
     <!-- Purpose Loop / Help Text -->
     <div id="purpose-section"
@@ -259,7 +263,7 @@
         © 2026 PaperSift
       </p>
     </footer>
-  </div>
+  </main>
   <script defer data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
     data-id="abhisheksinghsambyal" data-description="Support me on Buy me a coffee!"
     data-message=" Thanks for supporting PaperSift 🚀 It really helps me build and improve tools for researchers like you."
