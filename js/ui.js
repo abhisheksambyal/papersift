@@ -499,23 +499,30 @@ export function transitionToResults(refs) {
     const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, searchHints, appContainer } = refs;
 
     requestAnimationFrame(() => {
+      // 1. First animate the papersift to smaller size
+      appContainer.classList.add('justify-start');
       appContainer.classList.remove('justify-center');
       headerSection.classList.add('pb-4', 'pt-6', 'sm:pt-2');
-
-      // Toggle title size classes
       logoTitle.classList.remove('title-landing');
       logoTitle.classList.add('title-compact');
+      subtitle.classList.remove('subtitle-landing');
+      subtitle.classList.add('subtitle-compact');
 
-      // Fade out elements smoothly
-      fadeOutAndHide(subtitle);
-      fadeOutAndHide(examplePills);
-      fadeOutAndHide(purposeSection);
-
-      // Show results section smoothly after layout settles
+      // 2. Then remove the example pills (0.5s later)
       setTimeout(() => {
-        showAndFadeIn(resultsSection);
-        resolve();
-      }, 400);
+        fadeOutAndHide(examplePills);
+        fadeOutAndHide(purposeSection);
+        if (searchHints) fadeOutAndHide(searchHints);
+        
+        // Stop background animations to save CPU overhead
+        stopPurposeLoop();
+
+        // 3. Then show the search results (another 0.5s later)
+        setTimeout(() => {
+          showAndFadeIn(resultsSection);
+          resolve();
+        }, 500);
+      }, 500);
     });
   });
 }
@@ -532,12 +539,14 @@ export function resetToHome(refs, onReset) {
 
     setTimeout(() => {
       appContainer.classList.add('justify-center');
+      appContainer.classList.remove('justify-start');
       headerSection.classList.remove('pb-4', 'pt-6', 'sm:pt-2');
 
       logoTitle.classList.remove('title-compact');
       logoTitle.classList.add('title-landing');
+      subtitle.classList.remove('subtitle-compact');
+      subtitle.classList.add('subtitle-landing');
 
-      showAndFadeIn(subtitle);
       showAndFadeIn(examplePills);
       showAndFadeIn(purposeSection);
       if (searchHints) showAndFadeIn(searchHints);
