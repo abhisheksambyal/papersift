@@ -79,6 +79,8 @@ function shuffle(array) {
  */
 export function startPurposeLoop(el) {
   if (!el) return;
+  // Critical: prevent multiple timers from stacking on navigation
+  stopPurposeLoop();
 
   const discoveryQuestions = QUESTIONS.slice(0, -1);
   const finaleQuestion = QUESTIONS[QUESTIONS.length - 1];

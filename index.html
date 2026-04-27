@@ -207,21 +207,21 @@
       }
 
       @keyframes purpose-in {
-        from { opacity: 0; transform: translate3d(0, 15px, 0) rotateX(10deg); }
-        to { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
+        0% { opacity: 0; filter: blur(4px); transform: scale(0.98) translateY(5px); }
+        100% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); }
       }
       @keyframes purpose-out {
-        from { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
-        to { opacity: 0; transform: translate3d(0, 20px, 0) rotateX(20deg); }
+        0% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); }
+        100% { opacity: 0; filter: blur(4px); transform: scale(1.02) translateY(-5px); }
       }
       .purpose-in { 
-        @apply will-change-[transform,opacity];
-        animation: purpose-in 0.4s ease-out forwards; 
+        @apply will-change-[transform,opacity,filter];
+        animation: purpose-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         backface-visibility: hidden;
       }
       .purpose-out { 
-        @apply will-change-[transform,opacity];
-        animation: purpose-out 0.4s ease-in forwards; 
+        @apply will-change-[transform,opacity,filter];
+        animation: purpose-out 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         backface-visibility: hidden;
       }
     }
