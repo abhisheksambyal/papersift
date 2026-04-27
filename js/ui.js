@@ -525,6 +525,7 @@ export function resetToHome(refs, onReset) {
       if (searchHints) showAndFadeIn(searchHints);
 
       renderPills(examplePills);
+      startPurposeLoop(purposeSection.querySelector('p'));
     }, 400);
 
     input.value = '';
