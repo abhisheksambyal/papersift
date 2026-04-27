@@ -60,7 +60,6 @@ const QUESTIONS = [
   "Which MICCAI 2024 papers use the BraTS dataset?",
   "Where can I find Few-Shot Learning papers?",
   "Which papers are based on cardiac data?",
-  "Tired of checking every conference manually?",
   "Stop scouring 40+ conference sites manually.<br>Enter the keywords and Find the papers you need — faster."
 ];
 
@@ -82,12 +81,13 @@ export function startPurposeLoop(el) {
   // Critical: prevent multiple timers from stacking on navigation
   stopPurposeLoop();
 
-  const discoveryQuestions = QUESTIONS.slice(0, -1);
+  const specificQuestion = "Tired of checking every conference manually?";
+  const discoveryQuestions = QUESTIONS.filter(q => q !== specificQuestion && q !== QUESTIONS[QUESTIONS.length - 1]);
   const finaleQuestion = QUESTIONS[QUESTIONS.length - 1];
 
   shuffle(discoveryQuestions);
-  // The pool is just the discovery questions for the first cycle
-  const pool = [...discoveryQuestions];
+  // The pool is the shuffled questions followed by the specific trigger question
+  const pool = [...discoveryQuestions, specificQuestion];
   let idx = 0;
 
   el.classList.add('opacity-0', 'translate-y-4');
@@ -479,7 +479,7 @@ export function transitionToResults(refs) {
       // 1. First animate the papersift to smaller size
       headerSection.classList.remove('header-landing');
       headerSection.classList.add('header-compact');
-      
+
       logoTitle.classList.remove('title-landing');
       logoTitle.classList.add('title-compact');
       subtitle.classList.remove('subtitle-landing');
@@ -489,7 +489,7 @@ export function transitionToResults(refs) {
       setTimeout(() => {
         fadeOutAndHide(examplePills);
         fadeOutAndHide(purposeSection);
-        
+
         // Stop background animations to save CPU overhead
         stopPurposeLoop();
 
