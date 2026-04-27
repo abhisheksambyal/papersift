@@ -24,20 +24,14 @@ async function loadPapers() {
       if (!res.ok) throw new Error(`Failed to load paper data: ${res.status}`);
       const data = await res.json();
       
-      // Pre-process for high-performance searching
+      // Pre-process for performance
       for (const p of data) {
         const t = (p.title || '').toLowerCase();
         const a = (p.authors || '').toLowerCase();
         const abs = (p.abstract || '').toLowerCase();
-        const v = (p.venue || '').toLowerCase();
-        
-        // Combined for papers (titles) and abstracts only
-        p._search_paper_abstract = `${t} ${abs}`;
-        
-        // Individual fields kept for scoring and specific filtering
-        p._searchable = { title: t, authors: a, abstract: abs, venue: v };
+        p._search_blob = `${t} ${abs}`;
+        p._searchable = { title: t, authors: a, abstract: abs, venue: (p.venue || '').toLowerCase() };
       }
-      
       papersCache = data;
       return papersCache;
     } catch (err) {
@@ -54,39 +48,27 @@ async function loadPapers() {
  * Supports author: prefix (semicolon optional).
  */
 export function extractSearchTerms(query) {
-  const lowerQuery = query.toLowerCase().trim();
-  if (!lowerQuery) return { terms: [], isOrSearch: false, authorTerm: null, authorSubTerms: [] };
+  const q = query.toLowerCase().trim();
+  if (!q) return { terms: [], isOrSearch: false, authorTerm: null, authorSubTerms: [] };
   
   let authorTerm = null;
-  let processedQuery = lowerQuery;
+  let processed = q;
 
-  // Extract author search if present
-  if (lowerQuery.includes('author:')) {
-    const start = lowerQuery.indexOf('author:') + 7;
-    const end = lowerQuery.indexOf(',', start);
-    
-    if (end !== -1) {
-      authorTerm = lowerQuery.substring(start, end).trim();
-      processedQuery = (lowerQuery.substring(0, lowerQuery.indexOf('author:')) + lowerQuery.substring(end + 1)).trim();
-    } else {
-      // No comma: treat everything after "author:" as the author term
-      authorTerm = lowerQuery.substring(start).trim();
-      processedQuery = lowerQuery.substring(0, lowerQuery.indexOf('author:')).trim();
-    }
+  const authorIdx = q.indexOf('author:');
+  if (authorIdx !== -1) {
+    const start = authorIdx + 7;
+    const end = q.indexOf(',', start);
+    authorTerm = end !== -1 ? q.substring(start, end).trim() : q.substring(start).trim();
+    processed = (q.substring(0, authorIdx) + (end !== -1 ? q.substring(end + 1) : '')).trim();
   }
 
-  const authorSubTerms = authorTerm ? authorTerm.split(/\s+/).filter(t => t.length > 0) : [];
+  const authorSubTerms = authorTerm ? authorTerm.split(/\s+/).filter(Boolean) : [];
+  const isOrSearch = /\s+or\s+/.test(processed);
+  const terms = isOrSearch 
+    ? processed.split(/\s+or\s+/).map(t => t.trim()).filter(Boolean)
+    : processed.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ').split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
 
-  // Handle OR search
-  if (processedQuery.includes(' or ')) {
-    const terms = processedQuery.split(/\s+or\s+/).map(t => t.trim()).filter(t => t.length > 0);
-    return { terms, isOrSearch: true, authorTerm, authorSubTerms };
-  }
-  
-  // Handle AND search (default)
-  const normalized = processedQuery.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ');
-  const terms = normalized.split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
-  return { terms, isOrSearch: false, authorTerm, authorSubTerms };
+  return { terms, isOrSearch, authorTerm, authorSubTerms };
 }
 
 /**
@@ -127,10 +109,10 @@ export async function fetchResults(query, venue = '', year = '') {
       score += WEIGHTS.AUTHOR_MATCH;
     }
 
-    // B. Keyword Match (Searches title and abstract only)
+    // B. Keyword Match
     if (hasKeywords) {
       let matchCount = 0;
-      const blob = p._search_paper_abstract;
+      const blob = p._search_blob;
       
       for (const term of terms) {
         if (blob.includes(term)) {
@@ -139,27 +121,17 @@ export async function fetchResults(query, venue = '', year = '') {
           if (searchable.abstract.includes(term)) score += WEIGHTS.ABSTRACT;
         }
       }
-      
-      // Enforce AND/OR logic for keywords
-      if (isOrSearch) {
-        if (matchCount === 0) continue;
-      } else {
-        if (matchCount < terms.length) continue;
-      }
+      if (isOrSearch ? matchCount === 0 : matchCount < terms.length) continue;
     } 
-    // Skip if no filters/terms were actually provided
-    else if (!hasAuthorTerms && !venueSet && !yearSet) {
-      continue;
-    }
+    else if (!hasAuthorTerms && !venueSet && !yearSet) continue;
 
     results.push({ ...p, score });
     
-    // Track facets for filter highlighting
+    // Track facets
     const v = searchable.venue;
-    if (v.includes('miccai'))  activeVenues.add('miccai');
-    if (v.includes('midl'))    activeVenues.add('midl');
-    if (v.includes('isbi'))    activeVenues.add('isbi');
-    if (v.includes('neurips')) activeVenues.add('neurips');
+    ['miccai', 'midl', 'isbi', 'neurips'].forEach(id => {
+      if (v.includes(id)) activeVenues.add(id);
+    });
     if (p.year) activeYears.add(String(p.year));
   }
 

@@ -13,10 +13,7 @@ import { DEFAULTS, getRecent } from './core.js';
 export function fadeOutAndHide(element, duration = 400) {
   if (!element) return;
   element.classList.add('opacity-0', 'pointer-events-none');
-
-  setTimeout(() => {
-    element.classList.add('hidden');
-  }, duration);
+  setTimeout(() => element.classList.add('hidden'), duration);
 }
 
 /**
@@ -225,24 +222,16 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
  * @param {Set} activeYears
  */
 export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set()) {
-  // Clear all previous highlights in one go
-  document.querySelectorAll('#filter-container span').forEach(span => {
-    span.classList.remove('bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white');
+  const cls = ['bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
+  document.querySelectorAll('#filter-container span').forEach(s => s.classList.remove(...cls));
+
+  const apply = (name, set) => set.forEach(v => {
+    const el = document.querySelector(`input[name="${name}"][value="${v}"]`);
+    if (el) el.nextElementSibling.classList.add(...cls);
   });
 
-  const highlightClasses = ['bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
-
-  // Apply highlights to matching Venues
-  activeVenues.forEach(v => {
-    const el = document.querySelector(`input[name="conference"][value="${v}"]`);
-    if (el) el.nextElementSibling.classList.add(...highlightClasses);
-  });
-
-  // Apply highlights to matching Years
-  activeYears.forEach(y => {
-    const el = document.querySelector(`input[name="year"][value="${y}"]`);
-    if (el) el.nextElementSibling.classList.add(...highlightClasses);
-  });
+  apply('conference', activeVenues);
+  apply('year', activeYears);
 }
 
 
@@ -389,30 +378,21 @@ function renderNextChunk(container) {
 
   const chunk = currentResults.slice(currentIndex, currentIndex + CHUNK_SIZE);
   const regex = getHighlightRegex(currentTerms);
-  const authorRegex = currentAuthorSubTerms.length
-    ? new RegExp(`(${currentAuthorSubTerms.map(escapeRegex).join('|')})`, 'gi')
-    : null;
+  const authorRegex = currentAuthorSubTerms.length ? new RegExp(`(${currentAuthorSubTerms.map(escapeRegex).join('|')})`, 'gi') : null;
 
   const fragment = document.createDocumentFragment();
-
-  // Create temporary container to hold the elements for KaTeX
   const temp = document.createElement('div');
-  for (const paper of chunk) {
-    temp.appendChild(createCard(paper, regex, authorRegex));
-  }
+  chunk.forEach(p => temp.appendChild(createCard(p, regex, authorRegex)));
 
-  // Remove old sentinel
   const oldSentinel = container.querySelector('#scroll-sentinel');
   if (oldSentinel) {
     observer.unobserve(oldSentinel);
     oldSentinel.remove();
   }
 
-  // Move elements to fragment
   while (temp.firstChild) fragment.appendChild(temp.firstChild);
-
+  const newElements = Array.from(fragment.children);
   container.appendChild(fragment);
-  const newElements = Array.from(container.children).slice(currentIndex);
   currentIndex += chunk.length;
 
   if (currentIndex < currentResults.length) {
@@ -424,19 +404,14 @@ function renderNextChunk(container) {
     observer.observe(sentinel);
   }
 
-  // Performance fix: Only typeset the newly added chunk
   if (window.renderMathInElement) {
-    newElements.forEach(el => {
-      window.renderMathInElement(el, {
-        delimiters: [
-          { left: '$$', right: '$$', display: true },
-          { left: '\\[', right: '\\]', display: true },
-          { left: '$', right: '$', display: false },
-          { left: '\\(', right: '\\)', display: false }
-        ],
-        throwOnError: false
-      });
-    });
+    newElements.forEach(el => window.renderMathInElement(el, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false }
+      ],
+      throwOnError: false
+    }));
   }
 }
 

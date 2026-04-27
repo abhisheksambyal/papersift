@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeFilters(domRefs.conferenceFilters, domRefs.yearFilters, initiateSearch);
   startPurposeLoop(domRefs.purposeText);
 
+  const getSelectedFilters = () => ({
+    venues: Array.from(document.querySelectorAll('input[name="conference"]:checked')).map(cb => cb.value),
+    years: Array.from(document.querySelectorAll('input[name="year"]:checked')).map(cb => cb.value)
+  });
+
   // ── Interactions ──────────────────────────────────────────────────────────
   
   // Home Reset
@@ -61,11 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Live Search
   domRefs.input.addEventListener('input', () => {
     const query = domRefs.input.value.trim();
-    const selectedVenues = Array.from(document.querySelectorAll('input[name="conference"]:checked')).map(cb => cb.value);
-    const selectedYears = Array.from(document.querySelectorAll('input[name="year"]:checked')).map(cb => cb.value);
+    const { venues, years } = getSelectedFilters();
     
     // Start transition immediately on first input to hide top elements
-    if (!hasSearched && (query || selectedVenues.length || selectedYears.length)) {
+    if (!hasSearched && (query || venues.length || years.length)) {
       transitionPromise = transitionToResults(domRefs);
       hasSearched = true;
     }
@@ -100,11 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function initiateSearch() {
     const query = domRefs.input.value.trim();
-    const selectedVenues = Array.from(document.querySelectorAll('input[name="conference"]:checked')).map(cb => cb.value);
-    const selectedYears = Array.from(document.querySelectorAll('input[name="year"]:checked')).map(cb => cb.value);
+    const { venues, years } = getSelectedFilters();
 
     // If nothing selected/typed, just clear if we had results
-    if (!query && !selectedVenues.length && !selectedYears.length) {
+    if (!query && !venues.length && !years.length) {
       if (hasSearched) { 
         domRefs.resultsList.innerHTML = ''; 
         domRefs.resultsCount.innerHTML = ''; 
@@ -120,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Wait for UI layout transitions to finish before blocking main thread with results render
     transitionPromise.then(() => {
-      performSearch(query, selectedVenues, selectedYears);
+      performSearch(query, venues, years);
     });
   }
 
