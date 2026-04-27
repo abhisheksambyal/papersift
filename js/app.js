@@ -7,6 +7,11 @@ import { fetchResults, extractSearchTerms } from './core.js';
 import { renderResults, renderPills, transitionToResults, resetToHome, initializeFilters, updateFilterHighlights, startPurposeLoop } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Reset scroll to top and disable automatic restoration
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
 
   // ── DOM References ──────────────────────────────────────────────────────
   const domRefs = {
@@ -43,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   domRefs.logoTitle.addEventListener('click', () => {
     if (hasSearched) {
       clearTimeout(debounceTimer);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       resetToHome(domRefs, () => { 
         hasSearched = false; 
         transitionPromise = Promise.resolve();
