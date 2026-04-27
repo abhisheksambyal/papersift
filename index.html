@@ -141,13 +141,124 @@
   <link rel="modulepreload" href="js/core.js">
   <link rel="modulepreload" href="js/ui.js">
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            paper: '#f4f1ea',
+            ink: '#1c1c1c',
+          },
+          fontFamily: {
+            serif: ['Merriweather', 'serif'],
+            masthead: ['"Playfair Display"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer base {
+      body {
+        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
+        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
+        background-size: 16px 16px;
+        background-attachment: fixed;
+      }
+
+      .dark body {
+        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
+      }
+    }
+
+    @layer components {
+      .app-container-safe {
+        @apply max-w-5xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen justify-center;
+        padding-left: max(0.75rem, env(safe-area-inset-left));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        transform: translateZ(0);
+      }
+
+      .no-tap {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .title-landing {
+        @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
+        transform: translateZ(0);
+      }
+
+      .title-compact {
+        @apply !text-[clamp(1.5rem,5vw,2.2rem)] !leading-[1.2];
+        transform: translateZ(0);
+      }
+
+      @keyframes abstract-fade {
+        from { opacity: 0; transform: translate3d(0, -5px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+      }
+      .abstract-expansion {
+        @apply will-change-[transform,opacity];
+        animation: abstract-fade 0.3s ease-out forwards;
+      }
+
+      @keyframes purpose-in {
+        from { opacity: 0; transform: translate3d(0, 15px, 0) rotateX(10deg); }
+        to { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
+      }
+      @keyframes purpose-out {
+        from { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); }
+        to { opacity: 0; transform: translate3d(0, 20px, 0) rotateX(20deg); }
+      }
+      .purpose-in { 
+        @apply will-change-[transform,opacity];
+        animation: purpose-in 0.4s ease-out forwards; 
+        backface-visibility: hidden;
+      }
+      .purpose-out { 
+        @apply will-change-[transform,opacity];
+        animation: purpose-out 0.4s ease-in forwards; 
+        backface-visibility: hidden;
+      }
+    }
+  </style>
+
   <style>
-    .app-container-safe { min-height: 100dvh !important; }
-    .subtitle-landing { font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 1.5rem; }
-    .subtitle-compact { font-size: 0.75rem; margin-top: 0.125rem; margin-bottom: 0.75rem; }
-    .header-landing { padding-top: 2.5rem; padding-bottom: 1rem; }
-    .header-compact { padding-top: 1.5rem; padding-bottom: 1rem; }
-    @media (min-width: 640px) { .header-compact { padding-top: 0.5rem; } }
+    .app-container-safe {
+      min-height: 100dvh !important;
+    }
+
+    .subtitle-landing {
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .subtitle-compact {
+      font-size: 0.75rem;
+      margin-top: 0.125rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .header-landing {
+      padding-top: 2.5rem;
+      padding-bottom: 1rem;
+    }
+
+    .header-compact {
+      padding-top: 1.5rem;
+      padding-bottom: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .header-compact {
+        padding-top: 0.5rem;
+      }
+    }
   </style>
 </head>
 
@@ -263,8 +374,10 @@
       </section>
 
       <!-- Purpose Loop / Help Text -->
-      <div id="purpose-section" class="flex flex-col items-center justify-start text-center transition-opacity duration-500 ease-in-out [perspective:1000px] pt-0">
-        <p id="purpose-text" class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[5rem] sm:min-h-[8rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
+      <div id="purpose-section"
+        class="flex flex-col items-center justify-start text-center transition-opacity duration-500 ease-in-out [perspective:1000px] pt-0">
+        <p id="purpose-text"
+          class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[5rem] sm:min-h-[8rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
           <!-- Dynamically populated loop -->
         </p>
       </div>
