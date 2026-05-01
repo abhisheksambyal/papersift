@@ -21,46 +21,92 @@ export function restartAnimation(el, cls) {
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add(cls)));
 }
 
+/**
+ * Logic for the rotating purpose questions on the landing page.
+ */
+
+
 const QUESTIONS = [
   "Which MICCAI 2024 papers use the BraTS dataset?",
   "Where can I find Few-Shot Learning papers?",
   "Which papers are based on cardiac data?",
-  "Find the research you need — faster."
+  "Stop scouring 40+ conference sites manually.<br>Enter the keywords and Find the papers you need — faster."
 ];
 
 let intervalId = null;
 
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+/**
+ * Start the rotating purpose questions.
+ * @param {HTMLElement} el - The element to populate with questions.
+ */
 export function startPurposeLoop(el) {
   if (!el) return;
+  // Critical: prevent multiple timers from stacking on navigation
   stopPurposeLoop();
-  
-  const pool = [...QUESTIONS.slice(0, -1)].sort(() => 0.5 - Math.random());
-  const finale = QUESTIONS[QUESTIONS.length - 1];
+
+  const specificQuestion = "Tired of checking every conference manually?";
+  const discoveryQuestions = QUESTIONS.filter(q => q !== specificQuestion && q !== QUESTIONS[QUESTIONS.length - 1]);
+  const finaleQuestion = QUESTIONS[QUESTIONS.length - 1];
+
+  shuffle(discoveryQuestions);
+  // The pool is the shuffled questions followed by the specific trigger question
+  const pool = [...discoveryQuestions, specificQuestion];
   let idx = 0;
 
+  el.classList.add('opacity-0', 'translate-y-4');
+
+  const showFirst = () => {
+    el.innerHTML = pool[idx];
+    restartAnimation(el, 'purpose-in');
+    idx++;
+  };
+
   const cycle = () => {
+    el.classList.remove('purpose-in');
     el.classList.add('purpose-out');
+
     setTimeout(() => {
       if (idx < pool.length) {
-        el.innerHTML = pool[idx++];
-        restartAnimation(el, 'purpose-in');
+        // Show next individual question
+        el.innerHTML = pool[idx];
         el.classList.remove('purpose-out');
+        restartAnimation(el, 'purpose-in');
+        idx++;
       } else {
-        el.innerHTML = finale;
-        restartAnimation(el, 'purpose-in');
+        // FINALE: Show 3 random questions + Solution, then STOP
+        const random3 = [...discoveryQuestions].sort(() => 0.5 - Math.random()).slice(0, 3);
+        const summary = random3.map(q => q.replace('?', '')).join(', ') + '?';
+
+        el.innerHTML = `<span class="block mb-2 opacity-60">${summary}</span> ${finaleQuestion}`;
         el.classList.remove('purpose-out');
-        stopPurposeLoop();
+        restartAnimation(el, 'purpose-in');
+
+        // Stop the animation
+        clearInterval(intervalId);
+        intervalId = null;
       }
     }, 400);
   };
 
-  el.innerHTML = pool[idx++];
-  restartAnimation(el, 'purpose-in');
-  intervalId = setInterval(cycle, 3500);
+  showFirst();
+  intervalId = setInterval(cycle, 3000);
 }
 
+/**
+ * Stop the loop if needed (e.g. on unmount or navigation).
+ */
 export function stopPurposeLoop() {
-  if (intervalId) { clearInterval(intervalId); intervalId = null; }
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 }
 
 export async function initializeFilters(confContainer, yearContainer, onSearch) {
@@ -186,10 +232,10 @@ function renderNext(container) {
   const authorRe = authorSub.length ? new RegExp(`(${authorSub.map(escapeRegex).join('|')})`, 'gi') : null;
   const frag = document.createDocumentFragment();
   chunk.forEach(p => frag.appendChild(createCard(p, re, authorRe)));
-  
+
   const sentinel = container.querySelector('#scroll-sentinel');
   if (sentinel) { observer.unobserve(sentinel); sentinel.remove(); }
-  
+
   const newEls = [...frag.children];
   container.appendChild(frag);
   idx += chunk.length;
@@ -203,13 +249,13 @@ function renderNext(container) {
     observer.observe(s);
   }
 
-  if (window.renderMathInElement) newEls.forEach(el => window.renderMathInElement(el, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }));
+  if (window.renderMathInElement) newEls.forEach(el => window.renderMathInElement(el, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false }));
 }
 
 function generateSummary(terms, isOr, author) {
   const joiner = isOr ? 'or' : 'and';
-  return (author ? ` <span class="opacity-70">by</span> <span class="font-bold">${author}</span>` : '') + 
-         (terms.length ? ` <span class="opacity-70">${author ? 'and' : 'with'}</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}` : '');
+  return (author ? ` <span class="opacity-70">by</span> <span class="font-bold">${author}</span>` : '') +
+    (terms.length ? ` <span class="opacity-70">${author ? 'and' : 'with'}</span> ${terms.map(t => `<span class="font-bold">${t}</span>`).join(` <span class="opacity-70 italic">${joiner}</span> `)}` : '');
 }
 
 export function renderResults(res, t, refs, isOr = false, author = null, sub = []) {
