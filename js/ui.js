@@ -159,7 +159,7 @@ export function updateFilterHighlights(activeVenues = new Set(), activeYears = n
       if (el) {
         const s = el.nextElementSibling, c = counts[v] || 0, r = max === min ? 0.5 : (c - min) / (max - min);
         s.style.fontSize = `${0.65 + r * 0.3}rem`;
-        s.style.opacity = `${0.5 + r * 0.5}`;
+        s.style.opacity = `${0.8 + r * 0.2}`;
       }
     });
   };
