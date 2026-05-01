@@ -137,7 +137,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
 }
 
 export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set(), yearCounts = null, venueCounts = null) {
-  const cls = ['bg-[#c8e6c9]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
+  const cls = ['bg-[#a5d6a7]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
   document.querySelectorAll('#filter-container span').forEach(s => {
     s.classList.remove(...cls);
     s.style.fontSize = s.style.opacity = '';
