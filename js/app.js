@@ -1,19 +1,10 @@
-/**
- * Main application entry point.
- * Orchestrates search, UI state, and interactions.
- */
-import { saveRecent } from './core.js';
-import { fetchResults, extractSearchTerms } from './core.js';
+import { saveRecent, fetchResults, extractSearchTerms } from './core.js';
 import { renderResults, renderPills, transitionToResults, resetToHome, initializeFilters, updateFilterHighlights, startPurposeLoop } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Reset scroll to top and disable automatic restoration
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-  }
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
 
-  // ── DOM References ──────────────────────────────────────────────────────
   const domRefs = {
     form:              document.getElementById('search-form'),
     input:             document.getElementById('search-input'),
@@ -28,71 +19,55 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsCount:      document.getElementById('results-count'),
     conferenceFilters: document.getElementById('conference-filters'),
     yearFilters:       document.getElementById('year-filters'),
-    searchHints:       document.getElementById('search-hints'),
-    appContainer:      document.getElementById('app-container'),
+    searchHints:       document.getElementById('search-hints')
   };
 
-  // ── State ─────────────────────────────────────────────────────────────────
-  let hasSearched   = false;
-  let debounceTimer = null;
-  let transitionPromise = Promise.resolve();
+  let hasSearched = false, debounceTimer = null, transitionPromise = Promise.resolve();
 
-  // ── Initialization ────────────────────────────────────────────────────────
   renderPills(domRefs.examplePills);
   initializeFilters(domRefs.conferenceFilters, domRefs.yearFilters, initiateSearch);
   startPurposeLoop(domRefs.purposeText);
 
   const getSelectedFilters = () => ({
-    venues: Array.from(document.querySelectorAll('input[name="conference"]:checked')).map(cb => cb.value),
-    years: Array.from(document.querySelectorAll('input[name="year"]:checked')).map(cb => cb.value)
+    venues: [...document.querySelectorAll('input[name="conference"]:checked')].map(cb => cb.value),
+    years: [...document.querySelectorAll('input[name="year"]:checked')].map(cb => cb.value)
   });
 
-  // ── Interactions ──────────────────────────────────────────────────────────
-  
-  // Home Reset
   domRefs.logoTitle.addEventListener('click', () => {
-    if (hasSearched) {
-      clearTimeout(debounceTimer);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      resetToHome(domRefs, () => { 
-        hasSearched = false; 
-        transitionPromise = Promise.resolve();
-        // Clear highlights after reset animation
-        setTimeout(() => updateFilterHighlights([]), 500);
-      });
-    }
+    if (!hasSearched) return;
+    clearTimeout(debounceTimer);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    resetToHome(domRefs, () => { 
+      hasSearched = false; 
+      transitionPromise = Promise.resolve();
+      setTimeout(() => updateFilterHighlights([]), 500);
+    });
   });
 
-  // Live Search
   domRefs.input.addEventListener('input', () => {
     const query = domRefs.input.value.trim();
     const { venues, years } = getSelectedFilters();
-    
-    // Start transition immediately on first input to hide top elements
     if (!hasSearched && (query || venues.length || years.length)) {
       transitionPromise = transitionToResults(domRefs);
       hasSearched = true;
     }
-
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(initiateSearch, 500); // 500ms debounce
+    debounceTimer = setTimeout(initiateSearch, 400);
   });
 
-  // History Save & Search
   domRefs.form.addEventListener('submit', e => {
     e.preventDefault();
-    const query = domRefs.input.value.trim();
-    if (query) saveRecent(query);
+    const q = domRefs.input.value.trim();
+    if (q) saveRecent(q);
     initiateSearch();
   });
 
-  // Pill Selection
   domRefs.examplePills.addEventListener('click', e => {
-    if (!e.target.classList.contains('pill-example')) return;
-    const term = e.target.textContent.trim();
+    const pill = e.target.closest('.pill-example');
+    if (!pill) return;
+    const term = pill.textContent.trim();
     domRefs.input.value = term;
     saveRecent(term);
-    
     if (!hasSearched) {
       transitionPromise = transitionToResults(domRefs);
       hasSearched = true;
@@ -100,18 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initiateSearch();
   });
 
-  // ── Search Logic ──────────────────────────────────────────────────────────
-  
   function initiateSearch() {
     const query = domRefs.input.value.trim();
     const { venues, years } = getSelectedFilters();
 
-    // If nothing selected/typed, just clear if we had results
     if (!query && !venues.length && !years.length) {
-      if (hasSearched) { 
-        domRefs.resultsList.innerHTML = ''; 
-        domRefs.resultsCount.innerHTML = ''; 
-        updateFilterHighlights(new Set(), new Set());
+      if (hasSearched) {
+        domRefs.resultsList.innerHTML = domRefs.resultsCount.innerHTML = '';
+        updateFilterHighlights();
       }
       return;
     }
@@ -121,27 +92,33 @@ document.addEventListener('DOMContentLoaded', () => {
       hasSearched = true;
     }
     
-    // Wait for UI layout transitions to finish before blocking main thread with results render
-    transitionPromise.then(() => {
-      performSearch(query, venues, years);
-    });
+    transitionPromise.then(() => performSearch(query, venues, years));
   }
 
   async function performSearch(query, venues, years) {
-    domRefs.resultsList.innerHTML  = '';
-    domRefs.resultsCount.innerHTML = '<span class="italic opacity-60">Scanning the archives...</span>';
+    domRefs.resultsList.innerHTML = '';
+    domRefs.resultsCount.innerHTML = '<span class="italic opacity-60">Scanning archive...</span>';
     
     try {
       const { results, activeVenues, activeYears } = await fetchResults(query, venues, years);
       const { terms, isOrSearch, authorTerm, authorSubTerms } = extractSearchTerms(query);
       
-      renderResults(results, terms, domRefs.resultsList, domRefs.resultsCount, isOrSearch, authorTerm, authorSubTerms);
-      updateFilterHighlights(activeVenues, activeYears);
+      const counts = results.reduce((acc, p) => {
+        if (p.year) acc.years[p.year] = (acc.years[p.year] || 0) + 1;
+        if (p.venue) {
+          const v = p.venue.toLowerCase();
+          ['miccai', 'midl', 'isbi', 'neurips'].forEach(id => {
+            if (v.includes(id)) acc.venues[id] = (acc.venues[id] || 0) + 1;
+          });
+        }
+        return acc;
+      }, { years: {}, venues: {} });
+
+      renderResults(results, terms, domRefs, isOrSearch, authorTerm, authorSubTerms);
+      updateFilterHighlights(activeVenues, activeYears, counts.years, counts.venues);
     } catch (err) {
       if (err.name === 'AbortError') return;
-      console.error('Search failed:', err);
-      domRefs.resultsCount.innerHTML = `Search error: ${err.message}`;
+      domRefs.resultsCount.innerHTML = `Error: ${err.message}`;
     }
   }
-
 });
