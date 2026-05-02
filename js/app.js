@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
     years: [...document.querySelectorAll('input[name="year"]:checked')].map(cb => cb.value)
   });
 
-  domRefs.logoTitle.addEventListener('click', () => {
+  const logoBranding = document.getElementById('logo-branding');
+  logoBranding.addEventListener('click', () => {
     if (!hasSearched) return;
     clearTimeout(debounceTimer);
     window.scrollTo({ top: 0, behavior: 'smooth' });
