@@ -57,16 +57,27 @@ export function extractSearchTerms(query) {
   const authorIdx = q.indexOf('author:');
   if (authorIdx !== -1) {
     const start = authorIdx + 7;
-    const end = q.indexOf(',', start);
-    authorTerm = end !== -1 ? q.substring(start, end).trim() : q.substring(start).trim();
-    processed = (q.substring(0, authorIdx) + (end !== -1 ? q.substring(end + 1) : '')).trim();
+    const remainder = q.substring(start);
+    // Find first delimiter: " and " preferred, then comma
+    const andPos = remainder.search(/\s+and\s+/);
+    const commaPos = remainder.indexOf(',');
+    const delim = andPos !== -1 ? andPos : commaPos;
+
+    if (delim !== -1) {
+      authorTerm = remainder.substring(0, delim).trim();
+      const after = delim === andPos ? remainder.substring(andPos).replace(/^\s+and\s+/, '') : remainder.substring(commaPos + 1);
+      processed = (q.substring(0, authorIdx) + after).trim();
+    } else {
+      authorTerm = remainder.trim();
+      processed = q.substring(0, authorIdx).trim();
+    }
   }
 
   const authorSubTerms = authorTerm ? authorTerm.split(/\s+/).filter(Boolean) : [];
-  const isOrSearch = /\s+or\s+/.test(processed);
+  const isOrSearch = /\s+or\s+/.test(processed) || processed.includes(',');
   const terms = isOrSearch 
-    ? processed.split(/\s+or\s+/).map(t => t.trim()).filter(Boolean)
-    : processed.replace(/\s+and\s+/g, ' ').replace(/,/g, ' ').split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
+    ? processed.split(/,|\s+or\s+/).map(t => t.trim()).filter(Boolean)
+    : processed.replace(/\s+and\s+/g, ' ').split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
 
   return { terms, isOrSearch, authorTerm, authorSubTerms };
 }
