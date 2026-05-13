@@ -228,7 +228,7 @@ let results = [], idx = 0, terms = [], authorSub = [], observer = null;
 
 function renderNext(container) {
   if (idx >= results.length) return;
-  const chunk = results.slice(idx, idx + CHUNK), re = terms.length ? new RegExp(`(${terms.map(escapeRegex).join('|')})`, 'gi') : null;
+  const chunk = results.slice(idx, idx + CHUNK), re = terms.length ? new RegExp(`\\b(${terms.map(escapeRegex).join('|')})\\b`, 'gi') : null;
   const authorRe = authorSub.length ? new RegExp(`(${authorSub.map(escapeRegex).join('|')})`, 'gi') : null;
   const frag = document.createDocumentFragment();
   chunk.forEach(p => frag.appendChild(createCard(p, re, authorRe)));

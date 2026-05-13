@@ -77,7 +77,7 @@ export function extractSearchTerms(query) {
   const isOrSearch = /\s+or\s+/.test(processed) || processed.includes(',');
   const terms = isOrSearch 
     ? processed.split(/,|\s+or\s+/).map(t => t.trim()).filter(Boolean)
-    : processed.replace(/\s+and\s+/g, ' ').split(/\s+/).map(t => t.trim()).filter(t => t.length > 2);
+    : processed.replace(/\s+and\s+/g, ' ').split(/\s+/).map(t => t.trim()).filter(t => t.length > 1);
 
   return { terms, isOrSearch, authorTerm, authorSubTerms };
 }
@@ -102,6 +102,10 @@ export async function fetchResults(query, venue = '', year = '') {
   const activeYears = new Set();
   const hasKeywords = terms.length > 0;
   const hasAuthorTerms = authorSubTerms.length > 0;
+
+  // Precompile regular expressions for word boundary matching
+  const escapeRegExp = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const termRegexes = terms.map(term => new RegExp(`\\b${escapeRegExp(term)}\\b`));
   
   for (let i = 0, len = papers.length; i < len; i++) {
     const p = papers[i];
@@ -125,11 +129,12 @@ export async function fetchResults(query, venue = '', year = '') {
       let matchCount = 0;
       const blob = p._search_blob;
       
-      for (const term of terms) {
-        if (blob.includes(term)) {
+      for (let j = 0; j < termRegexes.length; j++) {
+        const regex = termRegexes[j];
+        if (regex.test(blob)) {
           matchCount++;
-          if (searchable.title.includes(term))    score += WEIGHTS.TITLE;
-          if (searchable.abstract.includes(term)) score += WEIGHTS.ABSTRACT;
+          if (regex.test(searchable.title))    score += WEIGHTS.TITLE;
+          if (regex.test(searchable.abstract)) score += WEIGHTS.ABSTRACT;
         }
       }
       if (isOrSearch ? matchCount === 0 : matchCount < terms.length) continue;
@@ -156,9 +161,9 @@ const MAX_RECENT  = 4;
 
 export const DEFAULTS = ['mri', 'classification', 'calibration'];
 
-/** Returns true only if every word in the query is 3+ alphabetic characters. */
+/** Returns true only if every word in the query is 2+ alphabetic characters. */
 const isValidQuery = query =>
-  query.trim().split(/\s+/).every(w => /^[a-zA-Z]{3,}$/.test(w));
+  query.trim().split(/\s+/).every(w => /^[a-zA-Z]{2,}$/.test(w));
 
 /** Read the stored recent-search list (newest first). */
 export function getRecent() {
