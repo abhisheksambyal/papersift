@@ -54,17 +54,33 @@ class Fetcher:
                     time.sleep(wait)
                     continue
                 if e.code == 404: return {}
+                print(f"  Fetch failed for {url}: HTTP {e.code}")
                 return {}
-            except Exception:
+            except Exception as e:
                 if attempt < max_retries - 1:
                     time.sleep(0.5)
                     continue
+                print(f"  Fetch failed for {url}: {e}")
                 return {}
         return {}
 
 
 # Global fetcher instance for connection reuse
 _fetcher = Fetcher()
+
+
+def _fetch_miccai_abstract(url):
+    """Fetch a MICCAI paper detail page and extract its abstract text."""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            html = res.read().decode('utf-8', errors='replace')
+        match = re.search(r'<h1 id="abstract-id">Abstract</h1>\s*<p>(.*?)<br', html, re.DOTALL)
+        if match:
+            return re.sub(r'<[^>]+>', '', match.group(1)).strip()
+    except Exception as e:
+        print(f"  Failed to fetch MICCAI abstract from {url}: {e}")
+    return ""
 
 
 def fetch_miccai_json(year):
@@ -100,7 +116,28 @@ def fetch_miccai_json(year):
                 "year": str(year),
                 "abstract": p.get("description") or p.get("discription") or p.get("abstract") or ""
             })
-        print(f"  Loaded official MICCAI {year} data with abstracts.")
+        print(f"  Loaded official MICCAI {year} data. Fetching abstracts from detail pages...")
+
+        # The official search.json never populates description/abstract, so
+        # fetch each paper's detail page and scrape the real abstract text.
+        detail_base = "https://papers.miccai.org"
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_idx = {}
+            for i, p in enumerate(data):
+                rel_url = p.get("url")
+                if rel_url:
+                    detail_url = detail_base + rel_url
+                    future_to_idx[executor.submit(_fetch_miccai_abstract, detail_url)] = i
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                try:
+                    abstract = future.result()
+                    if abstract:
+                        papers[idx]["abstract"] = abstract
+                except Exception:
+                    continue
+        with_abstract = sum(1 for x in papers if x["abstract"])
+        print(f"  Fetched abstracts for {with_abstract}/{len(papers)} MICCAI {year} papers.")
     else:
         # 2. Fallback to DBLP for older years
         url = f"https://dblp.org/search/publ/api?q=venue:MICCAI:year:{year}:&format=json&h=1000"
@@ -265,7 +302,7 @@ def fetch_neurips_json(year):
     print(f"Fetching NeurIPS {year}...")
     base_url = "https://papers.nips.cc"
     index_url = f"{base_url}/paper_files/paper/{year}"
-    
+
     # We use a slightly different approach for NeurIPS as it's large
     req = urllib.request.Request(index_url, headers={'User-Agent': 'Mozilla/5.0'})
     try:
@@ -275,11 +312,31 @@ def fetch_neurips_json(year):
         print(f"  Error fetching NeurIPS {year} index: {e}")
         return []
 
+    # Starting with 2025, the year page only lists secondary tracks inline and
+    # links the bulk of papers out to per-volume pages (e.g. "vol38-main-conference").
+    # Older years list everything directly on the year page, so this is a no-op then.
+    volume_pattern = re.compile(rf'href="(/paper_files/paper/{year}/vol[^"]+)"')
+    volume_urls = sorted(set(volume_pattern.findall(html)))
+    html_parts = [html]
+    for vol_path in volume_urls:
+        vol_req = urllib.request.Request(base_url + vol_path, headers={'User-Agent': 'Mozilla/5.0'})
+        try:
+            with _fetcher._opener.open(vol_req, timeout=30) as response:
+                html_parts.append(response.read().decode('utf-8'))
+        except Exception as e:
+            print(f"  Error fetching NeurIPS {year} volume {vol_path}: {e}")
+
     # Regex to find papers: href="{url}">{title}</a> ... paper-authors">{authors}</span>
     # Note: Structure varies slightly over 30 years, so we try to be robust.
     paper_pattern = re.compile(r'href="(?P<url>/paper_files/paper/\d+/hash/[^"]+Abstract[^"]*)">(?P<title>[^<]+)</a>.*?paper-authors">(?P<authors>[^<]+)</span>', re.DOTALL)
-    
-    matches = list(paper_pattern.finditer(html))
+
+    matches = []
+    seen_urls = set()
+    for html_part in html_parts:
+        for m in paper_pattern.finditer(html_part):
+            if m.group('url') not in seen_urls:
+                seen_urls.add(m.group('url'))
+                matches.append(m)
     print(f"  Found {len(matches)} papers for NeurIPS {year}. Fetching abstracts...")
     
     papers = []
@@ -312,8 +369,8 @@ def fetch_neurips_json(year):
                         abs_match = re.search(r'Abstract</h4>\s*<p>(.*?)</p>', abs_html, re.DOTALL | re.IGNORECASE)
                     if abs_match:
                         abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  Failed to fetch NeurIPS abstract from {paper_url}: {e}")
         
         return {
             "title": title,

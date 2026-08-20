@@ -19,7 +19,7 @@ CONFERENCES = {
         "fetcher": fetch_isbi_json,
     },
     "neurips": {
-        "years": tuple(range(1987, 2025)),
+        "years": tuple(range(1987, CURRENT_YEAR + 1)),
         "fetcher": fetch_neurips_json,
     }
 }
