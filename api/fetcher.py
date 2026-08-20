@@ -69,6 +69,70 @@ class Fetcher:
 _fetcher = Fetcher()
 
 
+def _reconstruct_abstract(inverted_index):
+    """Reconstruct plain text from OpenAlex's abstract_inverted_index format."""
+    if not inverted_index:
+        return ""
+    max_pos = max(pos for positions in inverted_index.values() for pos in positions)
+    words = [""] * (max_pos + 1)
+    for word, positions in inverted_index.items():
+        for pos in positions:
+            words[pos] = word
+    return " ".join(w for w in words if w)
+
+
+def _fetch_openalex_abstracts(dois):
+    """Look up abstracts for a batch of DOIs via the OpenAlex API (50 DOIs/request)."""
+    abstracts = {}
+    unique_dois = list(dict.fromkeys(d for d in dois if d))
+    for i in range(0, len(unique_dois), 50):
+        batch = unique_dois[i:i + 50]
+        filt = "|".join(batch)
+        url = f"https://api.openalex.org/works?filter=doi:{filt}&select=doi,abstract_inverted_index&per_page=50"
+        data = _fetcher.fetch(url)
+        if not isinstance(data, dict):
+            continue
+        for result in data.get("results", []):
+            doi_url = result.get("doi") or ""
+            doi = doi_url.replace("https://doi.org/", "").lower()
+            abstract = _reconstruct_abstract(result.get("abstract_inverted_index"))
+            if abstract:
+                abstracts[doi] = abstract
+    return abstracts
+
+
+def _fetch_dblp_hits(venue, year):
+    """Fetch all publication hits for a venue/year from DBLP.
+
+    DBLP's search API caps each response at 100 hits regardless of the
+    requested `h`, so we page through with `f` (offset) until @total is met.
+    """
+    hits = []
+    first = 0
+    page_size = 100
+    while True:
+        url = f"https://dblp.org/search/publ/api?q=venue:{venue}:year:{year}:&format=json&h={page_size}&f={first}"
+        response = None
+        for attempt in range(3):
+            response = _fetcher.fetch(url)
+            if isinstance(response, dict) and response.get('result'):
+                break
+            time.sleep(2)
+        if not isinstance(response, dict):
+            break
+        result_hits = response.get('result', {}).get('hits', {})
+        page_hits = result_hits.get('hit', [])
+        if not isinstance(page_hits, list):
+            page_hits = [page_hits] if page_hits else []
+        hits.extend(page_hits)
+        total = int(result_hits.get('@total', 0) or 0)
+        if not page_hits or len(hits) >= total or first > 5000:
+            break
+        first += page_size
+        time.sleep(0.4)
+    return hits
+
+
 def _fetch_miccai_abstract(url):
     """Fetch a MICCAI paper detail page and extract its abstract text."""
     try:
@@ -140,22 +204,19 @@ def fetch_miccai_json(year):
         print(f"  Fetched abstracts for {with_abstract}/{len(papers)} MICCAI {year} papers.")
     else:
         # 2. Fallback to DBLP for older years
-        url = f"https://dblp.org/search/publ/api?q=venue:MICCAI:year:{year}:&format=json&h=1000"
-        response = _fetcher.fetch(url)
-        if not isinstance(response, dict): response = {}
-        hits = response.get('result', {}).get('hits', {}).get('hit', [])
-        if not isinstance(hits, list): hits = [hits] if hits else []
+        hits = _fetch_dblp_hits("MICCAI", year)
         
         papers = []
+        dois = []
         for h in hits:
             info = h.get('info', {})
             if info.get('type') != 'Conference and Workshop Papers':
                 continue
-            
+
             authors_data = info.get('authors', {}).get('author', [])
             if isinstance(authors_data, dict): authors_data = [authors_data]
             authors_list = [a.get('text', 'Unknown') for a in authors_data]
-            
+
             papers.append({
                 "title": info.get('title', '').rstrip('.'),
                 "authors": ", ".join(authors_list),
@@ -164,6 +225,19 @@ def fetch_miccai_json(year):
                 "year": str(year),
                 "abstract": ""
             })
+            dois.append(info.get('doi'))
+
+        # DBLP has no abstract data. Springer rarely shares MICCAI abstracts
+        # with OpenAlex, but check anyway in case some individual papers do.
+        if dois:
+            abstracts_by_doi = _fetch_openalex_abstracts(dois)
+            found = 0
+            for paper, doi in zip(papers, dois):
+                if doi and doi.lower() in abstracts_by_doi:
+                    paper["abstract"] = abstracts_by_doi[doi.lower()]
+                    found += 1
+            if found:
+                print(f"  Backfilled {found}/{len(papers)} MICCAI {year} abstracts from OpenAlex.")
 
     # Save to disk
     if papers:
@@ -248,14 +322,10 @@ def fetch_isbi_json(year):
             _fetcher._cache['isbi'][year] = processed
             return processed
 
-    url = f"https://dblp.org/search/publ/api?q=venue:ISBI:year:{year}:&format=json&h=1000"
-    
-    response = _fetcher.fetch(url)
-    if not isinstance(response, dict): response = {}
-    hits = response.get('result', {}).get('hits', {}).get('hit', [])
-    if not isinstance(hits, list): hits = [hits] if hits else []
+    hits = _fetch_dblp_hits("ISBI", year)
     
     processed = []
+    dois = []
     for h in hits:
         info = h.get('info', {})
         if info.get('type') != 'Conference and Workshop Papers':
@@ -264,7 +334,7 @@ def fetch_isbi_json(year):
         authors_data = info.get('authors', {}).get('author', [])
         if isinstance(authors_data, dict): authors_data = [authors_data]
         authors_list = [a.get('text', 'Unknown') for a in authors_data]
-        
+
         processed.append({
             "title": title,
             "authors": ", ".join(authors_list),
@@ -273,6 +343,19 @@ def fetch_isbi_json(year):
             "year": str(year),
             "abstract": ""
         })
+        dois.append(info.get('doi'))
+
+    # DBLP has no abstract data; backfill from OpenAlex, which has good
+    # coverage for IEEE-published ISBI papers.
+    if dois:
+        abstracts_by_doi = _fetch_openalex_abstracts(dois)
+        found = 0
+        for paper, doi in zip(processed, dois):
+            if doi and doi.lower() in abstracts_by_doi:
+                paper["abstract"] = abstracts_by_doi[doi.lower()]
+                found += 1
+        if found:
+            print(f"  Backfilled {found}/{len(processed)} ISBI {year} abstracts from OpenAlex.")
 
     if processed:
         with open(cache_path, 'w') as f:
@@ -400,6 +483,488 @@ def fetch_neurips_json(year):
             json.dump(papers, f)
 
     _fetcher._cache['neurips'][year] = papers
+    return papers
+
+
+# PMLR volume number for each ICML year (each conference/workshop gets its
+# own volume; there's no year->volume formula, so this is looked up from
+# https://proceedings.mlr.press/'s own volume index).
+_ICML_VOLUME_MAP = {
+    2013: 28, 2014: 32, 2015: 37, 2016: 48, 2017: 70, 2018: 80,
+    2019: 97, 2020: 119, 2021: 139, 2022: 162, 2023: 202, 2024: 235, 2025: 267,
+}
+
+
+def _fetch_pmlr_abstract(url):
+    """Fetch a PMLR (proceedings.mlr.press) paper page and extract its abstract."""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            html = res.read().decode('utf-8', errors='replace')
+        match = re.search(r'<div id="abstract" class="abstract">(.*?)</div>', html, re.DOTALL)
+        if match:
+            return re.sub(r'<[^>]+>', '', match.group(1)).strip()
+    except Exception as e:
+        print(f"  Failed to fetch ICML abstract from {url}: {e}")
+    return ""
+
+
+def fetch_icml_json(year):
+    """Fetch ICML papers from PMLR (proceedings.mlr.press)."""
+    if year in _fetcher._cache.get('icml', {}):
+        return _fetcher._cache['icml'][year]
+    if 'icml' not in _fetcher._cache: _fetcher._cache['icml'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "icml")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['icml'][year] = papers
+            return papers
+
+    volume = _ICML_VOLUME_MAP.get(year)
+    if not volume:
+        _fetcher._cache['icml'][year] = []
+        return []
+
+    index_url = f"https://proceedings.mlr.press/v{volume}/"
+    req = urllib.request.Request(index_url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        with _fetcher._opener.open(req, timeout=30) as response:
+            html = response.read().decode('utf-8')
+    except Exception as e:
+        print(f"  Error fetching ICML {year} index: {e}")
+        return []
+
+    pattern = re.compile(
+        r'<p class="title">(?P<title>.*?)</p>\s*<p class="details">\s*'
+        r'<span class="authors">(?P<authors>.*?)</span>.*?'
+        r'<p class="links">\s*\[<a href="(?P<url>[^"]+)">abs</a>',
+        re.DOTALL
+    )
+    matches = list(pattern.finditer(html))
+    print(f"  Found {len(matches)} papers for ICML {year}. Fetching abstracts...")
+
+    papers = []
+
+    def _fetch_one(m):
+        title = re.sub(r'<[^>]+>', '', m.group('title')).strip()
+        authors = re.sub(r'&nbsp;', ' ', m.group('authors'))
+        authors = re.sub(r'<[^>]+>', '', authors).strip()
+        return {
+            "title": title,
+            "authors": authors,
+            "url": m.group('url'),
+            "venue": f"ICML {year}",
+            "year": str(year),
+            "abstract": _fetch_pmlr_abstract(m.group('url'))
+        }
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(_fetch_one, m) for m in matches]
+        for i, future in enumerate(as_completed(futures)):
+            try:
+                res = future.result()
+                if res: papers.append(res)
+            except Exception:
+                continue
+            if (i + 1) % 200 == 0:
+                print(f"    Processed {i+1}/{len(matches)} ICML {year} abstracts...")
+
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache['icml'][year] = papers
+    return papers
+
+
+def _fetch_cvf_abstract(url):
+    """Fetch a CVF Open Access paper page and extract its abstract."""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            html = res.read().decode('utf-8', errors='replace')
+        match = re.search(r'<div id="abstract"\s*>(.*?)</div>', html, re.DOTALL)
+        if match:
+            return re.sub(r'<[^>]+>', '', match.group(1)).strip()
+    except Exception as e:
+        print(f"  Failed to fetch CVF abstract from {url}: {e}")
+    return ""
+
+
+def _fetch_cvf_json(conf, year):
+    """Shared fetcher for CVF Open Access venues (CVPR, ICCV)."""
+    key = conf.lower()
+    if year in _fetcher._cache.get(key, {}):
+        return _fetcher._cache[key][year]
+    if key not in _fetcher._cache: _fetcher._cache[key] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, key)
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache[key][year] = papers
+            return papers
+
+    base_url = "https://openaccess.thecvf.com"
+    index_url = f"{base_url}/{conf}{year}?day=all"
+    req = urllib.request.Request(index_url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        with _fetcher._opener.open(req, timeout=30) as response:
+            html = response.read().decode('utf-8')
+    except Exception as e:
+        print(f"  Error fetching {conf} {year} index: {e}")
+        return []
+
+    # A few years' backends reject "day=all" outright ("Error 1525") - fall
+    # back to discovering and merging each individual conference day's page.
+    if 'ptitle' not in html:
+        try:
+            base_req = urllib.request.Request(f"{base_url}/{conf}{year}", headers={'User-Agent': 'Mozilla/5.0'})
+            with _fetcher._opener.open(base_req, timeout=30) as response:
+                base_html = response.read().decode('utf-8')
+            day_values = sorted(set(re.findall(r'day=(\d{4}-\d{2}-\d{2})', base_html)))
+            html_parts = []
+            for day in day_values:
+                day_req = urllib.request.Request(f"{base_url}/{conf}{year}?day={day}", headers={'User-Agent': 'Mozilla/5.0'})
+                with _fetcher._opener.open(day_req, timeout=30) as response:
+                    html_parts.append(response.read().decode('utf-8'))
+            if html_parts:
+                html = "\n".join(html_parts)
+                print(f"  {conf} {year}: day=all unsupported, merged {len(day_values)} per-day pages instead.")
+        except Exception as e:
+            print(f"  Error fetching {conf} {year} per-day pages: {e}")
+
+    pattern = re.compile(
+        r'<dt class="ptitle"><br><a href="(?P<url>[^"]+)">(?P<title>.*?)</a></dt>\s*'
+        r'<dd>(?P<authors_block>.*?)</dd>',
+        re.DOTALL
+    )
+    matches = list(pattern.finditer(html))
+    print(f"  Found {len(matches)} papers for {conf} {year}. Fetching abstracts...")
+
+    papers = []
+
+    def _fetch_one(m):
+        title = re.sub(r'<[^>]+>', '', m.group('title')).strip()
+        authors = re.findall(r'<a href="#"[^>]*>([^<]+)</a>', m.group('authors_block'))
+        rel_url = m.group('url')
+        if rel_url.startswith('http'):
+            paper_url = rel_url
+        elif rel_url.startswith('/'):
+            paper_url = base_url + rel_url
+        else:
+            paper_url = f"{base_url}/{rel_url}"
+        return {
+            "title": title,
+            "authors": ", ".join(a.strip() for a in authors),
+            "url": paper_url,
+            "venue": f"{conf} {year}",
+            "year": str(year),
+            "abstract": _fetch_cvf_abstract(paper_url)
+        }
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(_fetch_one, m) for m in matches]
+        for i, future in enumerate(as_completed(futures)):
+            try:
+                res = future.result()
+                if res: papers.append(res)
+            except Exception:
+                continue
+            if (i + 1) % 200 == 0:
+                print(f"    Processed {i+1}/{len(matches)} {conf} {year} abstracts...")
+
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache[key][year] = papers
+    return papers
+
+
+def fetch_cvpr_json(year):
+    return _fetch_cvf_json("CVPR", year)
+
+
+def fetch_iccv_json(year):
+    return _fetch_cvf_json("ICCV", year)
+
+
+# ECVA hosts every ECCV open-access year on a single page, so we fetch it
+# once per process and slice out the requested year from that cache.
+_eccv_page_cache = None
+
+
+def _get_eccv_page():
+    global _eccv_page_cache
+    if _eccv_page_cache is not None:
+        return _eccv_page_cache
+    try:
+        req = urllib.request.Request("https://www.ecva.net/papers.php", headers={'User-Agent': 'Mozilla/5.0'})
+        with _fetcher._opener.open(req, timeout=30) as response:
+            _eccv_page_cache = response.read().decode('utf-8', errors='replace')
+    except Exception as e:
+        print(f"  Error fetching ECCV papers.php: {e}")
+        _eccv_page_cache = ""
+    return _eccv_page_cache
+
+
+def fetch_eccv_json(year):
+    """Fetch ECCV papers from the ECVA open-access archive."""
+    if year in _fetcher._cache.get('eccv', {}):
+        return _fetcher._cache['eccv'][year]
+    if 'eccv' not in _fetcher._cache: _fetcher._cache['eccv'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "eccv")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['eccv'][year] = papers
+            return papers
+
+    html = _get_eccv_page()
+    base_url = "https://www.ecva.net/"
+
+    pattern = re.compile(
+        rf'<dt class="ptitle"><br>\s*<a href=[\'"]?(?P<url>papers/eccv_{year}/[^\'">\s]+)[\'"]?>\s*'
+        r'(?P<title>.*?)</a>\s*</dt><dd>\s*(?P<authors>.*?)</dd>',
+        re.DOTALL
+    )
+    matches = list(pattern.finditer(html))
+    print(f"  Found {len(matches)} papers for ECCV {year}. Fetching abstracts...")
+
+    papers = []
+
+    def _fetch_one(m):
+        title = re.sub(r'<[^>]+>', '', m.group('title')).strip()
+        authors = re.sub(r'<[^>]+>', '', m.group('authors')).strip()
+        paper_url = base_url + m.group('url').strip("'\"")
+        abstract = ""
+        try:
+            req = urllib.request.Request(paper_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as res:
+                paper_html = res.read().decode('utf-8', errors='replace')
+            abs_match = re.search(r'<div id="abstract">(.*?)</div>', paper_html, re.DOTALL)
+            if abs_match:
+                abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip().strip('"')
+        except Exception as e:
+            print(f"  Failed to fetch ECCV abstract from {paper_url}: {e}")
+        return {
+            "title": title,
+            "authors": authors,
+            "url": paper_url,
+            "venue": f"ECCV {year}",
+            "year": str(year),
+            "abstract": abstract
+        }
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(_fetch_one, m) for m in matches]
+        for i, future in enumerate(as_completed(futures)):
+            try:
+                res = future.result()
+                if res: papers.append(res)
+            except Exception:
+                continue
+            if (i + 1) % 200 == 0:
+                print(f"    Processed {i+1}/{len(matches)} ECCV {year} abstracts...")
+
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache['eccv'][year] = papers
+    return papers
+
+
+# The OAI feed's <datestamp> is when a record was added/modified in OJS,
+# not the paper's actual AAAI year - it does not correlate with publication
+# year, so date-range selective harvesting can't be used to fetch "one
+# year" at a time. Instead we harvest the whole "AAAI" set once (all pages)
+# and bucket each record by its own <dc:date> into the right year.
+_aaai_harvest_cache = None
+
+
+def _harvest_aaai():
+    global _aaai_harvest_cache
+    if _aaai_harvest_cache is not None:
+        return _aaai_harvest_cache
+
+    base = "https://ojs.aaai.org/index.php/AAAI/oai"
+    url = f"{base}?verb=ListRecords&metadataPrefix=oai_dc&set=AAAI"
+    by_year = {}
+    seen_ids = set()
+
+    for page in range(300):  # safety cap on pagination
+        xml = None
+        for attempt in range(5):
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            try:
+                with urllib.request.urlopen(req, timeout=30) as res:
+                    xml = res.read().decode('utf-8', errors='replace')
+                break
+            except Exception as e:
+                print(f"  Error fetching AAAI OAI page {page} (attempt {attempt + 1}): {e}")
+                time.sleep(5 * (attempt + 1))
+        if xml is None:
+            print(f"  Giving up on AAAI OAI page {page} after retries; harvest incomplete.")
+            break
+
+        for rec in re.finditer(r'<record>(.*?)</record>', xml, re.DOTALL):
+            block = rec.group(1)
+            id_m = re.search(r'<identifier>(.*?)</identifier>', block)
+            record_id = id_m.group(1) if id_m else None
+            if record_id:
+                if record_id in seen_ids:
+                    continue
+                seen_ids.add(record_id)
+
+            title_m = re.search(r'<dc:title[^>]*>(.*?)</dc:title>', block, re.DOTALL)
+            date_m = re.search(r'<dc:date>(\d{4})', block)
+            if not title_m or not date_m:
+                continue
+            year = int(date_m.group(1))
+
+            authors = re.findall(r'<dc:creator>(.*?)</dc:creator>', block, re.DOTALL)
+            desc_m = re.search(r'<dc:description[^>]*>(.*?)</dc:description>', block, re.DOTALL)
+            url_m = re.search(r'<dc:identifier>(https://ojs\.aaai\.org[^<]+)</dc:identifier>', block)
+
+            by_year.setdefault(year, []).append({
+                "title": re.sub(r'<[^>]+>', '', title_m.group(1)).strip(),
+                "authors": ", ".join(re.sub(r'<[^>]+>', '', a).strip() for a in authors),
+                "url": url_m.group(1) if url_m else "#",
+                "venue": f"AAAI {year}",
+                "year": str(year),
+                "abstract": re.sub(r'<[^>]+>', '', desc_m.group(1)).strip() if desc_m else ""
+            })
+
+        token_m = re.search(r'<resumptionToken[^>]*>([^<]*)</resumptionToken>', xml)
+        harvested = sum(len(v) for v in by_year.values())
+        print(f"  AAAI OAI harvest: page {page + 1}, {harvested} papers so far...")
+        if not token_m or not token_m.group(1):
+            break
+        url = f"{base}?verb=ListRecords&resumptionToken={token_m.group(1)}"
+        time.sleep(1.0)
+
+    _aaai_harvest_cache = by_year
+    return by_year
+
+
+def fetch_aaai_json(year):
+    """Fetch AAAI papers via the ojs.aaai.org OAI-PMH metadata feed (2020+)."""
+    if year in _fetcher._cache.get('aaai', {}):
+        return _fetcher._cache['aaai'][year]
+    if 'aaai' not in _fetcher._cache: _fetcher._cache['aaai'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "aaai")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['aaai'][year] = papers
+            return papers
+
+    papers = _harvest_aaai().get(year, [])
+
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache['aaai'][year] = papers
+    return papers
+
+
+def fetch_ijcai_json(year):
+    """Fetch IJCAI papers from ijcai.org's proceedings pages."""
+    if year in _fetcher._cache.get('ijcai', {}):
+        return _fetcher._cache['ijcai'][year]
+    if 'ijcai' not in _fetcher._cache: _fetcher._cache['ijcai'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "ijcai")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            papers = json.load(f)
+            _fetcher._cache['ijcai'][year] = papers
+            return papers
+
+    base_url = "https://www.ijcai.org"
+    index_url = f"{base_url}/proceedings/{year}/"
+    req = urllib.request.Request(index_url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        with _fetcher._opener.open(req, timeout=30) as response:
+            html = response.read().decode('utf-8')
+    except Exception as e:
+        print(f"  Error fetching IJCAI {year} index: {e}")
+        return []
+
+    pattern = re.compile(
+        r'<div class="title">(?P<title>.*?)</div><div class="authors">(?P<authors>.*?)</div>'
+        r'<div class="details">\(<a href="[^"]+">PDF</a> \| <a href="(?P<url>/proceedings/\d+/\d+)">',
+        re.DOTALL
+    )
+    matches = list(pattern.finditer(html))
+    print(f"  Found {len(matches)} papers for IJCAI {year}. Fetching abstracts...")
+
+    papers = []
+
+    def _fetch_one(m):
+        title = re.sub(r'<[^>]+>', '', m.group('title')).strip()
+        authors = re.sub(r'<[^>]+>', '', m.group('authors')).strip()
+        paper_url = base_url + m.group('url')
+        abstract = ""
+        try:
+            req = urllib.request.Request(paper_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as res:
+                paper_html = res.read().decode('utf-8', errors='replace')
+            abs_match = re.search(
+                r'<hr>\s*<div class="row">\s*<div class="col-md-12">\s*(.*?)\s*</div>\s*<div class="col-md-12">\s*<div class="keywords">',
+                paper_html, re.DOTALL
+            )
+            if abs_match:
+                abstract = re.sub(r'<[^>]+>', '', abs_match.group(1)).strip()
+        except Exception as e:
+            print(f"  Failed to fetch IJCAI abstract from {paper_url}: {e}")
+        return {
+            "title": title,
+            "authors": authors,
+            "url": paper_url,
+            "venue": f"IJCAI {year}",
+            "year": str(year),
+            "abstract": abstract
+        }
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(_fetch_one, m) for m in matches]
+        for i, future in enumerate(as_completed(futures)):
+            try:
+                res = future.result()
+                if res: papers.append(res)
+            except Exception:
+                continue
+            if (i + 1) % 200 == 0:
+                print(f"    Processed {i+1}/{len(matches)} IJCAI {year} abstracts...")
+
+    if papers:
+        with open(cache_path, 'w') as f:
+            json.dump(papers, f)
+
+    _fetcher._cache['ijcai'][year] = papers
     return papers
 
 

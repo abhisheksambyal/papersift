@@ -20,10 +20,21 @@ async function loadPapers() {
 
   loadingPromise = (async () => {
     try {
-      const res = await fetch('data/papers.json');
-      if (!res.ok) throw new Error(`Failed to load paper data: ${res.status}`);
-      const data = await res.json();
-      
+      const configRes = await fetch('data/config.json');
+      if (!configRes.ok) throw new Error(`Failed to load config: ${configRes.status}`);
+      const config = await configRes.json();
+
+      // Data is split into one file per conference (keeps individual files
+      // under hosting size limits and lets the browser fetch them in parallel).
+      const perConference = await Promise.all(
+        config.conferences.map(async ({ id }) => {
+          const res = await fetch(`data/${id}.json`);
+          if (!res.ok) throw new Error(`Failed to load ${id} data: ${res.status}`);
+          return res.json();
+        })
+      );
+      const data = perConference.flat();
+
       // Pre-process for performance
       for (const p of data) {
         const t = (p.title || '').toLowerCase();
@@ -143,11 +154,10 @@ export async function fetchResults(query, venue = '', year = '') {
 
     results.push({ ...p, score });
     
-    // Track facets
-    const v = searchable.venue;
-    ['miccai', 'midl', 'isbi', 'neurips'].forEach(id => {
-      if (v.includes(id)) activeVenues.add(id);
-    });
+    // Track facets. Venue strings are always "{ConferenceId} {year}", so the
+    // id is just the first word - this scales to new conferences automatically.
+    const confId = searchable.venue.split(' ')[0];
+    if (confId) activeVenues.add(confId);
     if (p.year) activeYears.add(String(p.year));
   }
 

@@ -1,0 +1,4 @@
+# Aggregated 24h fetch-acceleration cache - regenerable from data_cache/{conf}/*.json,
+# not source data. Grows too large to track (now exceeds GitHub's 100MB file limit
+# once every conference is included).
+data_cache/full_index.json

@@ -1,4 +1,8 @@
-from api.fetcher import fetch_miccai_json, fetch_midl_json, fetch_isbi_json, fetch_neurips_json
+from api.fetcher import (
+    fetch_miccai_json, fetch_midl_json, fetch_isbi_json, fetch_neurips_json,
+    fetch_icml_json, fetch_cvpr_json, fetch_iccv_json, fetch_eccv_json,
+    fetch_aaai_json, fetch_ijcai_json,
+)
 from functools import lru_cache
 from datetime import date
 
@@ -21,7 +25,31 @@ CONFERENCES = {
     "neurips": {
         "years": tuple(range(1987, CURRENT_YEAR + 1)),
         "fetcher": fetch_neurips_json,
-    }
+    },
+    "icml": {
+        "years": tuple(range(2013, CURRENT_YEAR + 1)),
+        "fetcher": fetch_icml_json,
+    },
+    "cvpr": {
+        "years": tuple(range(2013, CURRENT_YEAR + 1)),
+        "fetcher": fetch_cvpr_json,
+    },
+    "iccv": {
+        "years": tuple(y for y in range(2013, CURRENT_YEAR + 1) if y % 2 == 1), # Biennial (odd years)
+        "fetcher": fetch_iccv_json,
+    },
+    "eccv": {
+        "years": tuple(y for y in range(2018, CURRENT_YEAR + 1) if y % 2 == 0), # Biennial (even years)
+        "fetcher": fetch_eccv_json,
+    },
+    "aaai": {
+        "years": tuple(range(2020, CURRENT_YEAR + 1)), # OAI feed only covers 2020+
+        "fetcher": fetch_aaai_json,
+    },
+    "ijcai": {
+        "years": tuple(range(2017, CURRENT_YEAR + 1)), # No per-paper listing before 2017
+        "fetcher": fetch_ijcai_json,
+    },
 }
 
 MAX_RESULTS = 100
@@ -137,7 +165,13 @@ def get_search_config():
             {"id": "miccai", "name": "MICCAI"},
             {"id": "midl", "name": "MIDL"},
             {"id": "isbi", "name": "ISBI"},
-            {"id": "neurips", "name": "NeurIPS"}
+            {"id": "neurips", "name": "NeurIPS"},
+            {"id": "icml", "name": "ICML"},
+            {"id": "cvpr", "name": "CVPR"},
+            {"id": "iccv", "name": "ICCV"},
+            {"id": "eccv", "name": "ECCV"},
+            {"id": "aaai", "name": "AAAI"},
+            {"id": "ijcai", "name": "IJCAI"}
         ],
         "years": sorted(list(years), reverse=True)
     }

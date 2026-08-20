@@ -106,10 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const counts = results.reduce((acc, p) => {
         if (p.year) acc.years[p.year] = (acc.years[p.year] || 0) + 1;
         if (p.venue) {
-          const v = p.venue.toLowerCase();
-          ['miccai', 'midl', 'isbi', 'neurips'].forEach(id => {
-            if (v.includes(id)) acc.venues[id] = (acc.venues[id] || 0) + 1;
-          });
+          // Venue strings are always "{ConferenceId} {year}".
+          const confId = p.venue.toLowerCase().split(' ')[0];
+          if (confId) acc.venues[confId] = (acc.venues[confId] || 0) + 1;
         }
         return acc;
       }, { years: {}, venues: {} });
