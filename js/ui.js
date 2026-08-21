@@ -193,7 +193,7 @@ function createCard(p, re, authorRe) {
   card.innerHTML = `
     <div class="flex items-start gap-4 sm:gap-8 py-1">
       <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
-        <div class="font-serif text-[0.5rem] sm:text-[0.6rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">${venue}</div>
+        <div class="font-serif text-[0.6rem] sm:text-[0.65rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">${venue}</div>
         <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 dark:text-paper/20 -mt-1 tabular-nums tracking-tighter">'${yr}</div>
       </div>
       <div class="flex-grow min-w-0 border-l border-ink/10 dark:border-paper/10 pl-4 sm:pl-8">
@@ -210,7 +210,7 @@ function createCard(p, re, authorRe) {
               <span>Abstract</span>
               <svg class="w-2 h-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
             </button>
-            <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed italic border-t border-ink/5 pt-4">${abstract}</div>
+            <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed border-t border-ink/5 pt-4">${abstract}</div>
           </div>` : ''}
       </div>
     </div>`;
