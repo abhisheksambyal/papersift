@@ -1,7 +1,7 @@
 from api.fetcher import (
     fetch_miccai_json, fetch_midl_json, fetch_isbi_json, fetch_neurips_json,
     fetch_icml_json, fetch_cvpr_json, fetch_iccv_json, fetch_eccv_json,
-    fetch_aaai_json, fetch_ijcai_json,
+    fetch_aaai_json, fetch_ijcai_json, fetch_iclr_json,
 )
 from functools import lru_cache
 from datetime import date
@@ -49,6 +49,10 @@ CONFERENCES = {
     "ijcai": {
         "years": tuple(range(2017, CURRENT_YEAR + 1)), # No per-paper listing before 2017
         "fetcher": fetch_ijcai_json,
+    },
+    "iclr": {
+        "years": tuple(range(2013, CURRENT_YEAR + 1)), # DBLP's ICLR stream starts in 2013
+        "fetcher": fetch_iclr_json,
     },
 }
 
@@ -171,7 +175,8 @@ def get_search_config():
             {"id": "iccv", "name": "ICCV"},
             {"id": "eccv", "name": "ECCV"},
             {"id": "aaai", "name": "AAAI"},
-            {"id": "ijcai", "name": "IJCAI"}
+            {"id": "ijcai", "name": "IJCAI"},
+            {"id": "iclr", "name": "ICLR"}
         ],
         "years": sorted(list(years), reverse=True)
     }

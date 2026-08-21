@@ -1,11 +1,11 @@
 # 📰 PaperSift
 
-A high-performance, monochromatic research search engine for AI/ML and medical imaging researchers. PaperSift provides sub-millisecond access to over 120,000 papers from major conferences including NeurIPS, ICML, CVPR, ICCV, ECCV, AAAI, IJCAI, MICCAI, MIDL, and ISBI.
+A high-performance, monochromatic research search engine for AI/ML and medical imaging researchers. PaperSift provides sub-millisecond access to a large corpus of papers from major conferences including NeurIPS, ICML, CVPR, ICCV, ECCV, AAAI, IJCAI, MICCAI, MIDL, ISBI, and ICLR.
 
 ## ✨ Key Features
 
-- **⚡ Instant Search**: Client-side filtering of 120,000+ papers with negligible latency.
-- **📚 Extensive Archive**: Full historical proceedings across 10 conferences — see [Conference Coverage](#-conference-coverage) below.
+- **⚡ Instant Search**: Client-side filtering of a large paper corpus with negligible latency.
+- **📚 Extensive Archive**: Full historical proceedings across 11 conferences — see [Conference Coverage](#-conference-coverage) below.
 - **🎨 Newsprint Aesthetic**: A clean, monochromatic interface optimized for focus.
 - **🌓 Adaptive Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset.
 - **🔢 LaTeX Support**: Integrated KaTeX for rendering complex mathematical abstracts.
@@ -23,10 +23,9 @@ A high-performance, monochromatic research search engine for AI/ML and medical i
 | AAAI | 2020+ | ojs.aaai.org (OAI-PMH) | ⚠️ Best-effort — the OAI feed's pagination has been unreliable under sustained load; coverage may be incomplete for some years |
 | IJCAI | 2017+ | ijcai.org | ✅ Full |
 | MICCAI | 2018+ | papers.miccai.org (2024+), DBLP (earlier) | ✅ Full for 2024+; DBLP-only years have no abstracts (Springer doesn't expose them, and its site blocks scraping) |
-| MIDL | 2018+ | OpenReview | ⚠️ OpenReview's API currently requires a JS bot-challenge that blocks automated fetching — new years won't sync until this changes upstream |
+| MIDL | 2019+ | DBLP + PMLR | ✅ Full for 2019-2024 with abstracts (OpenReview's API/site requires a JS bot-challenge that blocks automated fetching, so listings and abstracts are sourced from DBLP and the PMLR proceedings pages instead); DBLP has no MIDL 2018 entries at all, and 2025+ hasn't been indexed there yet |
 | ISBI | 2004+ | DBLP + OpenAlex | ✅ Full (abstracts backfilled via OpenAlex, which has strong coverage for IEEE-published papers) |
-
-**Not included:** ICLR — also hosted on OpenReview, blocked by the same bot-challenge as MIDL.
+| ICLR | 2013+ | iclr.cc (2018+), DBLP + OpenAlex (2013-2017) | ✅ Full for 2018+ — same OpenReview bot-challenge as MIDL, but iclr.cc's own conference site (its Schedule pages for 2018-2019, its virtual site for 2020+) has the authoritative accepted-paper listing with abstracts, sidestepping OpenReview and OpenAlex entirely; ~81% abstract coverage (some detail pages have none to scrape). 2013-2017 fall back to DBLP + best-effort OpenAlex title search, since iclr.cc doesn't have a scrapable listing that far back and OpenAlex now meters its API with a tiny free daily budget |
 
 ---
 

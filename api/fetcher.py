@@ -1,5 +1,7 @@
 import urllib.request
 import urllib.error
+import urllib.parse
+import html
 import json
 import os
 import time
@@ -101,24 +103,45 @@ def _fetch_openalex_abstracts(dois):
     return abstracts
 
 
-def _fetch_dblp_hits(venue, year):
-    """Fetch all publication hits for a venue/year from DBLP.
+def _fetch_html(url, timeout=30, max_retries=3):
+    """Fetch a URL and return raw HTML text, with retries (mirrors Fetcher.fetch but for HTML, not JSON)."""
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as res:
+                return res.read().decode('utf-8', errors='replace')
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            print(f"  Fetch failed for {url}: {e}")
+            return ""
+    return ""
+
+
+def _fetch_dblp_hits_once(venue, year, facet):
+    """Single pass at paging through all hits for a venue/year from DBLP.
 
     DBLP's search API caps each response at 100 hits regardless of the
     requested `h`, so we page through with `f` (offset) until @total is met.
+    Returns (hits, total_reported) — total_reported is 0 if we never got a
+    successful first page, letting the caller tell "genuinely empty" apart
+    from "gave up early".
     """
     hits = []
     first = 0
     page_size = 100
+    total = 0
     while True:
-        url = f"https://dblp.org/search/publ/api?q=venue:{venue}:year:{year}:&format=json&h={page_size}&f={first}"
+        url = f"https://dblp.org/search/publ/api?q={facet}:{venue}:year:{year}:&format=json&h={page_size}&f={first}"
         response = None
-        for attempt in range(3):
-            response = _fetcher.fetch(url)
+        for attempt in range(6):
+            response = _fetcher.fetch(url, timeout=45)
             if isinstance(response, dict) and response.get('result'):
                 break
-            time.sleep(2)
-        if not isinstance(response, dict):
+            time.sleep(min(2 ** attempt, 20))
+        if not isinstance(response, dict) or not response.get('result'):
+            print(f"  Giving up on {venue} {year} page at offset {first} after repeated failures.")
             break
         result_hits = response.get('result', {}).get('hits', {})
         page_hits = result_hits.get('hit', [])
@@ -130,7 +153,68 @@ def _fetch_dblp_hits(venue, year):
             break
         first += page_size
         time.sleep(0.4)
-    return hits
+    return hits, total
+
+
+def _fetch_dblp_hits(venue, year, facet="venue"):
+    """Fetch all publication hits for a venue/year from DBLP, retrying the
+    whole year (not just the failing page) when DBLP's flakiness causes a
+    pass to give up before reaching the reported total.
+
+    `facet` selects the DBLP facet used to scope the query: "venue" (default,
+    e.g. "venue:MICCAI:") works for most conferences, but some (e.g. ICLR)
+    500-error on the venue facet and need "stream" instead (e.g.
+    "stream:streams/conf/iclr:").
+    """
+    best_hits, best_total = [], 0
+    for pass_num in range(3):
+        hits, total = _fetch_dblp_hits_once(venue, year, facet)
+        if len(hits) > len(best_hits):
+            best_hits, best_total = hits, total
+        if total and len(best_hits) >= total:
+            break
+        if pass_num < 2:
+            print(f"  {venue} {year} incomplete ({len(hits)}/{total or '?'}), retrying whole year...")
+            time.sleep(5)
+    return best_hits
+
+
+_openalex_budget_exhausted = False
+
+
+def _fetch_openalex_title_abstract(title):
+    """Best-effort abstract lookup by title via OpenAlex (used when no DOI is available).
+
+    Makes its own request (rather than going through the shared, retrying
+    `_fetcher.fetch`) so it can detect OpenAlex's daily budget being
+    exhausted and stop hitting the network for the rest of the run instead
+    of burning 3 retries with backoff on every single title.
+    """
+    global _openalex_budget_exhausted
+    if _openalex_budget_exhausted:
+        return ""
+    try:
+        # OpenAlex treats "?" and "*" as wildcards even when URL-encoded, which
+        # 400s on title.search (a stemmed field); strip them since they're
+        # rarely meaningful in a paper title anyway.
+        query = title.replace("?", "").replace("*", "")
+        url = f"https://api.openalex.org/works?filter=title.search:{urllib.parse.quote(query)}&select=title,abstract_inverted_index&per_page=1"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            data = json.loads(res.read().decode('utf-8'))
+        results = data.get("results", [])
+        if results:
+            return _reconstruct_abstract(results[0].get("abstract_inverted_index"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')
+        if "Insufficient budget" in body or "dailyRemainingUsd\":0" in body:
+            _openalex_budget_exhausted = True
+            print("  OpenAlex daily budget exhausted; skipping remaining title lookups for this run.")
+        elif e.code != 400:
+            print(f"  Failed OpenAlex title lookup for '{title}': HTTP {e.code}")
+    except Exception as e:
+        print(f"  Failed OpenAlex title lookup for '{title}': {e}")
+    return ""
 
 
 def _fetch_miccai_abstract(url):
@@ -249,7 +333,7 @@ def fetch_miccai_json(year):
 
 
 def fetch_midl_json(year):
-    """Fetch MIDL papers from OpenReview API."""
+    """Fetch MIDL papers from DBLP (OpenReview is blocked by a bot-challenge)."""
     if year in _fetcher._cache.get('midl', {}):
         return _fetcher._cache['midl'][year]
 
@@ -265,37 +349,48 @@ def fetch_midl_json(year):
             _fetcher._cache['midl'][year] = processed
             return processed
 
-    base_api = "api2" if year >= 2024 else "api"
-    url = f"https://{base_api}.openreview.net/notes?content.venueid=MIDL.io/{year}/Conference"
-    
-    response = _fetcher.fetch(url)
-    if not isinstance(response, dict): response = {}
-    notes = response.get('notes', [])
-    
+    hits = _fetch_dblp_hits("MIDL", year)
+
     processed = []
-    for n in notes:
-        content = n.get('content', {})
-        title = content.get('title')
-        if isinstance(title, dict): title = title.get('value')
-        authors = content.get('authors')
-        if isinstance(authors, dict): authors = authors.get('value')
-        venue = content.get('venue', {})
-        if isinstance(venue, dict): venue = venue.get('value', '')
-        
-        if not title or any(x in venue.lower() for x in ["submitted", "review", "reject"]):
+    urls = []
+    for h in hits:
+        info = h.get('info', {})
+        if info.get('type') != 'Conference and Workshop Papers':
             continue
 
-        abstract = content.get('abstract')
-        if isinstance(abstract, dict): abstract = abstract.get('value')
+        authors_data = info.get('authors', {}).get('author', [])
+        if isinstance(authors_data, dict): authors_data = [authors_data]
+        authors_list = [a.get('text', 'Unknown') for a in authors_data]
+        url = info.get('ee') or info.get('url') or "#"
 
         processed.append({
-            "title": title,
-            "authors": ", ".join(authors) if isinstance(authors, list) else authors,
-            "url": f"https://openreview.net/forum?id={n['id']}",
+            "title": info.get('title', '').rstrip('.'),
+            "authors": ", ".join(authors_list),
+            "url": url,
             "venue": f"MIDL {year}",
             "year": str(year),
-            "abstract": abstract or ""
+            "abstract": ""
         })
+        urls.append(url)
+
+    # MIDL papers are hosted on PMLR, whose pages include the abstract text.
+    if urls:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_idx = {
+                executor.submit(_fetch_pmlr_abstract, url): i
+                for i, url in enumerate(urls) if url.startswith("https://proceedings.mlr.press")
+            }
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                try:
+                    abstract = future.result()
+                    if abstract:
+                        processed[idx]["abstract"] = abstract
+                except Exception:
+                    continue
+        found = sum(1 for x in processed if x["abstract"])
+        if found:
+            print(f"  Fetched abstracts for {found}/{len(processed)} MIDL {year} papers.")
 
     if processed:
         with open(cache_path, 'w') as f:
@@ -362,6 +457,225 @@ def fetch_isbi_json(year):
             json.dump(processed, f)
 
     _fetcher._cache['isbi'][year] = processed
+    return processed
+
+
+def _fetch_iclr_virtual_detail(year, paper_id):
+    """Fetch an ICLR virtual-site poster page and extract its authors + abstract."""
+    url = f"https://iclr.cc/virtual/{year}/poster/{paper_id}"
+    authors = ""
+    abstract = ""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            html_text = res.read().decode('utf-8', errors='replace')
+
+        ld_match = re.search(r'<script type="application/ld\+json">(.*?)</script>', html_text, re.DOTALL)
+        if ld_match:
+            try:
+                ld = json.loads(ld_match.group(1))
+                authors = ", ".join(a.get('name', '') for a in ld.get('author', []) if a.get('name'))
+            except Exception:
+                pass
+
+        abs_match = re.search(r'abstract-text-inner">\s*<p>(.*?)</p>', html_text, re.DOTALL)
+        if abs_match:
+            abstract = html.unescape(re.sub(r'<[^>]+>', '', abs_match.group(1))).strip()
+    except Exception as e:
+        print(f"  Failed to fetch ICLR poster detail from {url}: {e}")
+    return url, authors, abstract
+
+
+def _fetch_iclr_virtual(year):
+    """Fetch ICLR papers directly from iclr.cc's virtual conference site (2020+).
+
+    This is the authoritative listing (matches the official accepted-paper
+    count) and sidesteps both OpenReview's bot-challenge and OpenAlex's
+    metered API entirely, since abstracts live on iclr.cc's own pages.
+    """
+    listing_url = f"https://iclr.cc/virtual/{year}/papers.html"
+    listing = _fetch_html(listing_url)
+    if not listing:
+        return []
+
+    pairs = re.findall(rf'<a href="/virtual/{year}/poster/(\d+)">([^<]+)</a>', listing)
+    if not pairs:
+        return []
+
+    processed = [{
+        "title": html.unescape(title).strip(),
+        "authors": "",
+        "url": f"https://iclr.cc/virtual/{year}/poster/{paper_id}",
+        "venue": f"ICLR {year}",
+        "year": str(year),
+        "abstract": ""
+    } for paper_id, title in pairs]
+    ids = [paper_id for paper_id, _ in pairs]
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_idx = {
+            executor.submit(_fetch_iclr_virtual_detail, year, paper_id): i
+            for i, paper_id in enumerate(ids)
+        }
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                _, authors, abstract = future.result()
+                if authors:
+                    processed[idx]["authors"] = authors
+                if abstract:
+                    processed[idx]["abstract"] = abstract
+            except Exception:
+                continue
+
+    found = sum(1 for p in processed if p["abstract"])
+    print(f"  Fetched {len(processed)} ICLR {year} papers from iclr.cc, {found} with abstracts.")
+    return processed
+
+
+def _fetch_iclr_schedule_detail(year, event_id):
+    """Fetch an ICLR Conferences/{year}/Schedule event detail and extract its abstract."""
+    url = f"https://iclr.cc/Conferences/{year}/Schedule?showEvent={event_id}"
+    abstract = ""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as res:
+            html_text = res.read().decode('utf-8', errors='replace')
+        abs_match = re.search(r'abstractContainer"><p>(.*?)</p>', html_text, re.DOTALL)
+        if abs_match:
+            abstract = html.unescape(re.sub(r'<[^>]+>', '', abs_match.group(1))).strip()
+    except Exception as e:
+        print(f"  Failed to fetch ICLR schedule abstract from {url}: {e}")
+    return abstract
+
+
+def _fetch_iclr_schedule(year):
+    """Fetch ICLR papers from iclr.cc's older Schedule-based conference site (2018-2019)."""
+    # No type filter: the unfiltered Schedule page includes both oral and
+    # poster presentations (accepted papers), excluding "break"/"workshop"
+    # cards which aren't accepted research papers.
+    listing_url = f"https://iclr.cc/Conferences/{year}/Schedule"
+    listing = _fetch_html(listing_url)
+    if not listing:
+        return []
+
+    processed = []
+    ids = []
+    card_re = re.compile(
+        r'<div class="maincard narrower (?:oral|poster)" id="maincard_(\d+)">.*?'
+        r'<div class="maincardBody">([^<]+)</div>.*?'
+        r'<div class="maincardFooter">([^<]*)</div>',
+        re.DOTALL
+    )
+    for m in card_re.finditer(listing):
+        event_id, title, authors_raw = m.groups()
+        authors = ", ".join(a.strip() for a in html.unescape(authors_raw).split("·") if a.strip())
+        processed.append({
+            "title": html.unescape(title).strip(),
+            "authors": authors,
+            "url": f"https://iclr.cc/Conferences/{year}/Schedule?showEvent={event_id}",
+            "venue": f"ICLR {year}",
+            "year": str(year),
+            "abstract": ""
+        })
+        ids.append(event_id)
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_idx = {
+            executor.submit(_fetch_iclr_schedule_detail, year, event_id): i
+            for i, event_id in enumerate(ids)
+        }
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                abstract = future.result()
+                if abstract:
+                    processed[idx]["abstract"] = abstract
+            except Exception:
+                continue
+
+    found = sum(1 for p in processed if p["abstract"])
+    print(f"  Fetched {len(processed)} ICLR {year} papers from iclr.cc, {found} with abstracts.")
+    return processed
+
+
+def fetch_iclr_json(year):
+    """Fetch ICLR papers. OpenReview itself is blocked by a bot-challenge, so:
+    - 2020+: iclr.cc's virtual conference site (authoritative, has abstracts)
+    - 2018-2019: iclr.cc's older Schedule-based site (also has abstracts)
+    - pre-2018: DBLP + best-effort OpenAlex title search (small volume, and
+      iclr.cc doesn't have a scrapable listing that far back)
+    """
+    if year in _fetcher._cache.get('iclr', {}):
+        return _fetcher._cache['iclr'][year]
+
+    if 'iclr' not in _fetcher._cache: _fetcher._cache['iclr'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "iclr")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            processed = json.load(f)
+            _fetcher._cache['iclr'][year] = processed
+            return processed
+
+    if year >= 2020:
+        processed = _fetch_iclr_virtual(year)
+    elif year >= 2018:
+        processed = _fetch_iclr_schedule(year)
+    else:
+        hits = _fetch_dblp_hits("streams/conf/iclr", year, facet="stream")
+        processed = []
+        titles = []
+        for h in hits:
+            info = h.get('info', {})
+            if info.get('type') != 'Conference and Workshop Papers':
+                continue
+            title = info.get('title', '').rstrip('.')
+            authors_data = info.get('authors', {}).get('author', [])
+            if isinstance(authors_data, dict): authors_data = [authors_data]
+            authors_list = [a.get('text', 'Unknown') for a in authors_data]
+
+            processed.append({
+                "title": title,
+                "authors": ", ".join(authors_list),
+                "url": info.get('ee') or info.get('url') or "#",
+                "venue": f"ICLR {year}",
+                "year": str(year),
+                "abstract": ""
+            })
+            titles.append(title)
+
+        # DBLP's pre-2018 ICLR entries link to OpenReview (blocked) and have
+        # no DOI, so the DOI-batch OpenAlex lookup doesn't apply here. Most
+        # are cross-posted to arXiv and indexed by OpenAlex, so fall back to
+        # a best-effort per-title search instead.
+        if titles:
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                future_to_idx = {
+                    executor.submit(_fetch_openalex_title_abstract, title): i
+                    for i, title in enumerate(titles) if title
+                }
+                found = 0
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        abstract = future.result()
+                        if abstract:
+                            processed[idx]["abstract"] = abstract
+                            found += 1
+                    except Exception:
+                        continue
+            if found:
+                print(f"  Backfilled {found}/{len(processed)} ICLR {year} abstracts from OpenAlex.")
+
+    if processed:
+        with open(cache_path, 'w') as f:
+            json.dump(processed, f)
+
+    _fetcher._cache['iclr'][year] = processed
     return processed
 
 
