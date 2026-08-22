@@ -157,8 +157,8 @@
               panel: '#242220',
             },
             accent: {
-              DEFAULT: '#b5482a',
-              dark: '#e2793f',
+              DEFAULT: '#3f4b57',
+              dark: '#adbac6',
             },
           },
           fontFamily: {
@@ -353,35 +353,61 @@
             class="mx-2.5 px-1.5 py-0.5 bg-accent/10 dark:bg-accent-dark/15 text-accent dark:text-accent-dark rounded-sm text-[0.6rem] uppercase tracking-wider">or</span>
           <span class="font-serif not-italic text-[0.72rem] text-ink/70 dark:text-paper/70">knowledge distillation, author: john</span>
         </div>
+      </div>
 
-        <div id="filter-container"
-          class="mt-4 sm:mt-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-start gap-3 sm:gap-4 transition-all duration-500 ease-in-out">
-          <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
-            <label
-              class="block font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold mb-2.5">Archives</label>
-            <div id="conference-filters" class="flex flex-wrap gap-1.5">
+      <div id="filter-container"
+        class="w-full mt-4 sm:mt-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-start gap-3 sm:gap-4 transition-all duration-500 ease-in-out">
+          <div class="relative">
+            <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
+              <button type="button" id="conference-filter-toggle" aria-expanded="false" aria-controls="conference-filters"
+                class="w-full flex items-center justify-between gap-2 no-tap hover:opacity-80 transition-opacity">
+                <span class="font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold flex items-center gap-1.5">
+                  Archives
+                  <span id="conference-filter-summary"
+                    class="hidden font-sans normal-case tracking-normal font-normal text-[0.7rem] text-ink/40 dark:text-paper/40"></span>
+                </span>
+                <svg class="w-3 h-3 flex-shrink-0 text-ink/40 dark:text-paper/40 transition-transform duration-300" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+            <div id="conference-filters"
+              class="hidden absolute left-0 right-0 top-full mt-2 z-30 flex-wrap gap-1.5 max-h-[60vh] overflow-y-auto rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
               <!-- Dynamically populated -->
             </div>
           </div>
-          <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
-            <label
-              class="block font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold mb-2.5">Chronology</label>
-            <div id="year-filters" class="flex flex-col gap-2.5 no-tap">
+          <div class="relative">
+            <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
+              <button type="button" id="year-filter-toggle" aria-expanded="false" aria-controls="year-filters"
+                class="w-full flex items-center justify-between gap-2 no-tap hover:opacity-80 transition-opacity">
+                <span class="font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold flex items-center gap-1.5">
+                  Chronology
+                  <span id="year-filter-summary"
+                    class="hidden font-sans normal-case tracking-normal font-normal text-[0.7rem] text-ink/40 dark:text-paper/40"></span>
+                </span>
+                <svg class="w-3 h-3 flex-shrink-0 text-ink/40 dark:text-paper/40 transition-transform duration-300" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+            <div id="year-filters"
+              class="hidden absolute left-0 right-0 top-full mt-2 z-30 flex-col gap-2.5 no-tap max-h-[60vh] overflow-y-auto rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
               <!-- Dynamically populated -->
             </div>
           </div>
         </div>
 
-        <!-- Example / recent-search pills -->
-        <div id="example-pills"
-          class="flex flex-wrap gap-2 mt-3 sm:mt-4 text-[0.65rem] uppercase tracking-widest transition-opacity duration-500 ease-in-out">
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">classification</span>
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">calibration</span>
-        </div>
+      <!-- Example / recent-search pills -->
+      <div id="example-pills"
+        class="w-full max-w-xl flex flex-wrap justify-center gap-2 mt-4 sm:mt-5 text-[0.65rem] uppercase tracking-widest transition-opacity duration-500 ease-in-out">
+        <span
+          class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
+        <span
+          class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">classification</span>
+        <span
+          class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">calibration</span>
       </div>
 
     </header>

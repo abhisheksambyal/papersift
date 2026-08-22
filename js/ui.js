@@ -151,9 +151,47 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
       const none = !document.querySelectorAll(`input[name="${group}"]:checked`).length;
       const all = document.querySelector(`input[name="${group}-all"]`);
       if (none && all) all.checked = true;
+      updateFilterSummary(group);
       onSearch();
     }));
+
+    const panels = [['conference', confContainer], ['year', yearContainer]]
+      .map(([group, container]) => ({ group, container, toggle: document.getElementById(`${group}-filter-toggle`) }))
+      .filter(p => p.toggle);
+
+    const closePanel = p => {
+      p.toggle.setAttribute('aria-expanded', 'false');
+      p.container.classList.add('hidden');
+      p.toggle.querySelector('svg').classList.remove('rotate-180');
+    };
+    const openPanel = p => {
+      p.toggle.setAttribute('aria-expanded', 'true');
+      p.container.classList.remove('hidden');
+      p.toggle.querySelector('svg').classList.add('rotate-180');
+    };
+
+    panels.forEach(p => p.toggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = p.toggle.getAttribute('aria-expanded') === 'true';
+      panels.forEach(closePanel);
+      if (!isOpen) openPanel(p);
+    }));
+
+    document.addEventListener('click', e => {
+      panels.forEach(p => {
+        if (p.toggle.getAttribute('aria-expanded') === 'true' && !p.container.contains(e.target) && !p.toggle.contains(e.target)) closePanel(p);
+      });
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') panels.forEach(closePanel); });
   } catch (err) { console.error('Filter init failed:', err); }
+}
+
+function updateFilterSummary(group) {
+  const summaryEl = document.getElementById(`${group}-filter-summary`);
+  if (!summaryEl) return;
+  const count = document.querySelectorAll(`input[name="${group}"]:checked`).length;
+  summaryEl.textContent = count ? `· ${count} selected` : '';
+  summaryEl.classList.toggle('hidden', !count);
 }
 
 export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set(), yearCounts = null, venueCounts = null) {
@@ -315,6 +353,9 @@ export function resetToHome(refs, onReset) {
   input.value = '';
   document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
   document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);
+  document.querySelectorAll('[id$="-filter-summary"]').forEach(s => { s.textContent = ''; s.classList.add('hidden'); });
+  document.querySelectorAll('[id$="-filter-toggle"]').forEach(t => { t.setAttribute('aria-expanded', 'false'); t.querySelector('svg')?.classList.remove('rotate-180'); });
+  document.querySelectorAll('#conference-filters, #year-filters').forEach(c => c.classList.add('hidden'));
   resultsList.innerHTML = resultsCount.innerHTML = '';
   onReset();
 }
