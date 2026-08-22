@@ -109,17 +109,37 @@ export function stopPurposeLoop() {
   }
 }
 
+const chip = (name, val, label, checked = false) => `
+  <label class="cursor-pointer group no-tap">
+    <input type="checkbox" name="${name}" value="${val}" class="hidden peer" ${checked ? 'checked' : ''}>
+    <span class="inline-flex items-center px-2.5 py-1 rounded-full border border-ink/15 dark:border-paper/15 font-sans text-[0.68rem] uppercase tracking-wider text-ink/55 dark:text-paper/55 group-hover:border-ink/35 dark:group-hover:border-paper/35 transition-all">${label}</span>
+  </label>`;
+
+const allChip = (name, label) => `
+  <label class="cursor-pointer group no-tap">
+    <input type="checkbox" name="${name}-all" value="all" class="hidden peer" checked>
+    <span class="inline-flex items-center px-2.5 py-1 rounded-full border border-dashed border-ink/25 dark:border-paper/25 font-sans italic text-[0.68rem] uppercase tracking-wider text-ink/45 dark:text-paper/45 group-hover:border-ink/40 dark:group-hover:border-paper/40 transition-all">${label}</span>
+  </label>`;
+
 export async function initializeFilters(confContainer, yearContainer, onSearch) {
   try {
     const config = await (await fetch('data/config.json')).json();
-    const tpl = (name, val, label, checked = false) => `
-      <label class="flex items-center gap-2 cursor-pointer group no-tap">
-        <input type="checkbox" name="${name}" value="${val}" class="hidden peer" ${checked ? 'checked' : ''}>
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">${label}</span>
-      </label>`;
 
-    confContainer.innerHTML = tpl('conference-all', 'all', 'All', true) + config.conferences.map(c => tpl('conference', c.id, c.name)).join('');
-    yearContainer.innerHTML = tpl('year-all', 'all', 'All', true) + config.years.map(y => tpl('year', y, y)).join('');
+    confContainer.innerHTML = allChip('conference', 'All') + config.conferences.map(c => chip('conference', c.id, c.name)).join('');
+
+    const decades = new Map();
+    config.years.forEach(y => {
+      const d = Math.floor(y / 10) * 10;
+      if (!decades.has(d)) decades.set(d, []);
+      decades.get(d).push(y);
+    });
+    const decadeRows = [...decades.entries()].map(([d, ys]) => `
+      <div class="year-decade-group">
+        <div class="font-sans text-[0.6rem] uppercase tracking-[0.15em] text-ink/35 dark:text-paper/35 mb-1.5">${d}s</div>
+        <div class="flex flex-wrap gap-1.5">${ys.map(y => chip('year', y, y)).join('')}</div>
+      </div>`).join('');
+
+    yearContainer.innerHTML = `<div class="mb-1">${allChip('year', 'All')}</div>` + decadeRows;
 
     [confContainer, yearContainer].forEach(c => c.addEventListener('change', e => {
       const isAll = e.target.name.endsWith('-all'), group = e.target.name.replace('-all', '');
@@ -137,7 +157,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
 }
 
 export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set(), yearCounts = null, venueCounts = null) {
-  const cls = ['bg-[#a5d6a7]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
+  const cls = ['bg-accent', 'dark:bg-accent-dark', 'border-accent', 'dark:border-accent-dark', 'text-paper', 'dark:text-ink', 'font-bold'];
   document.querySelectorAll('#filter-container span').forEach(s => {
     s.classList.remove(...cls);
     s.style.fontSize = s.style.opacity = '';
@@ -158,8 +178,8 @@ export function updateFilterHighlights(activeVenues = new Set(), activeYears = n
       const el = document.querySelector(`input[name="${name}"][value="${v}"]`);
       if (el) {
         const s = el.nextElementSibling, c = counts[v] || 0, r = max === min ? 0.5 : (c - min) / (max - min);
-        s.style.fontSize = `${0.65 + r * 0.3}rem`;
-        s.style.opacity = `${0.8 + r * 0.2}`;
+        s.style.fontSize = `${0.68 + r * 0.24}rem`;
+        s.style.opacity = `${0.85 + r * 0.15}`;
       }
     });
   };
@@ -189,28 +209,29 @@ function createCard(p, re, authorRe) {
   const [venue] = (p.venue || 'PAPER').split(' '), yr = String(p.year || '').slice(-2);
 
   const card = document.createElement('div');
-  card.className = 'group block py-3 sm:py-2.5 px-1 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] border-b border-ink/5 dark:border-paper/5 last:border-0';
+  card.className = 'group relative block py-4 sm:py-5 px-2 sm:px-3 border-b border-ink/8 dark:border-paper/8 last:border-0 transition-colors hover:bg-ink/[0.025] dark:hover:bg-paper/[0.025]';
   card.innerHTML = `
+    <span class="absolute left-0 top-2 bottom-2 w-0.5 bg-accent dark:bg-accent-dark scale-y-0 group-hover:scale-y-100 origin-center transition-transform duration-200"></span>
     <div class="flex items-start gap-4 sm:gap-8 py-1">
       <div class="flex-shrink-0 w-12 sm:w-16 text-right pt-1">
-        <div class="font-serif text-[0.6rem] sm:text-[0.65rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">${venue}</div>
-        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/20 dark:text-paper/20 -mt-1 tabular-nums tracking-tighter">'${yr}</div>
+        <div class="font-sans text-[0.6rem] sm:text-[0.65rem] text-ink/40 dark:text-paper/40 uppercase tracking-widest font-black leading-none">${venue}</div>
+        <div class="font-masthead text-xl sm:text-2xl font-black text-ink/25 dark:text-paper/25 -mt-1 tabular-nums tracking-tighter">'${yr}</div>
       </div>
-      <div class="flex-grow min-w-0 border-l border-ink/10 dark:border-paper/10 pl-4 sm:pl-8">
+      <div class="flex-grow min-w-0 border-l-2 border-ink/8 dark:border-paper/8 pl-4 sm:pl-8">
         <div class="flex items-start justify-between gap-4">
           <a href="${url}" target="_blank" rel="noopener" class="hover:underline underline-offset-4 decoration-1">
-            <h3 class="font-masthead font-bold leading-tight capitalize text-[clamp(0.9rem,2.5vw,1.1rem)]">${title}</h3>
+            <h3 class="font-masthead font-bold leading-tight capitalize text-[clamp(0.95rem,2.6vw,1.15rem)] group-hover:text-accent dark:group-hover:text-accent-dark transition-colors">${title}</h3>
           </a>
-          <span class="text-ink/30 font-serif text-[0.8rem] font-bold">&rarr;</span>
+          <span class="text-ink/25 dark:text-paper/25 group-hover:text-accent dark:group-hover:text-accent-dark font-serif text-[0.8rem] font-bold transition-colors">&rarr;</span>
         </div>
-        <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 text-[clamp(0.7rem,1.8vw,0.8rem)]">${authors}</div>
+        <div class="font-serif text-ink/60 dark:text-paper/60 italic mt-1 text-[clamp(0.7rem,1.8vw,0.8rem)]">${authors}</div>
         ${p.abstract ? `
           <div class="mt-2.5">
-            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 dark:text-paper/60 hover:text-ink px-2 py-1 -ml-2 rounded flex items-center gap-2">
+            <button class="abstract-toggle inline-flex items-center gap-1.5 rounded-full border border-ink/15 dark:border-paper/15 px-2.5 py-1 -ml-0.5 font-sans text-[0.65rem] uppercase tracking-[0.15em] text-ink/60 dark:text-paper/60 hover:border-accent hover:text-accent dark:hover:border-accent-dark dark:hover:text-accent-dark transition-all">
               <span>Abstract</span>
               <svg class="w-2 h-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
             </button>
-            <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed border-t border-ink/5 pt-4">${abstract}</div>
+            <div class="abstract-content hidden mt-3 rounded-card bg-ink/[0.025] dark:bg-paper/[0.03] border border-ink/5 dark:border-paper/5 p-3 sm:p-4 text-[0.8rem] leading-relaxed">${abstract}</div>
           </div>` : ''}
       </div>
     </div>`;

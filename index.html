@@ -125,11 +125,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.buymeacoffee.com">
   <link rel="preload"
-    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
   </noscript>
   <link rel="preload" href="assets/css/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
@@ -148,12 +148,35 @@
       theme: {
         extend: {
           colors: {
-            paper: '#f4f1ea',
-            ink: '#1c1c1c',
+            paper: {
+              DEFAULT: '#f4f1ea',
+              panel: '#fdfbf6',
+            },
+            ink: {
+              DEFAULT: '#1c1c1c',
+              panel: '#242220',
+            },
+            accent: {
+              DEFAULT: '#b5482a',
+              dark: '#e2793f',
+            },
           },
           fontFamily: {
             serif: ['Merriweather', 'serif'],
             masthead: ['"Playfair Display"', 'serif'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+          fontSize: {
+            micro: ['0.625rem', { letterSpacing: '0.08em', lineHeight: '1rem' }],
+            label: ['0.7rem', { letterSpacing: '0.18em', lineHeight: '1rem' }],
+            meta: ['0.8rem', { lineHeight: '1.5' }],
+          },
+          borderRadius: {
+            card: '0.875rem',
+          },
+          boxShadow: {
+            panel: '0 1px 2px rgba(28,28,28,0.05), 0 6px 20px rgba(28,28,28,0.06)',
+            'panel-dark': '0 1px 2px rgba(0,0,0,0.35), 0 6px 24px rgba(0,0,0,0.35)',
           }
         }
       }
@@ -301,49 +324,49 @@
         id="search-container">
         <form id="search-form" class="w-full">
           <div
-            class="flex items-center border-b-2 border-ink/30 dark:border-paper/30 focus-within:border-ink dark:focus-within:border-paper transition-colors pb-1">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0 text-ink/50 dark:text-paper/50" xmlns="http://www.w3.org/2000/svg"
+            class="flex items-center gap-3 bg-paper-panel dark:bg-ink-panel rounded-card border border-ink/10 dark:border-paper/10 shadow-panel dark:shadow-panel-dark px-4 sm:px-5 py-3 sm:py-3.5 focus-within:border-accent dark:focus-within:border-accent-dark focus-within:ring-2 focus-within:ring-accent/15 dark:focus-within:ring-accent-dark/15 transition-all">
+            <svg class="w-5 h-5 mr-1 flex-shrink-0 text-ink/40 dark:text-paper/40" xmlns="http://www.w3.org/2000/svg"
               fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             <!-- font-size:16px prevents iOS auto-zoom on focus -->
             <input type="text" id="search-input"
-              class="w-full bg-transparent border-none outline-none text-ink dark:text-paper font-serif py-3 placeholder-ink/30 dark:placeholder-paper/30 text-base"
+              class="w-full bg-transparent border-none outline-none text-ink dark:text-paper font-serif placeholder-ink/30 dark:placeholder-paper/30 text-base"
               placeholder="Search the archives…" autocomplete="off" autocorrect="off" autocapitalize="none"
               spellcheck="false">
             <button type="submit"
-              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation no-tap">
+              class="flex-shrink-0 bg-ink text-paper dark:bg-paper dark:text-ink rounded-full px-4 py-1.5 font-sans uppercase tracking-widest text-[0.7rem] font-bold hover:opacity-90 focus:outline-none active:scale-95 transition-all touch-manipulation no-tap">
               Search
             </button>
           </div>
         </form>
 
         <div id="search-hints"
-          class="mt-2 ml-1 pl-4 flex flex-wrap items-center text-[0.68rem] text-ink/40 dark:text-paper/40 font-serif italic opacity-100 transition-opacity duration-500 ease-in-out border-l border-ink/10 dark:border-paper/10">
+          class="mt-2.5 pl-1 flex flex-wrap items-center font-sans text-micro text-ink/45 dark:text-paper/45 not-italic opacity-100 transition-opacity duration-500 ease-in-out">
           <span class="mr-2 opacity-70">try:</span>
-          <span class="text-ink/70 dark:text-paper/70">author: john doe</span>
+          <span class="font-serif not-italic text-[0.72rem] text-ink/70 dark:text-paper/70">author: john doe</span>
           <span
-            class="mx-3 px-1.5 py-0.5 bg-ink/[0.05] dark:bg-paper/[0.05] rounded-sm not-italic text-[0.625rem] uppercase tracking-wider opacity-70">or</span>
-          <span class="text-ink/70 dark:text-paper/70">mri and segmentation</span>
+            class="mx-2.5 px-1.5 py-0.5 bg-accent/10 dark:bg-accent-dark/15 text-accent dark:text-accent-dark rounded-sm text-[0.6rem] uppercase tracking-wider">or</span>
+          <span class="font-serif not-italic text-[0.72rem] text-ink/70 dark:text-paper/70">mri and segmentation</span>
           <span
-            class="mx-3 px-1.5 py-0.5 bg-ink/[0.05] dark:bg-paper/[0.05] rounded-sm not-italic text-[0.625rem] uppercase tracking-wider opacity-70">or</span>
-          <span class="text-ink/70 dark:text-paper/70">knowledge distillation, author: john</span>
+            class="mx-2.5 px-1.5 py-0.5 bg-accent/10 dark:bg-accent-dark/15 text-accent dark:text-accent-dark rounded-sm text-[0.6rem] uppercase tracking-wider">or</span>
+          <span class="font-serif not-italic text-[0.72rem] text-ink/70 dark:text-paper/70">knowledge distillation, author: john</span>
         </div>
 
         <div id="filter-container"
-          class="flex flex-col gap-2 sm:gap-3 mt-3 sm:mt-4 transition-all duration-500 ease-in-out">
-          <div class="flex flex-col">
+          class="mt-4 sm:mt-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-start gap-3 sm:gap-4 transition-all duration-500 ease-in-out">
+          <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
             <label
-              class="text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-2 sm:mb-3 font-bold">Archives</label>
-            <div id="conference-filters" class="flex flex-wrap gap-x-4 gap-y-2">
+              class="block font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold mb-2.5">Archives</label>
+            <div id="conference-filters" class="flex flex-wrap gap-1.5">
               <!-- Dynamically populated -->
             </div>
           </div>
-          <div class="flex flex-col">
+          <div class="rounded-card border border-ink/10 dark:border-paper/10 bg-paper-panel dark:bg-ink-panel shadow-panel dark:shadow-panel-dark p-3.5 sm:p-4">
             <label
-              class="text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 mb-2 sm:mb-3 font-bold">Chronology</label>
-            <div id="year-filters" class="flex flex-wrap gap-x-2 sm:gap-x-4 gap-y-1 sm:gap-y-2 no-tap py-1">
+              class="block font-sans text-label uppercase text-ink/50 dark:text-paper/50 font-bold mb-2.5">Chronology</label>
+            <div id="year-filters" class="flex flex-col gap-2.5 no-tap">
               <!-- Dynamically populated -->
             </div>
           </div>
@@ -366,12 +389,12 @@
     <div class="flex-grow flex flex-col">
       <section id="results-section"
         class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform] max-w-3xl mx-auto w-full">
-        <div class="py-2 mb-4">
+        <div class="pb-3 mb-3 border-b border-ink/5 dark:border-paper/5">
           <h2 id="results-count"
             class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
         </div>
-        
-        <div id="results-list" class="flex flex-col gap-1"></div>
+
+        <div id="results-list" class="flex flex-col"></div>
       </section>
 
       <!-- Purpose Loop / Help Text -->
