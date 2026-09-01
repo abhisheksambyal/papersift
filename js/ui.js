@@ -109,9 +109,12 @@ export function stopPurposeLoop() {
   }
 }
 
+let conferenceOrder = [];
+
 export async function initializeFilters(confContainer, yearContainer, onSearch) {
   try {
     const config = await (await fetch('data/config.json')).json();
+    conferenceOrder = config.conferences.map(c => c.id);
     const tpl = (name, val, label, checked = false) => `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="${name}" value="${val}" class="hidden peer" ${checked ? 'checked' : ''}>
@@ -165,6 +168,31 @@ export function updateFilterHighlights(activeVenues = new Set(), activeYears = n
   };
   applyDist('year', activeYears, yearCounts);
   applyDist('conference', activeVenues, venueCounts);
+
+  sortConferenceChips(venueCounts);
+}
+
+/**
+ * Reorders the conference chips highest-count-first. With no counts (initial
+ * load, or a reset), ties fall back to the original data/config.json order.
+ */
+function sortConferenceChips(counts) {
+  const container = document.getElementById('conference-filters');
+  if (!container) return;
+
+  const allLabel = container.querySelector('input[name="conference-all"]')?.closest('label');
+  const labels = [...container.querySelectorAll('input[name="conference"]')].map(input => input.closest('label'));
+
+  labels.sort((a, b) => {
+    const va = a.querySelector('input').value, vb = b.querySelector('input').value;
+    const ca = counts?.[va] || 0, cb = counts?.[vb] || 0;
+    return ca !== cb ? cb - ca : conferenceOrder.indexOf(va) - conferenceOrder.indexOf(vb);
+  });
+
+  const frag = document.createDocumentFragment();
+  if (allLabel) frag.appendChild(allLabel);
+  labels.forEach(l => frag.appendChild(l));
+  container.appendChild(frag);
 }
 
 const escapeCache = new Map();
