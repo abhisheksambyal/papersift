@@ -133,7 +133,8 @@ def _fetch_dblp_hits_once(venue, year, facet):
     page_size = 100
     total = 0
     while True:
-        url = f"https://dblp.org/search/publ/api?q={facet}:{venue}:year:{year}:&format=json&h={page_size}&f={first}"
+        q = urllib.parse.quote(f"{facet}:{venue}:year:{year}:")
+        url = f"https://dblp.org/search/publ/api?q={q}&format=json&h={page_size}&f={first}"
         response = None
         for attempt in range(6):
             response = _fetcher.fetch(url, timeout=45)
@@ -457,6 +458,66 @@ def fetch_isbi_json(year):
             json.dump(processed, f)
 
     _fetcher._cache['isbi'][year] = processed
+    return processed
+
+
+def fetch_tmi_json(year):
+    """Fetch IEEE Transactions on Medical Imaging (TMI) papers from DBLP API."""
+    if year in _fetcher._cache.get('tmi', {}):
+        return _fetcher._cache['tmi'][year]
+
+    if 'tmi' not in _fetcher._cache: _fetcher._cache['tmi'] = {}
+
+    conf_dir = os.path.join(CACHE_DIR, "tmi")
+    os.makedirs(conf_dir, exist_ok=True)
+    cache_path = os.path.join(conf_dir, f"{year}.json")
+
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as f:
+            processed = json.load(f)
+            _fetcher._cache['tmi'][year] = processed
+            return processed
+
+    hits = _fetch_dblp_hits("IEEE Trans. Med. Imaging", year)
+
+    processed = []
+    dois = []
+    for h in hits:
+        info = h.get('info', {})
+        if info.get('type') != 'Journal Articles':
+            continue
+        title = info.get('title', '').rstrip('.')
+        authors_data = info.get('authors', {}).get('author', [])
+        if isinstance(authors_data, dict): authors_data = [authors_data]
+        authors_list = [a.get('text', 'Unknown') for a in authors_data]
+
+        processed.append({
+            "title": title,
+            "authors": ", ".join(authors_list),
+            "url": info.get('ee') or info.get('url') or "#",
+            "venue": f"TMI {year}",
+            "year": str(year),
+            "abstract": ""
+        })
+        dois.append(info.get('doi'))
+
+    # DBLP has no abstract data; backfill from OpenAlex, which has good
+    # coverage for IEEE-published TMI papers.
+    if dois:
+        abstracts_by_doi = _fetch_openalex_abstracts(dois)
+        found = 0
+        for paper, doi in zip(processed, dois):
+            if doi and doi.lower() in abstracts_by_doi:
+                paper["abstract"] = abstracts_by_doi[doi.lower()]
+                found += 1
+        if found:
+            print(f"  Backfilled {found}/{len(processed)} TMI {year} abstracts from OpenAlex.")
+
+    if processed:
+        with open(cache_path, 'w') as f:
+            json.dump(processed, f)
+
+    _fetcher._cache['tmi'][year] = processed
     return processed
 
 

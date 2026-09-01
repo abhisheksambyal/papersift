@@ -1,7 +1,7 @@
 from api.fetcher import (
     fetch_miccai_json, fetch_midl_json, fetch_isbi_json, fetch_neurips_json,
     fetch_icml_json, fetch_cvpr_json, fetch_iccv_json, fetch_eccv_json,
-    fetch_aaai_json, fetch_ijcai_json, fetch_iclr_json,
+    fetch_aaai_json, fetch_ijcai_json, fetch_iclr_json, fetch_tmi_json,
 )
 from functools import lru_cache
 from datetime import date
@@ -21,6 +21,10 @@ CONFERENCES = {
     "isbi": {
         "years": tuple(range(2004, CURRENT_YEAR + 1)),
         "fetcher": fetch_isbi_json,
+    },
+    "tmi": {
+        "years": tuple(range(1992, CURRENT_YEAR + 1)),
+        "fetcher": fetch_tmi_json,
     },
     "neurips": {
         "years": tuple(range(1987, CURRENT_YEAR + 1)),
@@ -169,6 +173,7 @@ def get_search_config():
             {"id": "miccai", "name": "MICCAI"},
             {"id": "midl", "name": "MIDL"},
             {"id": "isbi", "name": "ISBI"},
+            {"id": "tmi", "name": "TMI"},
             {"id": "neurips", "name": "NeurIPS"},
             {"id": "icml", "name": "ICML"},
             {"id": "cvpr", "name": "CVPR"},
