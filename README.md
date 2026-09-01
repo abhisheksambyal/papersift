@@ -71,6 +71,39 @@ python3 scripts/sync.py --full
 
 ---
 
+### Testing
+
+Covers both search implementations in this repo:
+
+- `tests/js/` — tests `js/core.js` (`extractSearchTerms`, `fetchResults`), the real
+  client-side search used by the static site. This is where `author:`, AND/OR,
+  and title/abstract keyword matching are actually implemented.
+- `tests/python/` — tests `api/search.py` (`run_search`), used only by the local-dev
+  server (`server.py`). It's a simpler implicit-AND matcher with no `author:` prefix
+  and no real OR support; several tests there intentionally pin down that narrower
+  behavior (see comments in `tests/python/test_search.py`) rather than asserting
+  something the code doesn't do.
+
+Both suites run against small fixture datasets, not the real scraped conference
+data, so they're fast, deterministic, and don't touch the network.
+
+#### Running
+
+```sh
+# JS (Node's built-in test runner, no install needed)
+node --test tests/js/*.test.mjs
+# or: npm test
+
+# Python (stdlib unittest, no install needed)
+python3 -m unittest discover -s tests/python -v
+```
+
+Re-run both after any change to `js/core.js` or `api/search.py` to confirm
+author search, author+keyword search, AND search, OR search, and title/abstract
+keyword matching still behave as expected.
+
+---
+
 ## 🏗️ Technical Architecture
 
 PaperSift is built as a **Static Web Application**. Search indexing and filtering are performed entirely in the browser using per-conference JSON indexes, fetched in parallel and merged client-side.
