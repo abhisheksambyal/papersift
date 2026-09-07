@@ -1,0 +1,18 @@
+# GitHub Pages (Jekyll) build configuration.
+#
+# Files listed under `exclude` stay in the repository but are NOT published to
+# the live site. api/ and data_cache/ are local development artifacts used only
+# by server.py -- the deployed app reads exclusively from data/.
+#
+# Without this, GitHub Pages published them: api/fetcher.py returned its own
+# source over HTTP, and data_cache/ added ~208 MB of unreferenced JSON to the
+# deploy. robots.txt cannot fix that, since Disallow only asks crawlers not to
+# index a path; it does not prevent anyone from fetching it.
+exclude:
+  - api
+  - data_cache
+  - scripts
+  - tests
+  - server.py
+  - requirements.txt
+  - package.json

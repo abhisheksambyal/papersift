@@ -1,6 +1,20 @@
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /data_cache/
+# Served at https://abhisheksambyal.com/papersift/robots.txt
+#
+# NOTE: crawlers only ever request robots.txt from the origin root
+# (https://abhisheksambyal.com/robots.txt), never from a subpath. That file is
+# published by the repository behind the apex domain, not by this one, so the
+# rules below have no effect until they are copied there. Paths are written
+# relative to the domain root so they can be pasted across unchanged.
+#
+# The Disallow lines are a safety net only: api/ and data_cache/ are excluded
+# from the published site by _config.yml, so they should not be reachable.
+#
+# Disallow comes first and there is no blanket "Allow: /": Google resolves
+# conflicts by longest match, but older parsers take the first match, and a
+# leading "Allow: /" silently defeats every rule under it.
 
-Sitemap: https://papersift.app/sitemap.xml
+User-agent: *
+Disallow: /papersift/api/
+Disallow: /papersift/data_cache/
+
+Sitemap: https://abhisheksambyal.com/papersift/sitemap.xml
