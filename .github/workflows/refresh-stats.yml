@@ -1,0 +1,63 @@
+# Keeps the About page's coverage table in step with the data in data/*.json.
+#
+# scripts/export_static.py --stats-only recomputes the `stats` block in
+# data/config.json (per-venue paper counts and year ranges) from the JSON that
+# is already committed. It touches no network and takes a few seconds.
+#
+# IMPORTANT - the weekly schedule will not fire until this file exists on the
+# repository's DEFAULT branch. GitHub only registers `schedule` triggers from
+# the default branch, which is currently `main`, while the live site is served
+# from `static-website`. Until this workflow is merged into `main` (or
+# `static-website` is made the default branch in Settings > General), only the
+# `push` and manual `workflow_dispatch` triggers below will run. The checkout
+# step pins `static-website` so a scheduled run started from `main` still
+# operates on - and commits to - the deployed branch.
+name: Refresh coverage stats
+
+on:
+  schedule:
+    # Mondays, 06:17 UTC. An off-the-hour minute avoids the top-of-hour queue,
+    # where GitHub delays or drops scheduled runs under load.
+    - cron: '17 6 * * 1'
+  push:
+    branches: [static-website]
+    paths:
+      - 'data/*.json'
+      # Excluded so this workflow's own commit cannot retrigger it.
+      - '!data/config.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-stats
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: static-website
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # No dependencies to install - the script is stdlib-only.
+      - name: Recompute stats
+        run: python3 scripts/export_static.py --stats-only
+
+      - name: Commit if the numbers moved
+        run: |
+          if git diff --quiet -- data/config.json; then
+            echo "Coverage stats unchanged; nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/config.json
+          git commit -m "Refresh About page coverage stats"
+          git push

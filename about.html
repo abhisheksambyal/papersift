@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script defer src="https://www.googletagmanager.com/gtag/js?id=G-EM4Y3T0B54"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-EM4Y3T0B54');
+  </script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea">
+  <title>About PaperSift | What it indexes and how to search it</title>
+  <link rel="canonical" href="https://abhisheksambyal.com/papersift/about.html">
+  <meta name="description"
+    content="What PaperSift is, how it helps researchers, the twelve conferences and journals it indexes with their year ranges, its search syntax, and where the data comes from.">
+  <meta name="keywords"
+    content="PaperSift, about, paper search, NeurIPS, ICML, ICLR, CVPR, ICCV, ECCV, AAAI, IJCAI, MICCAI, MIDL, ISBI, IEEE TMI, literature review">
+  <meta name="author" content="Abhishek Singh Sambyal">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abhisheksambyal.com/papersift/about.html">
+  <meta property="og:title" content="About PaperSift | What it indexes and how to search it">
+  <meta property="og:description"
+    content="What PaperSift is, how it helps researchers, the twelve conferences and journals it indexes with their year ranges, its search syntax, and where the data comes from.">
+  <meta property="og:image" content="https://abhisheksambyal.com/papersift/og-image.jpg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://abhisheksambyal.com/papersift/about.html">
+  <meta property="twitter:title" content="About PaperSift | What it indexes and how to search it">
+  <meta property="twitter:description"
+    content="What PaperSift is, how it helps researchers, the twelve conferences and journals it indexes with their year ranges, its search syntax, and where the data comes from.">
+  <meta property="twitter:image" content="https://abhisheksambyal.com/papersift/og-image.jpg">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About PaperSift",
+    "url": "https://abhisheksambyal.com/papersift/about.html",
+    "description": "What PaperSift is, how it helps researchers, the twelve conferences and journals it indexes, and where its data comes from.",
+    "mainEntity": {
+      "@type": "WebApplication",
+      "name": "PaperSift",
+      "url": "https://abhisheksambyal.com/papersift/",
+      "applicationCategory": "ResearchApplication",
+      "operatingSystem": "All",
+      "isAccessibleForFree": true,
+      "creator": {
+        "@type": "Person",
+        "name": "Abhishek Singh Sambyal",
+        "url": "https://abhisheksambyal.com/"
+      }
+    }
+  }
+  </script>
+
+  <!-- Theme selection (blocking on purpose: must run before first paint). -->
+  <script src="js/theme.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
+  </noscript>
+  <link rel="stylesheet" href="assets/css/tailwind.min.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            paper: '#f4f1ea',
+            ink: '#1c1c1c',
+          },
+          fontFamily: {
+            serif: ['Merriweather', 'serif'],
+            masthead: ['"Playfair Display"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer base {
+      body {
+        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
+        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
+        background-size: 16px 16px;
+        background-attachment: fixed;
+      }
+
+      .dark body {
+        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
+      }
+    }
+
+    @layer components {
+      .app-container-safe {
+        @apply max-w-3xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen;
+        padding-left: max(0.75rem, env(safe-area-inset-left));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      }
+
+      .no-tap {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Section heading: small, uppercase, wide-tracked - matches the
+         "Archives" / "Chronology" filter labels on the search page. */
+      .rule-heading {
+        @apply text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] font-bold text-ink/60 dark:text-paper/60 mb-3 pb-2 border-b border-ink/10 dark:border-paper/10;
+      }
+
+      .prose-body {
+        @apply text-[0.85rem] sm:text-[0.95rem] leading-relaxed text-ink/80 dark:text-paper/80;
+      }
+
+      .ink-link {
+        @apply underline underline-offset-4 decoration-1 decoration-ink/30 dark:decoration-paper/30 hover:decoration-ink dark:hover:decoration-paper transition-colors;
+      }
+
+      .code-chip {
+        @apply font-mono text-[0.75rem] bg-ink/[0.05] dark:bg-paper/[0.05] px-1.5 py-0.5 rounded-sm;
+      }
+    }
+  </style>
+</head>
+
+<body class="no-tap">
+  <!-- Masthead furniture: back link + theme toggle -->
+  <div class="fixed top-4 right-4 sm:top-6 sm:right-8 z-[100] flex items-center gap-1">
+    <a href="index.html"
+      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap">← Search</a>
+    <button onclick="toggleTheme()"
+      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap group"
+      aria-label="Toggle Theme">
+      <svg class="w-5 h-5 hidden dark:block text-paper/70 group-hover:text-paper" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z">
+        </path>
+      </svg>
+      <svg class="w-5 h-5 block dark:hidden text-ink/70 group-hover:text-ink" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <main class="app-container-safe">
+
+    <!-- pt-16 below sm keeps the centred wordmark clear of the fixed
+         "← Search" / theme cluster on narrow phones. -->
+    <header class="text-center pt-16 pb-8 sm:pt-12">
+      <a href="index.html" class="inline-block no-tap">
+        <h1 class="font-masthead font-black tracking-tight text-[clamp(1.8rem,7vw,3rem)] leading-[1.1]">PaperSift</h1>
+      </a>
+      <p class="italic text-ink/60 dark:text-paper/60 text-sm mt-1">Find Research Papers That Actually Matter</p>
+      <p id="headline-stats" class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/40 dark:text-paper/40 mt-4">
+        146,687 papers · 12 venues · 1987–2026
+      </p>
+    </header>
+
+    <article class="flex flex-col gap-10 pb-8">
+
+      <!-- What it is -->
+      <section>
+        <h2 class="rule-heading">What PaperSift is</h2>
+        <p class="prose-body">
+          PaperSift is a search engine over the published proceedings of the major AI, machine learning, computer
+          vision and medical imaging venues. Every paper's title, authors and abstract is indexed in one place, so a
+          single query reaches across all twelve venues at once instead of twelve separate conference websites.
+        </p>
+        <p class="prose-body mt-3">
+          It runs entirely in your browser. There is no account, no login, no query logging and no backend server —
+          the index is downloaded once and searched locally, which is why results appear as you type. It is free and
+          <a class="ink-link" href="https://github.com/abhisheksambyal/papersift">open source</a> under the MIT
+          license.
+        </p>
+      </section>
+
+      <!-- How it helps -->
+      <section>
+        <h2 class="rule-heading">How it helps researchers</h2>
+        <ul class="prose-body flex flex-col gap-3 list-none">
+          <li class="pl-4 border-l-2 border-ink/10 dark:border-paper/10">
+            <strong class="font-bold">One query, twelve venues.</strong> Start a literature review without opening
+            NeurIPS, CVPR, MICCAI and nine other proceedings sites in separate tabs — each with its own search box,
+            its own quirks, and no way to compare across them.
+          </li>
+          <li class="pl-4 border-l-2 border-ink/10 dark:border-paper/10">
+            <strong class="font-bold">Follow a person, not just a topic.</strong> The
+            <span class="code-chip">author:</span> prefix pulls up everything a researcher or lab has published across
+            the whole archive — useful for tracking a group's trajectory, preparing to review, or collecting your own
+            record.
+          </li>
+          <li class="pl-4 border-l-2 border-ink/10 dark:border-paper/10">
+            <strong class="font-bold">See where a field actually publishes.</strong> Filter by venue and year, and the
+            filter chips reorder by how many matches each venue holds — so a query answers "who works on this, and
+            where do they send it?" as well as "what exists?".
+          </li>
+          <li class="pl-4 border-l-2 border-ink/10 dark:border-paper/10">
+            <strong class="font-bold">Triage without opening PDFs.</strong> Abstracts expand inline with matched terms
+            highlighted, and mathematical notation renders properly via KaTeX, so you can judge relevance from the
+            results list.
+          </li>
+          <li class="pl-4 border-l-2 border-ink/10 dark:border-paper/10">
+            <strong class="font-bold">No waiting.</strong> Because the whole index sits in the browser, filtering
+            146,000+ papers takes milliseconds and works the same on a slow connection once loaded.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Coverage -->
+      <section>
+        <h2 class="rule-heading">What is indexed</h2>
+        <p class="prose-body mb-4">
+          Twelve conferences and journals, covering every year listed below. Counts come straight from the live index,
+          so this table updates whenever the archive is re-synced.
+        </p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-[0.6rem] uppercase tracking-[0.15em] text-ink/50 dark:text-paper/50">
+                <th class="py-2 pr-4 font-bold border-b border-ink/15 dark:border-paper/15">Venue</th>
+                <th class="py-2 pr-4 font-bold border-b border-ink/15 dark:border-paper/15 text-right">Papers</th>
+                <th class="py-2 font-bold border-b border-ink/15 dark:border-paper/15 text-right">Years</th>
+              </tr>
+            </thead>
+            <tbody id="coverage-body" class="text-[0.8rem] sm:text-[0.875rem]">
+              <!-- Populated from data/config.json; the rows below are the
+                   fallback shown if that fetch fails or JS is disabled. -->
+              <tr><td class="py-1.5 pr-4">NeurIPS</td><td class="py-1.5 pr-4 text-right tabular-nums">30,662</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">1987–2025</td></tr>
+              <tr><td class="py-1.5 pr-4">CVPR</td><td class="py-1.5 pr-4 text-right tabular-nums">22,520</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2013–2026</td></tr>
+              <tr><td class="py-1.5 pr-4">ICLR</td><td class="py-1.5 pr-4 text-right tabular-nums">17,323</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2013–2026</td></tr>
+              <tr><td class="py-1.5 pr-4">AAAI</td><td class="py-1.5 pr-4 text-right tabular-nums">16,330</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2020–2026</td></tr>
+              <tr><td class="py-1.5 pr-4">ICML</td><td class="py-1.5 pr-4 text-right tabular-nums">14,281</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2013–2025</td></tr>
+              <tr><td class="py-1.5 pr-4">ISBI</td><td class="py-1.5 pr-4 text-right tabular-nums">9,563</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2004–2026</td></tr>
+              <tr><td class="py-1.5 pr-4">ICCV</td><td class="py-1.5 pr-4 text-right tabular-nums">9,145</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2013–2025</td></tr>
+              <tr><td class="py-1.5 pr-4">IJCAI</td><td class="py-1.5 pr-4 text-right tabular-nums">8,158</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2017–2025</td></tr>
+              <tr><td class="py-1.5 pr-4">TMI</td><td class="py-1.5 pr-4 text-right tabular-nums">6,847</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">1992–2026</td></tr>
+              <tr><td class="py-1.5 pr-4">ECCV</td><td class="py-1.5 pr-4 text-right tabular-nums">6,166</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2018–2024</td></tr>
+              <tr><td class="py-1.5 pr-4">MICCAI</td><td class="py-1.5 pr-4 text-right tabular-nums">5,188</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2018–2025</td></tr>
+              <tr><td class="py-1.5 pr-4">MIDL</td><td class="py-1.5 pr-4 text-right tabular-nums">504</td><td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">2019–2024</td></tr>
+            </tbody>
+            <tfoot>
+              <tr class="text-[0.8rem] font-bold">
+                <td class="py-2 pr-4 border-t border-ink/15 dark:border-paper/15">Total</td>
+                <td id="coverage-total"
+                  class="py-2 pr-4 border-t border-ink/15 dark:border-paper/15 text-right tabular-nums">146,687</td>
+                <td id="coverage-span"
+                  class="py-2 border-t border-ink/15 dark:border-paper/15 text-right tabular-nums">1987–2026</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <p class="text-[0.7rem] italic text-ink/40 dark:text-paper/40 mt-3">
+          <span id="coverage-generated"></span>
+        </p>
+      </section>
+
+      <!-- Search syntax -->
+      <section>
+        <h2 class="rule-heading">How to search</h2>
+        <dl class="prose-body flex flex-col gap-3">
+          <div>
+            <dt class="font-bold">Keywords — all must match</dt>
+            <dd class="text-ink/70 dark:text-paper/70">
+              <span class="code-chip">diffusion models</span> finds papers whose title or abstract contains both
+              words, in any order. <span class="code-chip">and</span> between words is optional and means the same
+              thing.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-bold">Either term — <span class="code-chip">or</span> or a comma</dt>
+            <dd class="text-ink/70 dark:text-paper/70">
+              <span class="code-chip">transformer or vision</span> and
+              <span class="code-chip">transformer, vision</span> both match papers containing either term.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-bold">By author — <span class="code-chip">author:</span></dt>
+            <dd class="text-ink/70 dark:text-paper/70">
+              <span class="code-chip">author: sambyal</span> lists that person's papers.
+              <span class="code-chip">author: doe smith</span> requires both names on the paper, so it finds
+              co-authored work.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-bold">Author and topic together</dt>
+            <dd class="text-ink/70 dark:text-paper/70">
+              <span class="code-chip">author: hinton, deep learning</span> — the comma ends the author name; whatever
+              follows is matched against titles and abstracts.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-bold">Narrowing by venue and year</dt>
+            <dd class="text-ink/70 dark:text-paper/70">
+              The <em>Archives</em> and <em>Chronology</em> chips filter results. Leaving a query empty and selecting
+              only a venue and year browses that whole proceedings.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Data provenance -->
+      <section>
+        <h2 class="rule-heading">Where the data comes from</h2>
+        <p class="prose-body">
+          Every record is collected from the venue's own published proceedings, or from DBLP and OpenAlex where a
+          publisher does not expose abstracts: papers.nips.cc (NeurIPS), proceedings.mlr.press (ICML, MIDL),
+          openaccess.thecvf.com (CVPR, ICCV), ecva.net (ECCV), ojs.aaai.org (AAAI), ijcai.org (IJCAI),
+          papers.miccai.org (MICCAI), iclr.cc (ICLR), and DBLP + OpenAlex (ISBI, TMI, and older MICCAI/MIDL/ICLR
+          years).
+        </p>
+        <p class="prose-body mt-3">
+          Coverage is honest about its gaps rather than silent about them:
+        </p>
+        <ul class="prose-body mt-2 flex flex-col gap-2 list-disc pl-5 marker:text-ink/30 dark:marker:text-paper/30">
+          <li>AAAI is best-effort — its OAI-PMH feed paginates unreliably under load, so some years may be
+            incomplete.</li>
+          <li>MICCAI years sourced from DBLP have no abstracts; Springer does not expose them and blocks scraping.
+            2024 onward has full abstracts.</li>
+          <li>ICLR abstract coverage is roughly 81% — some detail pages carry no abstract to collect.</li>
+          <li>MIDL has no 2018 entries (DBLP has none) and nothing for 2025 onward yet.</li>
+        </ul>
+        <p class="prose-body mt-3">
+          Titles, authors and abstracts are shown for discovery only; the papers themselves stay with their
+          publishers, and each result links out to the original source.
+        </p>
+      </section>
+
+      <!-- Author -->
+      <section>
+        <h2 class="rule-heading">Who built this</h2>
+        <p class="prose-body">
+          PaperSift is built and maintained by <strong class="font-bold">Abhishek Singh Sambyal</strong>, a researcher
+          working in machine learning and medical image analysis. It started as a way out of a routine that will be
+          familiar to anyone doing a literature review: opening one conference site after another, running the same
+          query in a dozen different search boxes, and still not knowing whether anything had been missed.
+        </p>
+        <p class="prose-body mt-3">
+          More at <a class="ink-link" href="https://abhisheksambyal.com/">abhisheksambyal.com</a>. The source lives at
+          <a class="ink-link" href="https://github.com/abhisheksambyal/papersift">github.com/abhisheksambyal/papersift</a>
+          — missing venues, wrong records and feature ideas are all welcome as issues or pull requests.
+        </p>
+      </section>
+
+    </article>
+
+    <footer class="py-6 mt-auto text-center border-t border-ink/5 dark:border-paper/5">
+      <p class="text-[0.65rem] uppercase tracking-[0.3em] text-ink/30 dark:text-paper/30 font-serif italic">
+        © 2026 PaperSift · MIT License
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    // Fill the coverage table from the live index metadata. Only config.json is
+    // fetched here (a few hundred bytes) - never the venue paper files.
+    (async function () {
+      try {
+        const res = await fetch('data/config.json');
+        if (!res.ok) return;
+        const stats = (await res.json()).stats;
+        if (!stats || !stats.venues) return;
+
+        const num = n => n.toLocaleString('en-US');
+        const span = v => (v.first && v.last) ? (v.first === v.last ? `${v.first}` : `${v.first}–${v.last}`) : '—';
+
+        const rows = Object.values(stats.venues).sort((a, b) => b.count - a.count);
+        document.getElementById('coverage-body').innerHTML = rows.map(v => `
+          <tr>
+            <td class="py-1.5 pr-4">${v.name}</td>
+            <td class="py-1.5 pr-4 text-right tabular-nums">${num(v.count)}</td>
+            <td class="py-1.5 text-right tabular-nums text-ink/60 dark:text-paper/60">${span(v)}</td>
+          </tr>`).join('');
+
+        const years = stats.years || {};
+        const allSpan = span(years);
+        document.getElementById('coverage-total').textContent = num(stats.total);
+        document.getElementById('coverage-span').textContent = allSpan;
+        document.getElementById('headline-stats').textContent =
+          `${num(stats.total)} papers · ${rows.length} venues · ${allSpan}`;
+
+        if (stats.generated) {
+          document.getElementById('coverage-generated').textContent = `Index last updated ${stats.generated}.`;
+        }
+      } catch (e) { /* fallback table stays */ }
+    })();
+  </script>
+</body>
+
+</html>

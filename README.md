@@ -10,6 +10,7 @@ A high-performance, monochromatic research search engine for AI/ML and medical i
 - **🌓 Adaptive Themes**: Automatic Light/Dark mode transitions based on local sunrise/sunset.
 - **🔢 LaTeX Support**: Integrated KaTeX for rendering complex mathematical abstracts.
 - **🚀 Static Architecture**: Optimized for GitHub Pages with zero-server dependency in production.
+- **ℹ️ About Page**: [`about.html`](https://abhisheksambyal.com/papersift/about.html) explains the tool, its search syntax, and its live coverage table (generated from `data/config.json`, so the numbers never go stale).
 
 ## 📚 Conference Coverage
 
@@ -53,6 +54,8 @@ Use the `author:` prefix to target specific researchers or labs.
 ### Local Development
 To run the search engine locally with the dynamic backend:
 ```bash
+python3 -m http.server 8000
+or
 python3 server.py
 ```
 
@@ -68,6 +71,20 @@ python3 scripts/sync.py
 ```bash
 python3 scripts/sync.py --full
 ```
+
+### Coverage stats (automated)
+
+The About page's table reads the `stats` block in `data/config.json`. No manual step:
+[`.github/workflows/refresh-stats.yml`](.github/workflows/refresh-stats.yml) rebuilds it
+weekly (Mondays 06:17 UTC), on any push touching `data/*.json`, or on demand, and commits
+only when the numbers actually move.
+
+> **⚠️** GitHub runs `schedule` triggers only from the default branch (`main`), while the
+> site ships from `static-website`. Until this workflow reaches `main` — or
+> `static-website` becomes the default — only the push and manual triggers fire. The job
+> checks out `static-website` either way.
+
+Local equivalent, if ever needed: `python3 scripts/export_static.py --stats-only`
 
 ---
 
