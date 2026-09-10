@@ -56,35 +56,29 @@ async function loadPapers() {
 
 /**
  * Extract search terms and determine logic (AND vs OR).
- * Supports author: prefix (semicolon optional).
+ * ';' separates the author clause from the keyword clause, in either order;
+ * inside author: a comma separates names (all are required).
  */
 export function extractSearchTerms(query) {
   const q = query.toLowerCase().trim();
   if (!q) return { terms: [], isOrSearch: false, authorTerm: null, authorSubTerms: [] };
-  
-  let authorTerm = null;
-  let processed = q;
 
-  const authorIdx = q.indexOf('author:');
-  if (authorIdx !== -1) {
-    const start = authorIdx + 7;
-    const remainder = q.substring(start);
-    // Find first delimiter: " and " preferred, then comma
-    const andPos = remainder.search(/\s+and\s+/);
-    const commaPos = remainder.indexOf(',');
-    const delim = andPos !== -1 ? andPos : commaPos;
-
-    if (delim !== -1) {
-      authorTerm = remainder.substring(0, delim).trim();
-      const after = delim === andPos ? remainder.substring(andPos).replace(/^\s+and\s+/, '') : remainder.substring(commaPos + 1);
-      processed = (q.substring(0, authorIdx) + after).trim();
-    } else {
-      authorTerm = remainder.trim();
-      processed = q.substring(0, authorIdx).trim();
-    }
+  const authorParts = [], keywordParts = [];
+  for (const segment of q.split(';')) {
+    const s = segment.trim();
+    if (!s) continue;
+    if (s.startsWith('author:')) authorParts.push(s.slice(7).trim());
+    else keywordParts.push(s);
   }
 
-  const authorSubTerms = authorTerm ? authorTerm.split(/\s+/).filter(Boolean) : [];
+  const authorTerm = authorParts.filter(Boolean).join(', ') || null;
+  const processed = keywordParts.join(' ');
+
+  // Names split on commas and spaces alike, so "doe, smith" and "jane smith"
+  // both become AND-ed sub-terms; a stray "and" between names is ignored.
+  const authorSubTerms = authorTerm
+    ? authorTerm.split(/[\s,]+/).filter(t => t && t !== 'and')
+    : [];
   const isOrSearch = /\s+or\s+/.test(processed) || processed.includes(',');
   const terms = isOrSearch 
     ? processed.split(/,|\s+or\s+/).map(t => t.trim()).filter(Boolean)

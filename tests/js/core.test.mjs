@@ -24,11 +24,28 @@ describe('extractSearchTerms', () => {
     assert.deepEqual(r.authorSubTerms, ['smith']);
   });
 
-  test('author: prefix combined with "and <keyword>" splits into both', () => {
-    const r = extractSearchTerms('author: smith and segmentation');
+  test('a semicolon separates the author clause from the keyword clause', () => {
+    const r = extractSearchTerms('author: smith; segmentation');
     assert.equal(r.authorTerm, 'smith');
     assert.deepEqual(r.authorSubTerms, ['smith']);
     assert.deepEqual(r.terms, ['segmentation']);
+    assert.equal(r.isOrSearch, false);
+  });
+
+  test('the clauses may be given in either order', () => {
+    const r = extractSearchTerms('calibration; author: smith');
+    assert.equal(r.authorTerm, 'smith');
+    assert.deepEqual(r.authorSubTerms, ['smith']);
+    assert.deepEqual(r.terms, ['calibration']);
+    assert.equal(r.isOrSearch, false);
+  });
+
+  test('a comma inside author: separates names, not keywords', () => {
+    const r = extractSearchTerms('author: sambyal, usma; classification');
+    assert.equal(r.authorTerm, 'sambyal, usma');
+    assert.deepEqual(r.authorSubTerms, ['sambyal', 'usma']);
+    assert.deepEqual(r.terms, ['classification']);
+    // the author comma must not put the keyword clause into OR mode
     assert.equal(r.isOrSearch, false);
   });
 
@@ -66,18 +83,32 @@ describe('fetchResults: author search', () => {
     assert.ok(!titlesOf(results).includes("Extending Smith's Loss Function for Robust Training"));
   });
 
-  test('author: <name> and <keyword> narrows to papers matching both', async () => {
-    const { results } = await fetchResults('author: smith and segmentation');
+  test('author: <name>; <keyword> narrows to papers matching both', async () => {
+    const { results } = await fetchResults('author: smith; segmentation');
     assert.equal(results.length, 1);
     assert.equal(results[0].title, 'Deep CNN Segmentation of MRI Scans');
   });
 
-  test('author: <first> <last> requires every author sub-term to match', async () => {
-    // "jane smith" both individually appear in paper 1/2's authors field, but
-    // "smith lee" (last names from two different papers) must match neither,
+  test('<keyword>; author: <name> narrows the same way', async () => {
+    const { results } = await fetchResults('segmentation; author: smith');
+    assert.equal(results.length, 1);
+    assert.equal(results[0].title, 'Deep CNN Segmentation of MRI Scans');
+  });
+
+  test('author: <a>, <b> requires every author sub-term to match', async () => {
+    // "smith" and "lee" are last names from two different papers, so an OR
+    // would return both; only the co-authored paper has them together,
     // proving authorSubTerms uses AND (.every), not OR (.some).
-    const { results } = await fetchResults('author: smith lee');
+    const { results } = await fetchResults('author: smith, lee');
     assert.deepEqual(titlesOf(results), ['Deep CNN Segmentation of MRI Scans']);
+  });
+
+  test('multiple author names combine with a keyword clause', async () => {
+    const { results } = await fetchResults('author: smith, lee; segmentation');
+    assert.deepEqual(titlesOf(results), ['Deep CNN Segmentation of MRI Scans']);
+    // the same authors with a keyword they do not match returns nothing
+    const { results: none } = await fetchResults('author: smith, lee; molecule');
+    assert.deepEqual(none, []);
   });
 
   test('a plain keyword query does not match on author names', async () => {

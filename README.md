@@ -41,11 +41,12 @@ By default, keywords search through paper **titles** and **abstracts**.
 - `transformer or vision` — Finds papers containing either term.
 
 ### Author Search
-Use the `author:` prefix to target specific researchers or labs.
+Use the `author:` prefix to target specific researchers or labs. Commas separate author names; a
+semicolon separates the author clause from the keyword clause.
 - `author: sambyal` — Papers where "sambyal" is an author.
-- `author: doe smith` — Papers co-authored by "doe" and "smith" (Nested AND search).
-- `author: Hinton, deep learning` — Papers by "Hinton" containing "deep learning" in the title/abstract.
-- `author: abhishek sambyal,` — Captures the name explicitly (comma is optional).
+- `author: doe, smith` — Papers co-authored by "doe" and "smith" (Nested AND search).
+- `author: Hinton; deep learning` — Papers by "Hinton" containing "deep learning" in the title/abstract.
+- `calibration; author: sambyal, usma` — Same thing with the clauses reversed; either order works.
 
 ---
 

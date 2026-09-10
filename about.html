@@ -301,16 +301,17 @@
           <div>
             <dt class="font-bold">By author — <span class="code-chip">author:</span></dt>
             <dd class="text-ink/70 dark:text-paper/70">
-              <span class="code-chip">author: sambyal</span> lists that person's papers.
-              <span class="code-chip">author: doe smith</span> requires both names on the paper, so it finds
-              co-authored work.
+              <span class="code-chip">author: sambyal</span> lists that person's papers. Separate names with a comma —
+              <span class="code-chip">author: doe, smith</span> requires both on the paper, so it finds co-authored
+              work.
             </dd>
           </div>
           <div>
-            <dt class="font-bold">Author and topic together</dt>
+            <dt class="font-bold">Author and topic together — <span class="code-chip">;</span></dt>
             <dd class="text-ink/70 dark:text-paper/70">
-              <span class="code-chip">author: hinton, deep learning</span> — the comma ends the author name; whatever
-              follows is matched against titles and abstracts.
+              A semicolon ends the author clause; whatever follows is matched against titles and abstracts.
+              <span class="code-chip">author: hinton; deep learning</span> and
+              <span class="code-chip">calibration; author: sambyal, bathula</span> — either order works.
             </dd>
           </div>
           <div>
