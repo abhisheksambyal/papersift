@@ -3,62 +3,47 @@
 // Loaded as a classic blocking script in <head> so the .dark class is set
 // before first paint - deferring it would flash the light theme.
 (function () {
-  const THEME_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+  const SUN_CACHE_KEY = 'theme_sun_cache';
+
+  const setDark = (isDark) => document.documentElement.classList.toggle('dark', isDark);
+  const isNightAt = (sunrise, sunset) => {
+    const now = new Date();
+    return now < new Date(sunrise) || now > new Date(sunset);
+  };
 
   async function initTheme() {
+    // A manual choice always wins and never expires.
     const savedTheme = localStorage.getItem('theme');
-    const savedTime = localStorage.getItem('theme_timestamp');
-    const now = Date.now();
+    if (savedTheme) return setDark(savedTheme === 'dark');
 
-    let isDark = false;
-    let useAuto = true;
+    // Quick guess shown before first paint.
+    const hour = new Date().getHours();
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setDark(prefersDark || hour < 6 || hour >= 19);
 
-    // Check if a manual preference exists and hasn't expired
-    if (savedTheme && savedTime && (now - parseInt(savedTime)) < THEME_EXPIRY) {
-      isDark = savedTheme === 'dark';
-      useAuto = false;
-    } else {
-      // Clear expired preference
-      localStorage.removeItem('theme');
-      localStorage.removeItem('theme_timestamp');
+    // Refine with precise sunrise/sunset, cached per day so repeat page
+    // loads don't re-fetch (and re-race) on every navigation.
+    const today = new Date().toDateString();
+    let cache;
+    try { cache = JSON.parse(localStorage.getItem(SUN_CACHE_KEY)); } catch (e) { }
+    if (cache && cache.date === today) return setDark(isNightAt(cache.sunrise, cache.sunset));
 
-      // Default to automatic logic (initial quick check)
-      const hour = new Date().getHours();
-      isDark = hour < 6 || hour >= 19;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        isDark = true;
-      }
-    }
+    try {
+      const geo = await (await fetch('https://ipapi.co/json/')).json();
+      if (!geo.latitude || !geo.longitude) return;
+      const sun = await (await fetch(`https://api.sunrise-sunset.org/json?lat=${geo.latitude}&lng=${geo.longitude}&formatted=0`)).json();
+      if (sun.status !== 'OK') return;
 
-    if (isDark) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-
-    // Refine with precise sunrise/sunset if using auto mode
-    if (useAuto) {
-      try {
-        const geoRes = await fetch('https://ipapi.co/json/');
-        const geo = await geoRes.json();
-        if (geo.latitude && geo.longitude) {
-          const sunRes = await fetch(`https://api.sunrise-sunset.org/json?lat=${geo.latitude}&lng=${geo.longitude}&formatted=0`);
-          const sunData = await sunRes.json();
-          if (sunData.status === 'OK') {
-            const sunrise = new Date(sunData.results.sunrise);
-            const sunset = new Date(sunData.results.sunset);
-            const currentTime = new Date();
-            isDark = currentTime < sunrise || currentTime > sunset;
-
-            if (isDark) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-          }
-        }
-      } catch (e) { }
-    }
+      const { sunrise, sunset } = sun.results;
+      localStorage.setItem(SUN_CACHE_KEY, JSON.stringify({ date: today, sunrise, sunset }));
+      // Don't stomp on a manual toggle made while this fetch was in flight.
+      if (!localStorage.getItem('theme')) setDark(isNightAt(sunrise, sunset));
+    } catch (e) { }
   }
 
   window.toggleTheme = function () {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('theme_timestamp', Date.now().toString());
   };
 
   initTheme();

@@ -167,11 +167,13 @@
 
   <main class="app-container-safe">
 
-    <!-- pt-16 below sm keeps the centred wordmark clear of the fixed
-         "← Search" / theme cluster on narrow phones. -->
-    <header class="text-center pt-16 pb-8 sm:pt-12">
+    <!-- pt-14 below sm keeps the centred wordmark clear of the fixed
+         "← Search" / theme cluster on narrow phones. Padding and title size
+         match index.html's landing-state masthead exactly, so the logo sits
+         in the same place on both pages. -->
+    <header class="text-center pt-14 pb-2 sm:pt-6">
       <a href="index.html" class="inline-block no-tap">
-        <h1 class="font-masthead font-black tracking-tight text-[clamp(1.8rem,7vw,3rem)] leading-[1.1]">PaperSift</h1>
+        <h1 class="font-masthead font-black tracking-tight text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1]">PaperSift</h1>
       </a>
       <p class="italic text-ink/60 dark:text-paper/60 text-sm mt-1">Find Research Papers That Actually Matter</p>
       <p id="headline-stats" class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/40 dark:text-paper/40 mt-4">
