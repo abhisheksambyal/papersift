@@ -139,9 +139,9 @@
   <!-- Masthead furniture: About link + theme toggle -->
   <div class="fixed top-4 right-4 sm:top-6 sm:right-8 z-[100] flex items-center gap-1">
     <a href="about.html"
-      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,color,transform] duration-150 ease-out active:scale-95 no-tap">About</a>
+      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/70 dark:focus-visible:outline-paper/70 focus-visible:rounded-full transition-[background-color,color,transform] duration-150 ease-out active:scale-95 no-tap">About</a>
     <button onclick="toggleTheme()"
-      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,transform] duration-150 ease-out active:scale-95 no-tap group"
+      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/70 dark:focus-visible:outline-paper/70 transition-[background-color,transform] duration-150 ease-out active:scale-95 no-tap group"
       aria-label="Toggle Theme">
       <svg id="sun-icon" class="w-5 h-5 hidden dark:block text-paper/70 group-hover:text-paper" fill="none"
         stroke="currentColor" viewBox="0 0 24 24">
@@ -164,8 +164,8 @@
 
       <div class="text-center w-full transition-[transform,opacity] duration-300 ease-in-out will-change-transform"
         id="logo-container">
-        <h1 id="logo-title"
-          class="font-masthead font-black tracking-tight text-ink dark:text-paper transition-[font-size,transform] duration-300 ease-in-out title-landing will-change-[font-size] cursor-pointer">
+        <h1 id="logo-title" role="button" tabindex="0"
+          class="font-masthead font-black tracking-tight text-ink dark:text-paper transition-[font-size,transform] duration-300 ease-in-out title-landing will-change-[font-size] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink/70 dark:focus-visible:outline-paper/70 focus-visible:rounded-sm">
           PaperSift
         </h1>
         <p class="italic text-ink/60 dark:text-paper/60 font-serif opacity-100 transition-[font-size,margin,opacity] duration-300 ease-in-out subtitle-landing"
@@ -188,7 +188,7 @@
               placeholder="Search the archives…" autocomplete="off" autocorrect="off" autocapitalize="none"
               spellcheck="false">
             <button type="submit"
-              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-opacity duration-150 touch-manipulation no-tap">
+              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline focus-visible:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-opacity duration-150 touch-manipulation no-tap">
               Search
             </button>
           </div>
@@ -227,12 +227,12 @@
         <!-- Example / recent-search pills -->
         <div id="example-pills"
           class="flex flex-wrap gap-2 mt-3 sm:mt-4 text-[0.65rem] uppercase tracking-widest transition-opacity duration-200 ease-in-out">
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">mri</span>
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">classification</span>
-          <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">calibration</span>
+          <span role="button" tabindex="0"
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:focus-visible:outline-paper transition-[background-color,color] duration-150 ease-out touch-manipulation">mri</span>
+          <span role="button" tabindex="0"
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:focus-visible:outline-paper transition-[background-color,color] duration-150 ease-out touch-manipulation">classification</span>
+          <span role="button" tabindex="0"
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:focus-visible:outline-paper transition-[background-color,color] duration-150 ease-out touch-manipulation">calibration</span>
         </div>
       </div>
 

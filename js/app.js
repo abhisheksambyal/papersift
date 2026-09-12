@@ -37,11 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!hasSearched) return;
     clearTimeout(debounceTimer);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    resetToHome(domRefs, () => { 
+    resetToHome(domRefs, () => {
       hasSearched = false;
       transitionPromise = Promise.resolve();
       setTimeout(() => updateFilterHighlights([]), 200);
     });
+  });
+
+  domRefs.logoTitle.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    domRefs.logoTitle.click();
   });
 
   domRefs.input.addEventListener('input', () => {
@@ -73,6 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
       hasSearched = true;
     }
     initiateSearch();
+  });
+
+  domRefs.examplePills.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const pill = e.target.closest('.pill-example');
+    if (!pill) return;
+    e.preventDefault();
+    pill.click();
   });
 
   function initiateSearch() {

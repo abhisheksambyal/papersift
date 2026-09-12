@@ -117,8 +117,8 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     conferenceOrder = config.conferences.map(c => c.id);
     const tpl = (name, val, label, checked = false) => `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
-        <input type="checkbox" name="${name}" value="${val}" class="hidden peer" ${checked ? 'checked' : ''}>
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-[color,border-color] duration-150 ease-out border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">${label}</span>
+        <input type="checkbox" name="${name}" value="${val}" class="sr-only peer" ${checked ? 'checked' : ''}>
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-[color,border-color] duration-150 ease-out border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink dark:peer-focus-visible:outline-paper peer-focus-visible:rounded-sm">${label}</span>
       </label>`;
 
     confContainer.innerHTML = tpl('conference-all', 'all', 'All', true) + config.conferences.map(c => tpl('conference', c.id, c.name)).join('');
@@ -140,7 +140,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
 }
 
 export function updateFilterHighlights(activeVenues = new Set(), activeYears = new Set(), yearCounts = null, venueCounts = null) {
-  const cls = ['bg-[#a5d6a7]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', 'text-black', 'dark:text-white'];
+  const cls = ['bg-[#a5d6a7]', 'dark:bg-[#1b5e20]', 'px-1.5', 'py-0.5', '-mx-1.5', 'rounded', 'font-black', '!text-black', 'dark:!text-white'];
   document.querySelectorAll('#filter-container span').forEach(s => {
     s.classList.remove(...cls);
     s.style.fontSize = s.style.opacity = '';
@@ -234,7 +234,7 @@ function createCard(p, re, authorRe) {
         <div class="font-serif text-ink/50 dark:text-paper/50 italic mt-1 text-[clamp(0.7rem,1.8vw,0.8rem)]">${authors}</div>
         ${p.abstract ? `
           <div class="mt-2.5">
-            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 dark:text-paper/60 hover:text-ink px-2 py-1 -ml-2 rounded flex items-center gap-2">
+            <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 dark:text-paper/60 hover:text-ink dark:hover:text-paper focus-visible:text-ink dark:focus-visible:text-paper focus-visible:opacity-80 px-2 py-1 -ml-2 rounded flex items-center gap-2">
               <span>Abstract</span>
               <svg class="w-2 h-2 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
             </button>
@@ -294,7 +294,7 @@ function generateSummary(terms, isOr, author) {
 
 export function renderResults(res, t, refs, isOr = false, author = null, sub = []) {
   const { resultsList: list, resultsCount: count } = refs, summary = generateSummary(t, isOr, author);
-  if (!res.length) { count.innerHTML = `<span class="opacity-70">No matching papers</span>${summary}`; list.innerHTML = ''; return; }
+  if (!res.length) { count.innerHTML = `<span class="opacity-70">No matching papers — try fewer keywords or clearing a filter.</span>${summary}`; list.innerHTML = ''; return; }
   count.innerHTML = `<span class="opacity-70">Found</span> <span class="font-bold">${res.length.toLocaleString()}</span> <span class="opacity-70">papers</span>${summary}`;
   results = res; terms = t; authorSub = sub; idx = 0; list.innerHTML = '';
   if (observer) observer.disconnect();
@@ -304,7 +304,7 @@ export function renderResults(res, t, refs, isOr = false, author = null, sub = [
 
 export function renderPills(el) {
   const t = getRecent().length ? getRecent() : DEFAULTS;
-  el.innerHTML = t.map(v => `<span class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation no-tap">${v}</span>`).join('');
+  el.innerHTML = t.map(v => `<span class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:focus-visible:outline-paper transition-[background-color,color] duration-150 ease-out touch-manipulation no-tap" role="button" tabindex="0">${v}</span>`).join('');
 }
 
 export function transitionToResults(refs) {
