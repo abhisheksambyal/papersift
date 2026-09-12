@@ -4,6 +4,10 @@
   "type": "module",
   "scripts": {
     "test:js": "node --test tests/js/*.test.mjs",
-    "test": "node --test tests/js/*.test.mjs"
+    "test": "node --test tests/js/*.test.mjs",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i assets/css/tailwind.src.css -o assets/css/tailwind.min.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
   }
 }

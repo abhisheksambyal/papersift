@@ -76,80 +76,15 @@
       href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap">
   </noscript>
   <link rel="stylesheet" href="assets/css/tailwind.min.css">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            paper: '#f4f1ea',
-            ink: '#1c1c1c',
-          },
-          fontFamily: {
-            serif: ['Merriweather', 'serif'],
-            masthead: ['"Playfair Display"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
-
-  <style type="text/tailwindcss">
-    @layer base {
-      body {
-        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
-        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
-        background-size: 16px 16px;
-        background-attachment: fixed;
-      }
-
-      .dark body {
-        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
-      }
-    }
-
-    @layer components {
-      .app-container-safe {
-        @apply max-w-3xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen;
-        padding-left: max(0.75rem, env(safe-area-inset-left));
-        padding-right: max(0.75rem, env(safe-area-inset-right));
-        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-      }
-
-      .no-tap {
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      /* Section heading: small, uppercase, wide-tracked - matches the
-         "Venue" / "Years" filter labels on the search page. */
-      .rule-heading {
-        @apply text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] font-bold text-ink/60 dark:text-paper/60 mb-3 pb-2 border-b border-ink/10 dark:border-paper/10;
-      }
-
-      .prose-body {
-        @apply text-[0.85rem] sm:text-[0.95rem] leading-relaxed text-ink/80 dark:text-paper/80;
-      }
-
-      .ink-link {
-        @apply underline underline-offset-4 decoration-1 decoration-ink/30 dark:decoration-paper/30 hover:decoration-ink dark:hover:decoration-paper transition-colors;
-      }
-
-      .code-chip {
-        @apply font-mono text-[0.75rem] bg-ink/[0.05] dark:bg-paper/[0.05] px-1.5 py-0.5 rounded-sm;
-      }
-    }
-  </style>
 </head>
 
 <body class="no-tap">
   <!-- Masthead furniture: back link + theme toggle -->
   <div class="fixed top-4 right-4 sm:top-6 sm:right-8 z-[100] flex items-center gap-1">
     <a href="index.html"
-      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap">← Search</a>
+      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,color,transform] duration-150 ease-out active:scale-95 no-tap">← Search</a>
     <button onclick="toggleTheme()"
-      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap group"
+      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,transform] duration-150 ease-out active:scale-95 no-tap group"
       aria-label="Toggle Theme">
       <svg class="w-5 h-5 hidden dark:block text-paper/70 group-hover:text-paper" fill="none" stroke="currentColor"
         viewBox="0 0 24 24">
@@ -165,7 +100,7 @@
     </button>
   </div>
 
-  <main class="app-container-safe">
+  <main class="app-container-safe-about">
 
     <!-- pt-14 below sm keeps the centred wordmark clear of the fixed
          "← Search" / theme cluster on narrow phones. Padding and title size

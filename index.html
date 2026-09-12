@@ -93,92 +93,6 @@
   <link rel="modulepreload" href="js/core.js">
   <link rel="modulepreload" href="js/ui.js">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            paper: '#f4f1ea',
-            ink: '#1c1c1c',
-          },
-          fontFamily: {
-            serif: ['Merriweather', 'serif'],
-            masthead: ['"Playfair Display"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
-
-  <style type="text/tailwindcss">
-    @layer base {
-      body {
-        @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
-        background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
-        background-size: 16px 16px;
-        background-attachment: fixed;
-      }
-
-      .dark body {
-        background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
-      }
-    }
-
-    @layer components {
-      .app-container-safe {
-        @apply max-w-5xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen justify-center;
-        padding-left: max(0.75rem, env(safe-area-inset-left));
-        padding-right: max(0.75rem, env(safe-area-inset-right));
-        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-        transform: translateZ(0);
-      }
-
-      .no-tap {
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .title-landing {
-        @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
-        transform: translateZ(0);
-      }
-
-      .title-compact {
-        @apply !text-[clamp(1.5rem,5vw,2.2rem)] !leading-[1.2];
-        transform: translateZ(0);
-      }
-
-      @keyframes abstract-fade {
-        from { opacity: 0; transform: translate3d(0, -5px, 0); }
-        to { opacity: 1; transform: translate3d(0, 0, 0); }
-      }
-      .abstract-expansion {
-        @apply will-change-[transform,opacity];
-        animation: abstract-fade 0.3s ease-out forwards;
-      }
-
-      @keyframes purpose-in {
-        0% { opacity: 0; filter: blur(4px); transform: scale(0.98) translateY(5px); }
-        100% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); }
-      }
-      @keyframes purpose-out {
-        0% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); }
-        100% { opacity: 0; filter: blur(4px); transform: scale(1.02) translateY(-5px); }
-      }
-      .purpose-in { 
-        @apply will-change-[transform,opacity,filter];
-        animation: purpose-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        backface-visibility: hidden;
-      }
-      .purpose-out { 
-        @apply will-change-[transform,opacity,filter];
-        animation: purpose-out 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        backface-visibility: hidden;
-      }
-    }
-  </style>
-
   <style>
     .app-container-safe {
       min-height: 100dvh !important;
@@ -225,9 +139,9 @@
   <!-- Masthead furniture: About link + theme toggle -->
   <div class="fixed top-4 right-4 sm:top-6 sm:right-8 z-[100] flex items-center gap-1">
     <a href="about.html"
-      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap">About</a>
+      class="inline-flex items-center h-10 px-3.5 rounded-full text-[0.65rem] uppercase tracking-[0.2em] font-serif text-ink/70 dark:text-paper/70 hover:text-ink dark:hover:text-paper hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,color,transform] duration-150 ease-out active:scale-95 no-tap">About</a>
     <button onclick="toggleTheme()"
-      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-all active:scale-95 no-tap group"
+      class="p-2.5 rounded-full hover:bg-ink/5 dark:hover:bg-paper/5 transition-[background-color,transform] duration-150 ease-out active:scale-95 no-tap group"
       aria-label="Toggle Theme">
       <svg id="sun-icon" class="w-5 h-5 hidden dark:block text-paper/70 group-hover:text-paper" fill="none"
         stroke="currentColor" viewBox="0 0 24 24">
@@ -246,19 +160,19 @@
   <main class="app-container-safe justify-start" id="app-container">
 
     <header id="header-section"
-      class="flex flex-col items-center transition-[padding] duration-700 ease-in-out header-landing">
+      class="flex flex-col items-center transition-[padding] duration-300 ease-in-out header-landing">
 
-      <div class="text-center w-full transition-[transform,opacity] duration-700 ease-in-out will-change-transform"
+      <div class="text-center w-full transition-[transform,opacity] duration-300 ease-in-out will-change-transform"
         id="logo-container">
         <h1 id="logo-title"
-          class="font-masthead font-black tracking-tight text-ink dark:text-paper transition-[font-size,transform] duration-700 ease-in-out title-landing will-change-[font-size] cursor-pointer">
+          class="font-masthead font-black tracking-tight text-ink dark:text-paper transition-[font-size,transform] duration-300 ease-in-out title-landing will-change-[font-size] cursor-pointer">
           PaperSift
         </h1>
-        <p class="italic text-ink/60 dark:text-paper/60 font-serif opacity-100 transition-[font-size,margin,opacity] duration-700 ease-in-out subtitle-landing"
+        <p class="italic text-ink/60 dark:text-paper/60 font-serif opacity-100 transition-[font-size,margin,opacity] duration-300 ease-in-out subtitle-landing"
           id="subtitle">Find Research Papers That Actually Matter</p>
       </div>
 
-      <div class="w-full max-w-xl transition-transform duration-500 ease-in-out will-change-transform"
+      <div class="w-full max-w-xl transition-transform duration-[250ms] ease-in-out will-change-transform"
         id="search-container">
         <form id="search-form" class="w-full">
           <div
@@ -274,14 +188,14 @@
               placeholder="Search the archives…" autocomplete="off" autocorrect="off" autocapitalize="none"
               spellcheck="false">
             <button type="submit"
-              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-all touch-manipulation no-tap">
+              class="flex-shrink-0 text-ink dark:text-paper uppercase tracking-widest text-xs font-bold py-3 px-4 hover:underline underline-offset-8 decoration-1 focus:outline-none active:opacity-60 transition-opacity duration-150 touch-manipulation no-tap">
               Search
             </button>
           </div>
         </form>
 
         <div id="search-hints"
-          class="mt-2 ml-1 pl-4 flex flex-wrap items-center text-[0.68rem] text-ink/40 dark:text-paper/40 font-serif italic opacity-100 transition-opacity duration-500 ease-in-out border-l border-ink/10 dark:border-paper/10">
+          class="mt-2 ml-1 pl-4 flex flex-wrap items-center text-[0.68rem] text-ink/40 dark:text-paper/40 font-serif italic opacity-100 transition-opacity duration-200 ease-in-out border-l border-ink/10 dark:border-paper/10">
           <span class="mr-2 opacity-70">try:</span>
           <span class="text-ink/70 dark:text-paper/70">author: doe, smith</span>
           <span
@@ -293,7 +207,7 @@
         </div>
 
         <div id="filter-container"
-          class="flex flex-col gap-2 sm:gap-3 mt-3 sm:mt-4 transition-all duration-500 ease-in-out">
+          class="flex flex-col gap-2 sm:gap-3 mt-3 sm:mt-4 transition-[opacity,transform] duration-[250ms] ease-in-out">
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <label
               class="shrink-0 text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] text-ink/60 dark:text-paper/60 font-bold">Venue</label>
@@ -312,13 +226,13 @@
 
         <!-- Example / recent-search pills -->
         <div id="example-pills"
-          class="flex flex-wrap gap-2 mt-3 sm:mt-4 text-[0.65rem] uppercase tracking-widest transition-opacity duration-500 ease-in-out">
+          class="flex flex-wrap gap-2 mt-3 sm:mt-4 text-[0.65rem] uppercase tracking-widest transition-opacity duration-200 ease-in-out">
           <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">mri</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">mri</span>
           <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">classification</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">classification</span>
           <span
-            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-all touch-manipulation">calibration</span>
+            class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink active:bg-ink active:text-paper dark:active:bg-paper dark:active:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation">calibration</span>
         </div>
       </div>
 
@@ -326,7 +240,7 @@
 
     <div class="flex-grow flex flex-col">
       <section id="results-section"
-        class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-700 delay-300 pt-6 sm:pt-8 flex-1 will-change-[opacity,transform] max-w-3xl mx-auto w-full">
+        class="hidden opacity-0 translate-y-4 invisible transition-[opacity,transform] duration-[250ms] pt-6 sm:pt-8 flex-1 will-change-[opacity,transform] max-w-3xl mx-auto w-full">
         <div class="py-2 mb-4">
           <h2 id="results-count"
             class="font-masthead italic text-base sm:text-lg font-bold text-center text-ink/60 dark:text-paper/60"></h2>
@@ -337,9 +251,9 @@
 
       <!-- Purpose Loop / Help Text -->
       <div id="purpose-section"
-        class="flex flex-col items-center justify-start text-center transition-opacity duration-500 ease-in-out [perspective:1000px] pt-0">
+        class="flex flex-col items-center justify-start text-center transition-opacity duration-200 ease-in-out [perspective:1000px] pt-0">
         <p id="purpose-text"
-          class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[4rem] sm:min-h-[6rem] max-w-sm mx-auto leading-relaxed transition-all duration-700 ease-in-out will-change-transform relative">
+          class="italic text-[0.7rem] sm:text-[0.85rem] text-ink/40 dark:text-paper/40 font-serif min-h-[4rem] sm:min-h-[6rem] max-w-sm mx-auto leading-relaxed transition-[opacity,transform] duration-[220ms] ease-in-out will-change-transform relative">
           <!-- Dynamically populated loop -->
         </p>
       </div>

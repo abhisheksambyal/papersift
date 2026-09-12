@@ -1,6 +1,6 @@
 import { DEFAULTS, getRecent } from './core.js';
 
-export function fadeOutAndHide(el, dur = 400) {
+export function fadeOutAndHide(el, dur = 200) {
   if (!el) return;
   el.classList.add('opacity-0', 'pointer-events-none');
   setTimeout(() => el.classList.add('hidden'), dur);
@@ -92,7 +92,7 @@ export function startPurposeLoop(el) {
         clearInterval(intervalId);
         intervalId = null;
       }
-    }, 400);
+    }, 160);
   };
 
   showFirst();
@@ -118,7 +118,7 @@ export async function initializeFilters(confContainer, yearContainer, onSearch) 
     const tpl = (name, val, label, checked = false) => `
       <label class="flex items-center gap-2 cursor-pointer group no-tap">
         <input type="checkbox" name="${name}" value="${val}" class="hidden peer" ${checked ? 'checked' : ''}>
-        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-all border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">${label}</span>
+        <span class="text-[0.7rem] uppercase tracking-widest text-ink/40 dark:text-paper/40 peer-checked:text-ink dark:peer-checked:text-paper peer-checked:font-black group-hover:text-ink/70 dark:group-hover:text-paper/70 transition-[color,border-color] duration-150 ease-out border-b border-transparent peer-checked:border-ink/20 dark:peer-checked:border-paper/20">${label}</span>
       </label>`;
 
     confContainer.innerHTML = tpl('conference-all', 'all', 'All', true) + config.conferences.map(c => tpl('conference', c.id, c.name)).join('');
@@ -236,7 +236,7 @@ function createCard(p, re, authorRe) {
           <div class="mt-2.5">
             <button class="abstract-toggle text-[0.65rem] uppercase tracking-[0.15em] font-black text-ink/60 dark:text-paper/60 hover:text-ink px-2 py-1 -ml-2 rounded flex items-center gap-2">
               <span>Abstract</span>
-              <svg class="w-2 h-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+              <svg class="w-2 h-2 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
             </button>
             <div class="abstract-content hidden mt-4 text-[0.8rem] leading-relaxed border-t border-ink/5 pt-4">${abstract}</div>
           </div>` : ''}
@@ -245,7 +245,13 @@ function createCard(p, re, authorRe) {
 
   const btn = card.querySelector('.abstract-toggle');
   if (btn) btn.onclick = () => {
-    card.querySelector('.abstract-content').classList.toggle('hidden');
+    const content = card.querySelector('.abstract-content');
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      restartAnimation(content, 'abstract-expansion');
+    } else {
+      content.classList.add('hidden');
+    }
     btn.querySelector('svg').classList.toggle('rotate-180');
   };
   return card;
@@ -298,27 +304,32 @@ export function renderResults(res, t, refs, isOr = false, author = null, sub = [
 
 export function renderPills(el) {
   const t = getRecent().length ? getRecent() : DEFAULTS;
-  el.innerHTML = t.map(v => `<span class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink transition-all touch-manipulation no-tap">${v}</span>`).join('');
+  el.innerHTML = t.map(v => `<span class="pill-example bg-ink/[0.03] dark:bg-paper/[0.03] border border-ink/10 dark:border-paper/10 px-3 py-2 rounded-full cursor-pointer hover:bg-ink hover:text-paper dark:hover:bg-paper dark:hover:text-ink transition-[background-color,color] duration-150 ease-out touch-manipulation no-tap">${v}</span>`).join('');
 }
 
-export async function transitionToResults(refs) {
+export function transitionToResults(refs) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection } = refs;
   headerSection.classList.replace('header-landing', 'header-compact');
   logoTitle.classList.replace('title-landing', 'title-compact');
   subtitle.classList.replace('subtitle-landing', 'subtitle-compact');
-  setTimeout(() => { fadeOutAndHide(examplePills); fadeOutAndHide(purposeSection); stopPurposeLoop(); setTimeout(() => showAndFadeIn(resultsSection), 500); }, 500);
+  fadeOutAndHide(examplePills, 200);
+  fadeOutAndHide(purposeSection, 200);
+  stopPurposeLoop();
+  // Returns a Promise: callers in app.js chain performSearch() off it so
+  // results only start rendering once the reveal has begun.
+  return new Promise(resolve => setTimeout(() => { showAndFadeIn(resultsSection); resolve(); }, 200));
 }
 
 export function resetToHome(refs, onReset) {
   const { headerSection, logoTitle, subtitle, examplePills, purposeSection, resultsSection, input, resultsList, resultsCount, searchHints } = refs;
-  fadeOutAndHide(resultsSection);
+  fadeOutAndHide(resultsSection, 200);
   setTimeout(() => {
     headerSection.classList.replace('header-compact', 'header-landing');
     logoTitle.classList.replace('title-compact', 'title-landing');
     subtitle.classList.replace('subtitle-compact', 'subtitle-landing');
     showAndFadeIn(examplePills); showAndFadeIn(purposeSection); if (searchHints) showAndFadeIn(searchHints);
     renderPills(examplePills); startPurposeLoop(purposeSection.querySelector('p'));
-  }, 400);
+  }, 200);
   input.value = '';
   document.querySelectorAll('input[type="checkbox"]:not([name$="-all"])').forEach(cb => cb.checked = false);
   document.querySelectorAll('input[name$="-all"]').forEach(cb => cb.checked = true);

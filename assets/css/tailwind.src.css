@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-paper text-ink dark:bg-ink dark:text-paper font-serif min-h-screen overflow-x-hidden selection:bg-ink selection:text-paper dark:selection:bg-paper dark:selection:text-ink;
+    background-image: radial-gradient(rgba(28, 28, 28, 0.08) 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image: radial-gradient(rgba(244, 241, 234, 0.08) 1px, transparent 1px);
+  }
+}
+
+@layer components {
+  .no-tap {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* index.html: search page shell */
+  .app-container-safe {
+    @apply max-w-5xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen justify-center;
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    transform: translateZ(0);
+  }
+
+  /* about.html: narrower shell, not vertically centered (long-form content) */
+  .app-container-safe-about {
+    @apply max-w-3xl mx-auto pt-2 pb-2 sm:py-8 flex flex-col min-h-screen;
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .title-landing {
+    @apply text-[clamp(1.6rem,8vw,3.5rem)] leading-[1.1];
+    transform: translateZ(0);
+  }
+
+  .title-compact {
+    @apply !text-[clamp(1.5rem,5vw,2.2rem)] !leading-[1.2];
+    transform: translateZ(0);
+  }
+
+  @keyframes abstract-fade {
+    from { opacity: 0; transform: translate3d(0, -5px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  .abstract-expansion {
+    @apply will-change-[transform,opacity];
+    animation: abstract-fade 0.18s ease-out forwards;
+  }
+
+  @keyframes purpose-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes purpose-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-5px); }
+  }
+  .purpose-in {
+    @apply will-change-[transform,opacity];
+    animation: purpose-in 220ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+  .purpose-out {
+    @apply will-change-[transform,opacity];
+    animation: purpose-out 160ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* about.html only */
+  .rule-heading {
+    @apply text-[0.625rem] sm:text-[0.7rem] uppercase tracking-[0.2em] font-bold text-ink/60 dark:text-paper/60 mb-3 pb-2 border-b border-ink/10 dark:border-paper/10;
+  }
+
+  .prose-body {
+    @apply text-[0.85rem] sm:text-[0.95rem] leading-relaxed text-ink/80 dark:text-paper/80;
+  }
+
+  .ink-link {
+    @apply underline underline-offset-4 decoration-1 decoration-ink/30 dark:decoration-paper/30 hover:decoration-ink dark:hover:decoration-paper transition-colors;
+  }
+
+  .code-chip {
+    @apply font-mono text-[0.75rem] bg-ink/[0.05] dark:bg-paper/[0.05] px-1.5 py-0.5 rounded-sm;
+  }
+}
+
+/* Fewer and gentler under reduced motion - keep the crossfades, drop the
+   movement and the infinite scroll-sentinel bounce. */
+@media (prefers-reduced-motion: reduce) {
+  .purpose-in, .purpose-out, .abstract-expansion { animation: none !important; }
+  #purpose-text { transition: opacity 150ms ease; }
+  .animate-bounce { animation: none; opacity: .4; }
+}

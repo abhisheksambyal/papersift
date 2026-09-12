@@ -38,9 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(debounceTimer);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     resetToHome(domRefs, () => { 
-      hasSearched = false; 
+      hasSearched = false;
       transitionPromise = Promise.resolve();
-      setTimeout(() => updateFilterHighlights([]), 500);
+      setTimeout(() => updateFilterHighlights([]), 200);
     });
   });
 
